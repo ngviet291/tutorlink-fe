@@ -1,0 +1,15 @@
+export const ERROR_MESSAGES = {
+  NETWORK: 'Không thể kết nối máy chủ. Vui lòng thử lại.',
+  UNKNOWN: 'Đã có lỗi xảy ra. Vui lòng thử lại.',
+  UNAUTHORIZED: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+  FORBIDDEN: 'Bạn không có quyền thực hiện thao tác này.',
+  NOT_FOUND: 'Không tìm thấy dữ liệu yêu cầu.',
+  INVALID_CREDENTIALS: 'Email hoặc mật khẩu không đúng.',
+  EMAIL_EXISTS: 'Email này đã được đăng ký.',
+  ALREADY_APPLIED: 'Bạn đã đăng ký bài này rồi.',
+  OWN_POST: 'Bạn không thể đăng ký bài của chính mình.',
+  TUTOR_NOT_APPROVED: 'Hồ sơ gia sư chưa được duyệt nên chưa thể đăng ký nhận lớp.',
+  INSUFFICIENT_BALANCE: 'Số dư ví không đủ để thanh toán phí nhận lớp.',
+  SUBJECT_IN_USE: 'Không thể xóa môn học đang được sử dụng.',
+  AI_UNAVAILABLE: 'Dịch vụ AI tạm thời không khả dụng.',
+} as const
