@@ -70,6 +70,11 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
   get APPLICATION() { return t('application.title') },
   get PAYMENT()     { return t('wallet.title') },
   get CHAT()        { return t('chat.open') },
+  get TRANSACTION() { return t('wallet.title') },
+  get MESSAGE()     { return t('chat.open') },
+  get REVIEW()      { return 'Đánh giá' },
+  get POST()        { return 'Bài đăng' },
+  get MATCHING()    { return t('ai.top5Title') },
 }
 
 export const POST_TYPE_LABEL: Record<PostType, string> = {
