@@ -1,13 +1,48 @@
-// Environment configuration
-// - VITE_USE_MOCK=true  → dùng mock data (không cần backend)
-// - VITE_USE_MOCK=false → gọi API thật tại VITE_API_BASE_URL
-// - Không đặt           → mock khi chạy `npm run dev`, API thật khi build production
-const flag = import.meta.env.VITE_USE_MOCK as string | undefined
+import { subjects } from "@/mocks/db";
+
+const flag = import.meta.env.VITE_USE_MOCK as string | undefined;
 
 export const env = {
-  useMock: flag !== undefined ? flag === 'true' : import.meta.env.DEV,
-  apiBaseUrl: (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8080',
-  /** Chatbot: để trống → dùng mock trả lời tự động. */
-  chatbotApiUrl: (import.meta.env.VITE_CHATBOT_API_URL as string | undefined) ?? '',
-  chatbotApiKey: (import.meta.env.VITE_CHATBOT_API_KEY as string | undefined) ?? '',
-}
+  useMock: flag !== undefined ? flag === "true" : import.meta.env.DEV,
+
+  features: {
+    auth: false, // false = API thật
+    user: true, // true = Mock
+    tutor: true,
+    subject: true,
+    student: true,
+    notify: true,
+    booking: true,
+    chatbot: true,
+    admin: true,
+    application: true,
+    chat: true,
+    favorite: true,
+    post: true,
+    review: true,
+    wallet: true,
+  },
+
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+
+  chatbotApiUrl: import.meta.env.VITE_CHATBOT_API_URL ?? "",
+  chatbotApiKey: import.meta.env.VITE_CHATBOT_API_KEY ?? "",
+};
+
+export const mockConfig = {
+  application: env.features.application,
+  admin: env.features.admin,
+  subject: env.features.subject,
+  auth: env.features.auth,
+  user: env.features.user,
+  tutor: env.features.tutor,
+  notify: env.features.notify,
+  student: env.features.student,
+  booking: env.features.booking,
+  chatbot: env.features.chatbot,
+  chat: env.features.chat,
+  favorite: env.features.favorite,
+  post: env.features.post,
+  review: env.features.review,
+  wallet: env.features.wallet,
+};

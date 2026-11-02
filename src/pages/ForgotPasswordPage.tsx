@@ -3,12 +3,12 @@ import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Mail } from 'lucide-react'
-import { authService } from '@/features/auth/service/auth.service'
 import { ROUTES } from '@/constants/routes'
 import { Input } from '@/shared/components/ui/Input'
 import { Button } from '@/shared/components/ui/Button'
 import { useToast } from '@/shared/hooks/useToast'
 import { getErrorMessage } from '@/shared/utils/errors'
+import { authService } from '@/config/di/container'
 
 interface ForgotForm {
   email: string
