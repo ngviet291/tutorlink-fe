@@ -29,8 +29,8 @@ function ApplicationsModal({ post, onClose }: { post: PostResponse | null; onClo
         <ul className="divide-y divide-border">
           {data.map((a) => (
             <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-              <div className="min-w-0"><p className="truncate font-semibold text-text">{a.applicant.fullName}</p><p className="text-xs text-text-secondary">{formatDate(a.createdAt)}</p></div>
-              <StatusBadge kind="application" status={a.status} />
+              <div className="min-w-0"><p className="truncate font-semibold text-text">{a.tutor.fullName}</p><p className="text-xs text-text-secondary">{formatDate(a.appliedAt)}</p></div>
+              <StatusBadge kind="application" status={a.applicationStatus} />
             </li>
           ))}
         </ul>
@@ -77,9 +77,9 @@ export default function AdminPostsPage() {
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  <StatusBadge kind="post" status={p.status} />
+                  <StatusBadge kind="post" status={p.postStatus} />
                   <Button variant="ghost" size="sm" onClick={() => setViewing(p)}><Users className="size-4" /> {p.applicationCount ?? 0}</Button>
-                  {p.status !== 'REMOVED' && p.status !== 'CLOSED' && <Button variant="danger" size="sm" onClick={() => setTarget(p)}><Ban className="size-4" /> Gỡ bài</Button>}
+                  {p.postStatus !== 'REMOVED' && p.postStatus !== 'CLOSED' && <Button variant="danger" size="sm" onClick={() => setTarget(p)}><Ban className="size-4" /> Gỡ bài</Button>}
                 </div>
               </li>
             ))}

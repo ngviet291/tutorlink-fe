@@ -37,9 +37,9 @@ function Stat({ icon: Icon, label, value, to }: { icon: typeof Users; label: str
 
 function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
   const [open, setOpen] = useState(false)
-  const iAmStudent = (a.post.type === 'FIND_TUTOR' ? a.post.author.id : a.applicant.id) === myId
-  const partner = a.post.author.id === myId ? a.applicant : a.post.author
-  const tutorName = a.post.type === 'FIND_TUTOR' ? a.applicant.fullName : a.post.author.fullName
+  const iAmStudent = (a.post.type === 'FIND_TUTOR' ? a.post.author.id : a.tutor.id) === myId
+  const partner = a.post.author.id === myId ? a.tutor : a.post.author
+  const tutorName = a.post.type === 'FIND_TUTOR' ? a.tutor.fullName : a.post.author.fullName
   const reviewed = useHasReviewed(a.id)
 
   return (
@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
   const myPosts = posts.data ?? []
   const received = myPosts.reduce((s, p) => s + (p.applicationCount ?? 0), 0)
-  const unread = notifications.data?.filter((n) => !n.read).length ?? 0
+  const unread = notifications.data?.filter((n) => !n.isRead).length ?? 0
   const recentPosts = myPosts.slice(0, 4)
 
   return (
@@ -92,9 +92,9 @@ export default function DashboardPage() {
         }
       />
 
-      {isTutor && profile.data && profile.data.profileStatus !== 'APPROVED' && (
+      {isTutor && profile.data && profile.data.verificationStatus !== 'APPROVED' && (
         <Link to={ROUTES.TUTOR_PROFILE} className="rounded-2xl bg-amber-100 p-4 text-sm font-semibold text-amber-900 hover:opacity-90 dark:bg-amber-500/20 dark:text-amber-200">
-          {profile.data.profileStatus === 'PENDING' ? 'Hồ sơ gia sư đang chờ duyệt — xem chi tiết →' : 'Hồ sơ gia sư bị từ chối — xem ghi chú và cập nhật →'}
+          {profile.data.verificationStatus === 'PENDING' ? 'Hồ sơ gia sư đang chờ duyệt — xem chi tiết →' : 'Hồ sơ gia sư bị từ chối — xem ghi chú và cập nhật →'}
         </Link>
       )}
 
@@ -126,7 +126,7 @@ export default function DashboardPage() {
                   <span className="min-w-0 truncate font-semibold text-text">{p.title}</span>
                   <span className="flex shrink-0 items-center gap-2 text-xs text-text-secondary">
                     <Users className="size-3.5" /> {p.applicationCount ?? 0}
-                    <StatusBadge kind="post" status={p.status} />
+                    <StatusBadge kind="post" status={p.postStatus} />
                   </span>
                 </Link>
               </li>

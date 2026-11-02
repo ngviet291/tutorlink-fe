@@ -1,44 +1,37 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { AuthUser } from '@/features/user/types/user.types'
-import { tokenStorage } from './tokenStorage'
+import type { Address } from '@/shared/types/common.types'
 
 interface AuthState {
   user: AuthUser | null
-  isAuthenticated: boolean
+  isLoading: boolean
 }
 
-const storedUser = tokenStorage.getUser()
-
 const initialState: AuthState = {
-  user: storedUser && tokenStorage.getAccessToken() ? storedUser : null,
-  isAuthenticated: Boolean(storedUser && tokenStorage.getAccessToken()),
+  user: null,
+  isLoading: false,
 }
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    setCredentials(
-      state,
-      action: PayloadAction<{ user: AuthUser; accessToken: string; refreshToken: string }>,
-    ) {
-      state.user = action.payload.user
-      state.isAuthenticated = true
-      tokenStorage.setTokens(action.payload.accessToken, action.payload.refreshToken)
-      tokenStorage.setUser(action.payload.user)
+    setUser(state, action: PayloadAction<AuthUser>) {
+      state.user = action.payload
     },
-    updateUser(state, action: PayloadAction<Partial<AuthUser>>) {
-      if (!state.user) return
-      state.user = { ...state.user, ...action.payload }
-      tokenStorage.setUser(state.user)
-    },
-    clearAuth(state) {
+    clearUser(state) {
       state.user = null
-      state.isAuthenticated = false
-      tokenStorage.clear()
+    },
+    setLoading(state, action: PayloadAction<boolean>) {
+      state.isLoading = action.payload
+    },
+    updateUser(state, action: PayloadAction<{ fullName?: string; phone?: string; address?: Address }>) {
+      if (state.user) {
+        Object.assign(state.user, action.payload)
+      }
     },
   },
 })
 
-export const { setCredentials, updateUser, clearAuth } = authSlice.actions
+export const { setUser, clearUser, setLoading, updateUser } = authSlice.actions
 export default authSlice.reducer

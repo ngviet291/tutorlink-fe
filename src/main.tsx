@@ -9,6 +9,7 @@ import { store } from './app/store'
 import { router } from './app/router'
 import { ErrorBoundary } from './shared/components/ErrorBoundary'
 import { ToastContainer } from './shared/components/ui/Toast'
+import { AuthInitializer } from './features/auth/components/AuthInitializer'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,7 +31,9 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
+          <AuthInitializer>
+            <RouterProvider router={router} />
+          </AuthInitializer>
           <ToastContainer />
         </QueryClientProvider>
       </Provider>

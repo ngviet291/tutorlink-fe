@@ -16,6 +16,22 @@ export function useSendMessage(applicationId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (content: string) => chatService.sendMessage(applicationId, content),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.chat.room(applicationId) }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.chat.room(applicationId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.chat.inbox })
+    },
+  })
+}
+
+export function useChatInbox(enabled = true) {
+  return useQuery({ queryKey: queryKeys.chat.inbox, queryFn: () => chatService.getInbox(), enabled, refetchInterval: 15_000 })
+}
+
+export function useUnreadChatCount(enabled = true) {
+  return useQuery({
+    queryKey: [...queryKeys.chat.inbox, 'unread'],
+    queryFn: () => chatService.getUnreadCount(),
+    enabled,
+    refetchInterval: 15_000,
   })
 }

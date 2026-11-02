@@ -3,7 +3,11 @@ import { queryKeys } from '@/constants/queryKeys'
 import { favoriteService } from '../service/favorite.service'
 
 export function useFavorites(enabled = true) {
-  return useQuery({ queryKey: queryKeys.favorites.all, queryFn: favoriteService.getFavorites, enabled })
+  return useQuery({
+    queryKey: queryKeys.favorites.mine,
+    queryFn: () => favoriteService.getFavorites(),
+    enabled,
+  })
 }
 
 export function useToggleFavorite() {
@@ -12,4 +16,9 @@ export function useToggleFavorite() {
     mutationFn: (tutorId: string) => favoriteService.toggleFavorite(tutorId),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.favorites.all }),
   })
+}
+
+export function useIsFavorite(tutorId: string) {
+  const { data } = useFavorites()
+  return data?.some((t) => t.id === tutorId) ?? false
 }

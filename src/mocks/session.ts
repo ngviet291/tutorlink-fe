@@ -2,6 +2,7 @@ import { tokenStorage } from '@/features/auth/store/tokenStorage'
 import { ApiError } from '@/shared/types/api.types'
 import { ERROR_MESSAGES } from '@/constants/errorMessage'
 import { users } from './db'
+import type { CursorResponse } from '@/shared/types/api.types'
 
 export const delay = (ms = 350): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
@@ -38,4 +39,20 @@ export function paginate<T>(items: T[], page = 1, pageSize = 9) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
   const start = (page - 1) * pageSize
   return { items: items.slice(start, start + pageSize), page, pageSize, totalItems, totalPages }
+}
+
+export function cursorPaginate<T>(
+  items: T[],
+  cursorId: string | null | undefined,
+  getKey: (item: T) => string,
+  limit = 10,
+): CursorResponse<T> {
+  let list = items
+  if (cursorId) {
+    const idx = list.findIndex((x) => getKey(x) === cursorId)
+    if (idx !== -1) list = list.slice(idx + 1)
+  }
+  const page = list.slice(0, limit)
+  const hasMore = list.length > limit
+  return { items: page, nextCursor: hasMore ? getKey(page[page.length - 1]) : null, hasMore }
 }

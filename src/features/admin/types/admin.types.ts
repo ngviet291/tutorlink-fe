@@ -5,11 +5,16 @@ export interface FeeRateConfig {
   effectiveFrom: string
   createdBy: string
   active: boolean
+  /** Phí cố định cộng thêm (VND) */
+  fixedFee?: number
+  /** Ngày hết hiệu lực; rỗng nếu đang áp dụng */
+  effectiveTo?: string
 }
 
 export interface FeeRatePayload {
   ratePercent: number
   effectiveFrom: string
+  fixedFee?: number
 }
 
 export interface RevenuePoint {

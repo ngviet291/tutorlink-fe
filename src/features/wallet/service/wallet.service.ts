@@ -1,15 +1,34 @@
 import { http } from '@/config/axiosClient'
 import { env } from '@/config/env'
-import { ApiError, type PageResponse } from '@/shared/types/api.types'
+import { ApiError, type CursorResponse } from '@/shared/types/api.types'
 import { ERROR_MESSAGES } from '@/constants/errorMessage'
 import type {
-  EnrollmentFeeQuote, TopUpResponse, TransactionFilter, TransactionResponse, WalletResponse,
+  EnrollmentFeeQuote,
+  TopUpPayload,
+  TopUpResponse,
+  TransactionFilter,
+  TransactionResponse,
+  WalletResponse,
 } from '../types/wallet.types'
 import { applications, nextId, transactions, wallets } from '@/mocks/db'
-import { delay, paginate, requireUser } from '@/mocks/session'
+import { cursorPaginate, delay, requireUser } from '@/mocks/session'
 import { quoteFor } from '@/mocks/fee'
 
 const USE_MOCK = env.useMock
+
+/** TransactionResponse của BE → dạng FE dùng. */
+interface BeTransaction {
+  id: string; type: TransactionResponse['transactionType']; amount: number
+  status: TransactionResponse['transactionStatus']; paymentMethod?: TransactionResponse['paymentMethod']
+  transactionDate: string; tutorId?: string; applicationId?: string
+  paymentLink?: string; qrCodeUrl?: string; deeplink?: string
+}
+export function fromBeTransaction(t: BeTransaction): TransactionResponse {
+  return {
+    id: t.id, transactionType: t.type, amount: Number(t.amount), transactionStatus: t.status,
+    paymentMethod: t.paymentMethod, createdAt: t.transactionDate, tutorId: t.tutorId, applicationId: t.applicationId,
+  }
+}
 
 export const walletService = {
   async getWallet(): Promise<WalletResponse> {
@@ -18,59 +37,75 @@ export const walletService = {
       const me = requireUser()
       return { balance: wallets[me.id] ?? 0 }
     }
-    return http.get<WalletResponse>('/v1/wallet')
+    const r = await http.get<{ balance: number }>('/v1/payments/wallet/balance')
+    return { balance: Number(r.balance) }
   },
 
-  /** Tạo yêu cầu nạp (PENDING) + hướng dẫn chuyển khoản. Ví chỉ nạp và trả phí, KHÔNG rút tiền. */
-  async topUp(amount: number): Promise<TopUpResponse> {
+  async topUp(payload: TopUpPayload): Promise<TopUpResponse> {
     if (USE_MOCK) {
       await delay()
       const me = requireUser()
-      if (!Number.isFinite(amount) || amount < 10000) throw new ApiError('Số tiền nạp tối thiểu 10.000đ', 'INVALID_AMOUNT', 400)
-      const tx = {
-        id: nextId('tx'), type: 'TOP_UP' as const, amount, status: 'PENDING' as const,
-        createdAt: new Date().toISOString(), tutorId: me.id, tutorName: me.fullName,
+      if (!Number.isFinite(payload.amount) || payload.amount < 1_000 || payload.amount > 50_000_000) {
+        throw new ApiError('Số tiền nạp phải từ 1.000đ đến 50.000.000đ.', 'INVALID_AMOUNT', 400)
+      }
+      const tx: TransactionResponse = {
+        id: nextId('tx'), transactionType: 'TOP_UP', amount: payload.amount,
+        transactionStatus: 'PENDING', paymentMethod: payload.paymentMethod ?? 'MOMO', tutorId: me.id, createdAt: new Date().toISOString(),
       }
       transactions.unshift(tx)
       return {
-        transaction: tx, transferCode: `TL${tx.id.replace(/\D/g, '')}`,
-        bankName: 'Ngân hàng Demo (MOCK)', accountNumber: '0123456789', accountName: 'CONG TY TUTORLINK',
+        transaction: tx,
+        transferCode: `TL${tx.id.replace(/\D/g, '')}`,
+        bankName: 'Demo Bank (MOCK)',
+        accountNumber: '0123456789',
+        accountName: 'CONG TY TUTORLINK',
+        paymentLink: `https://test-payment.example/${payload.paymentMethod ?? 'MOMO'}/${tx.id}`,
       }
     }
-    return http.post<TopUpResponse>('/v1/wallet/top-up', { amount })
+    const r = await http.post<BeTransaction>('/v1/payments/wallet/top-up', { amount: payload.amount, paymentMethod: payload.paymentMethod ?? 'MOMO' })
+    return {
+      transaction: fromBeTransaction(r), transferCode: '', bankName: '', accountNumber: '', accountName: '',
+      paymentLink: r.paymentLink, qrCodeUrl: r.qrCodeUrl, deeplink: r.deeplink,
+    }
   },
 
-  /** Mock: giả lập ngân hàng xác nhận khi người dùng bấm "Tôi đã chuyển khoản". */
   async confirmTopUp(transactionId: string): Promise<TransactionResponse> {
     if (USE_MOCK) {
       await delay(800)
       const me = requireUser()
-      const tx = transactions.find((t) => t.id === transactionId && t.tutorId === me.id)
+      const tx = transactions.find((t) => t.id === transactionId)
       if (!tx) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, 'NOT_FOUND', 404)
-      if (tx.status === 'PENDING') {
-        tx.status = 'SUCCESS'
+      if (tx.transactionStatus === 'PENDING') {
+        tx.transactionStatus = 'SUCCESS'
         wallets[me.id] = (wallets[me.id] ?? 0) + tx.amount
       }
       return tx
     }
-    // TODO: nối API — thực tế backend tự xác nhận qua webhook ngân hàng; FE chỉ cần refetch
-    return http.get<TransactionResponse>(`/v1/wallet/transactions/${transactionId}`)
+    return fromBeTransaction(await http.get<BeTransaction>(`/v1/payments/wallet/top-up/${transactionId}`))
   },
 
-  async getTransactions(params: TransactionFilter = {}): Promise<PageResponse<TransactionResponse>> {
+  /** Trạng thái giao dịch nạp ví (dùng để poll sau khi chuyển sang cổng thanh toán). */
+  async getTopUpStatus(transactionId: string): Promise<TransactionResponse> {
+    if (USE_MOCK) {
+      const tx = transactions.find((t) => t.id === transactionId)
+      if (!tx) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, 'NOT_FOUND', 404)
+      return tx
+    }
+    return fromBeTransaction(await http.get<BeTransaction>(`/v1/payments/wallet/top-up/${transactionId}`))
+  },
+
+  async getTransactions(params: TransactionFilter = {}): Promise<CursorResponse<TransactionResponse>> {
     if (USE_MOCK) {
       await delay()
-      const me = requireUser()
-      const mine = transactions
-        .filter((t) => t.tutorId === me.id)
-        .filter((t) => !params.status || t.status === params.status)
+      const list = transactions
+        .filter((t) => !params.transactionStatus || t.transactionStatus === params.transactionStatus)
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
-      return paginate(mine, params.page, params.pageSize ?? 10)
+      return cursorPaginate(list, params.cursor, (t) => t.id, params.limit ?? 10)
     }
-    return http.get<PageResponse<TransactionResponse>>('/v1/wallet/transactions', { params })
+    const r = await http.get<CursorResponse<BeTransaction>>('/v1/payments/history', { cursor: params.cursor, limit: params.limit })
+    return { ...r, items: r.items.map(fromBeTransaction) }
   },
 
-  /** Báo giá phí nhận lớp = tỉ lệ (Admin cấu hình) × học phí dự kiến tháng đầu. */
   async getFeeQuote(applicationId: string): Promise<EnrollmentFeeQuote> {
     if (USE_MOCK) {
       await delay(200)
@@ -78,6 +113,6 @@ export const walletService = {
       if (!a) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, 'NOT_FOUND', 404)
       return quoteFor(a)
     }
-    return http.get<EnrollmentFeeQuote>(`/v1/applications/${applicationId}/fee-quote`) // TODO: nối API
+    return http.get<EnrollmentFeeQuote>(`/v1/applications/${applicationId}/fee-quote`)
   },
 }

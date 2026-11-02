@@ -9,7 +9,7 @@ import { useNotificationMutations, useNotifications } from '@/features/notificat
 export default function NotificationsPage() {
   const { data, isLoading, isError, refetch } = useNotifications()
   const { markAll } = useNotificationMutations()
-  const hasUnread = data?.some((n) => !n.read) ?? false
+  const hasUnread = data?.some((n) => !n.isRead) ?? false
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-5">

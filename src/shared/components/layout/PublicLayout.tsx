@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { Footer } from './Footer'
 import { Navbar } from './Navbar'
+import { ChatbotWidget } from '@/features/chatbot/components/ChatbotWidget'
 
 export function PublicLayout() {
   return (
@@ -10,6 +11,7 @@ export function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
+      <ChatbotWidget />
     </div>
   )
 }

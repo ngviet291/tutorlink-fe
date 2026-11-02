@@ -11,12 +11,12 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
   error?: string
   hint?: string
-  options: SelectOption[]
+  options?: SelectOption[]
   placeholder?: string
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { label, error, hint, options, placeholder, className, id, required, ...rest },
+  { label, error, hint, options, placeholder, className, id, required, children, ...rest },
   ref,
 ) {
   const autoId = useId()
@@ -31,11 +31,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         {...rest}
       >
         {placeholder !== undefined && <option value="">{placeholder}</option>}
-        {options.map((o) => (
+        {options?.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
           </option>
         ))}
+        {children}
       </select>
     </FormField>
   )

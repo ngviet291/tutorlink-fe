@@ -1,4 +1,5 @@
 import type { AuthUser } from '@/features/user/types/user.types'
+import type { Address } from '@/shared/types/common.types'
 
 export interface LoginPayload {
   email: string
@@ -10,8 +11,18 @@ export interface RegisterPayload {
   email: string
   password: string
   phone: string
-  city: string
-  district: string
+  gender?: string
+  dateOfBirth?: string
+  address?: Address
+}
+
+export interface ForgotPasswordPayload {
+  email: string
+}
+
+export interface ResetPasswordPayload {
+  newPassword: string
+  confirmPassword: string
 }
 
 export interface AuthTokens {

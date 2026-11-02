@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { CITIES, EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL, TEACHING_MODES, TEACHING_MODE_LABEL } from '@/constants/enums'
+import { PROVINCES, EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL, TEACHING_MODES, TEACHING_MODE_LABEL } from '@/constants/enums'
 import { ROUTES } from '@/constants/routes'
 import { Button } from '@/shared/components/ui/Button'
 import { ErrorState } from '@/shared/components/ui/EmptyState'
@@ -35,7 +35,7 @@ export default function PostFormPage() {
 
   const { register, reset, getValues, trigger, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
-      educationLevel: 'SECONDARY', teachingMode: 'BOTH', city: CITIES[0], sessionsPerWeek: 2, durationMinutes: 90, deadline: tomorrow(),
+      educationLevel: 'SECONDARY', teachingMode: 'BOTH', address: { province: PROVINCES[0] }, sessionsPerWeek: 2, durationMinutes: 90, deadline: tomorrow(),
     },
   })
 
@@ -43,7 +43,7 @@ export default function PostFormPage() {
     if (!existing) return
     reset({
       title: existing.title, content: existing.content, subjectId: existing.subject.id, educationLevel: existing.educationLevel,
-      teachingMode: existing.teachingMode, city: existing.address.city, district: existing.address.district, detail: existing.address.detail,
+      teachingMode: existing.teachingMode, address: { province: existing.address?.province, ward: existing.address?.ward, street: existing.address?.street },
       minBudget: existing.minBudget, maxBudget: existing.maxBudget, sessionsPerWeek: existing.sessionsPerWeek,
       durationMinutes: existing.durationMinutes, deadline: toDateInputValue(existing.deadline),
     })
@@ -90,10 +90,10 @@ export default function PostFormPage() {
           <Select label="Cấp học" required options={EDUCATION_LEVELS.map((l) => ({ value: l, label: EDUCATION_LEVEL_LABEL[l] }))} {...register('educationLevel')} />
           <Select label="Hình thức" required options={TEACHING_MODES.map((m) => ({ value: m, label: TEACHING_MODE_LABEL[m] }))} {...register('teachingMode')} />
           <Input label="Hạn nhận đăng ký" type="date" required error={errors.deadline?.message} {...register('deadline', req('Hạn nhận đăng ký'))} />
-          <Select label="Tỉnh / Thành phố" required options={CITIES.map((c) => ({ value: c, label: c }))} {...register('city')} />
-          <Input label="Quận / Huyện" required error={errors.district?.message} {...register('district', req('Quận/huyện'))} />
+          <Select label="Tỉnh / Thành phố" required options={PROVINCES.map((c) => ({ value: c, label: c }))} {...register('address.province')} />
+          <Input label="Phường / Xã (không bắt buộc)" {...register('address.ward')} />
         </div>
-        <Input label="Địa chỉ chi tiết (không bắt buộc)" hint="Chỉ nên ghi khu vực chung, không ghi số nhà/SĐT." {...register('detail')} />
+        <Input label="Địa chỉ chi tiết (không bắt buộc)" hint="Chỉ nên ghi khu vực chung, không ghi số nhà/SĐT." {...register('address.street')} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Học phí dự kiến tối thiểu (VNĐ/tháng)" type="number" required inputMode="numeric" error={errors.minBudget?.message} {...register('minBudget', num('Học phí tối thiểu', 100_000))} />
           <Input

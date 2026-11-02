@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/constants/queryKeys'
 import { reviewService } from '../service/review.service'
-import type { ReviewPayload } from '../types/review.types'
 
 export function useTutorReviews(tutorId: string | undefined) {
   return useQuery({
@@ -13,25 +12,31 @@ export function useTutorReviews(tutorId: string | undefined) {
 
 export function useHasReviewed(applicationId: string) {
   return useQuery({
-    queryKey: ['reviews', 'has', applicationId],
+    queryKey: queryKeys.reviews.byApplication(applicationId),
     queryFn: () => reviewService.hasReviewed(applicationId),
+    enabled: Boolean(applicationId),
+  })
+}
+
+export function useSubmitReview() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { applicationId: string; rating: number; comment?: string }) =>
+      reviewService.createReview({ applicationId: v.applicationId, rating: v.rating, comment: v.comment ?? '' }),
+    onSuccess: (_, vars) => {
+      void qc.invalidateQueries({ queryKey: queryKeys.reviews.all })
+      void qc.invalidateQueries({ queryKey: queryKeys.reviews.byApplication(vars.applicationId) })
+      void qc.invalidateQueries({ queryKey: queryKeys.tutors.all })
+    },
   })
 }
 
 export function useReviewMutations() {
   const qc = useQueryClient()
-  const refresh = () => qc.invalidateQueries({ queryKey: ['reviews'] })
   return {
-    create: useMutation({
-      mutationFn: (p: ReviewPayload) => reviewService.createReview(p),
-      onSuccess: async () => {
-        await refresh()
-        await qc.invalidateQueries({ queryKey: queryKeys.tutors.all })
-      },
-    }),
     complain: useMutation({
       mutationFn: (v: { reviewId: string; reason: string }) => reviewService.submitComplaint(v.reviewId, v.reason),
-      onSuccess: refresh,
+      onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.reviews.all }),
     }),
   }
 }

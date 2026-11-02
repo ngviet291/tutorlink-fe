@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { CalendarDays, Clock, MapPin, Users, Wifi } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { ROUTES } from '@/constants/routes'
 import { EDUCATION_LEVEL_LABEL, POST_TYPE_LABEL, TEACHING_MODE_LABEL } from '@/constants/enums'
 import { Avatar } from '@/shared/components/ui/Avatar'
@@ -11,6 +12,8 @@ import { formatDate } from '@/shared/utils/date'
 import type { PostResponse } from '../types/post.types'
 
 export function PostCard({ post }: { post: PostResponse }) {
+  const { t } = useTranslation()
+
   return (
     <Link
       to={ROUTES.POST_DETAIL(post.id)}
@@ -21,7 +24,7 @@ export function PostCard({ post }: { post: PostResponse }) {
           <Badge tone={post.type === 'FIND_TUTOR' ? 'orange' : 'blue'}>{POST_TYPE_LABEL[post.type]}</Badge>
           <SubjectTag name={post.subject.name} />
         </div>
-        <StatusBadge kind="post" status={post.status} />
+        <StatusBadge kind="post" status={post.postStatus} />
       </div>
 
       <h3 className="line-clamp-2 text-base font-bold text-text group-hover:text-primary">{post.title}</h3>
@@ -30,11 +33,11 @@ export function PostCard({ post }: { post: PostResponse }) {
       <dl className="mt-auto grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-text-secondary">
         <div className="col-span-2 text-sm font-bold text-primary">
           {formatBudgetRange(post.minBudget, post.maxBudget)}
-          <span className="font-normal text-text-secondary"> /tháng</span>
+          <span className="font-normal text-text-secondary"> {t('post.perMonth')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <MapPin className="size-3.5 shrink-0" />
-          <span className="truncate">{post.address.district}, {post.address.city}</span>
+          <span className="truncate">{post.address.province ?? t('common.notSpecified')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Wifi className="size-3.5 shrink-0" />
@@ -42,11 +45,11 @@ export function PostCard({ post }: { post: PostResponse }) {
         </div>
         <div className="flex items-center gap-1.5">
           <Clock className="size-3.5 shrink-0" />
-          {post.sessionsPerWeek} buổi/tuần · {post.durationMinutes}'
+          {post.sessionsPerWeek} {t('post.sessionsPerWeek')} · {post.durationMinutes}'
         </div>
         <div className="flex items-center gap-1.5">
           <CalendarDays className="size-3.5 shrink-0" />
-          Hạn {formatDate(post.deadline)}
+          {t('post.deadline')} {formatDate(post.deadline)}
         </div>
       </dl>
 

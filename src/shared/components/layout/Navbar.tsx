@@ -92,7 +92,7 @@ export function Navbar() {
                       className={cn(dropdownItemClass, 'text-danger')}
                       onClick={() => {
                         close()
-                        logout()
+                        logout.mutate()
                       }}
                     >
                       <LogOut className="size-4" /> {t('nav.logout')}

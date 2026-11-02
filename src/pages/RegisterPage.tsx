@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { CITIES } from '@/constants/enums'
+import { PROVINCES } from '@/constants/enums'
 import { ROUTES } from '@/constants/routes'
 import { Button } from '@/shared/components/ui/Button'
 import { Input } from '@/shared/components/ui/Input'
@@ -17,21 +17,20 @@ interface FormValues {
   password: string
   confirmPassword: string
   phone: string
-  city: string
-  district: string
+  province: string
   role: 'STUDENT' | 'TUTOR'
 }
 
 export default function RegisterPage() {
   const navigate = useNavigate()
-  const { register, handleSubmit, watch, getValues, formState: { errors } } = useForm<FormValues>({ defaultValues: { role: 'STUDENT', city: CITIES[0] } })
+  const { register, handleSubmit, watch, getValues, formState: { errors } } = useForm<FormValues>({ defaultValues: { role: 'STUDENT', province: PROVINCES[0] } })
   const role = watch('role')
   const registerMutation = useRegister(role)
   const toast = useToast()
 
   const onSubmit = handleSubmit((v) => {
     registerMutation.mutate(
-      { fullName: v.fullName, email: v.email, password: v.password, phone: v.phone, city: v.city, district: v.district },
+      { fullName: v.fullName, email: v.email, password: v.password, phone: v.phone, address: { province: v.province } },
       {
         onSuccess: () => {
           if (v.role === 'TUTOR') {
@@ -70,8 +69,7 @@ export default function RegisterPage() {
         />
         <Input label="Số điện thoại" type="tel" required autoComplete="tel" placeholder="09xx xxx xxx" error={errors.phone?.message} {...register('phone', rules.phone)} />
         <div className="grid grid-cols-2 gap-3">
-          <Select label="Tỉnh / Thành phố" required options={CITIES.map((c) => ({ value: c, label: c }))} error={errors.city?.message} {...register('city', { required: 'Chọn tỉnh/thành' })} />
-          <Input label="Quận / Huyện" required error={errors.district?.message} {...register('district', { required: 'Quận/huyện là bắt buộc' })} />
+          <Select label="Tỉnh / Thành phố" required options={PROVINCES.map((c) => ({ value: c, label: c }))} error={errors.province?.message} {...register('province', { required: 'Chọn tỉnh/thành' })} />
         </div>
 
         {registerMutation.isError && <p role="alert" className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300">{getErrorMessage(registerMutation.error)}</p>}

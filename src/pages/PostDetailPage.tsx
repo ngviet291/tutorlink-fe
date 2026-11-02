@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CalendarDays, Clock, Info, MapPin, Pencil, Trash2, Wallet, Wifi, XCircle } from 'lucide-react'
-import { EDUCATION_LEVEL_LABEL, POST_TYPE_LABEL, TEACHING_MODE_LABEL } from '@/constants/enums'
+import { BUDGET_UNIT_LABEL, EDUCATION_LEVEL_LABEL, POST_TYPE_LABEL, TEACHING_MODE_LABEL } from '@/constants/enums'
 import { ROUTES } from '@/constants/routes'
 import { Avatar } from '@/shared/components/ui/Avatar'
 import { Badge } from '@/shared/components/ui/Badge'
@@ -58,17 +58,17 @@ export default function PostDetailPage() {
   }
 
   const isAuthor = user?.id === post.author.id
-  const myApplication = myApps.data?.find((a) => a.post.id === post.id && a.applicant.id === user?.id)
-  const alreadyApplied = Boolean(myApplication && myApplication.status !== 'CANCELLED')
+  const myApplication = myApps.data?.find((a) => a.post.id === post.id && (a.tutor.id === user?.id || a.student.id === user?.id))
+  const alreadyApplied = Boolean(myApplication && myApplication.applicationStatus !== 'CANCELLED')
 
   // Người đủ điều kiện đăng ký: gia sư APPROVED → bài FIND_TUTOR; học viên → bài FIND_STUDENT
   const roleMatches = post.type === 'FIND_TUTOR' ? user?.role === 'TUTOR' : user?.role === 'STUDENT'
-  const tutorApproved = post.type === 'FIND_TUTOR' ? myTutor.data?.profileStatus === 'APPROVED' : true
+  const tutorApproved = post.type === 'FIND_TUTOR' ? myTutor.data?.verificationStatus === 'APPROVED' : true
 
   let disabledReason: string | undefined
   if (isAuthor) disabledReason = 'Bạn không thể đăng ký bài của chính mình'
   else if (alreadyApplied) disabledReason = 'Bạn đã đăng ký bài này rồi'
-  else if (post.status !== 'PUBLISHED') disabledReason = 'Bài đăng không còn nhận đăng ký'
+  else if (post.postStatus !== 'PUBLISHED') disabledReason = 'Bài đăng không còn nhận đăng ký'
   else if (isTutor && post.type === 'FIND_TUTOR' && !tutorApproved) disabledReason = 'Hồ sơ gia sư của bạn chưa được duyệt'
 
   const onApply = () => {
@@ -88,10 +88,10 @@ export default function PostDetailPage() {
       onError: (e) => toast.error(getErrorMessage(e)),
     })
 
-  const canEdit = isAuthor && post.status !== 'CLOSED' && post.status !== 'REMOVED'
+  const canEdit = isAuthor && post.postStatus !== 'CLOSED' && post.postStatus !== 'REMOVED'
 
   const info: { icon: typeof MapPin; label: string; value: string }[] = [
-    { icon: MapPin, label: 'Khu vực', value: [post.address.detail, post.address.district, post.address.city].filter(Boolean).join(', ') },
+    { icon: MapPin, label: 'Khu vực', value: [post.address?.street, post.address?.ward, post.address?.province].filter(Boolean).join(', ') },
     { icon: Wifi, label: 'Hình thức', value: TEACHING_MODE_LABEL[post.teachingMode] },
     { icon: Clock, label: 'Lịch học', value: `${post.sessionsPerWeek} buổi/tuần · ${post.durationMinutes} phút/buổi` },
     { icon: CalendarDays, label: 'Hạn đăng ký', value: formatDate(post.deadline) },
@@ -104,11 +104,11 @@ export default function PostDetailPage() {
           <Badge tone={post.type === 'FIND_TUTOR' ? 'orange' : 'blue'}>{POST_TYPE_LABEL[post.type]}</Badge>
           <SubjectTag name={post.subject.name} />
           <Badge tone="gray">{EDUCATION_LEVEL_LABEL[post.educationLevel]}</Badge>
-          <StatusBadge kind="post" status={post.status} />
+          <StatusBadge kind="post" status={post.postStatus} />
         </div>
         <h1 className="text-2xl font-extrabold leading-snug text-text sm:text-3xl">{post.title}</h1>
         <p className="mt-3 text-2xl font-extrabold text-primary">
-          {formatBudgetRange(post.minBudget, post.maxBudget)} <span className="text-sm font-medium text-text-secondary">/tháng (dự kiến)</span>
+          {formatBudgetRange(post.minBudget, post.maxBudget)} <span className="text-sm font-medium text-text-secondary">{BUDGET_UNIT_LABEL[post.budgetUnit ?? 'PER_MONTH'].replace('mỗi ', '/')} (dự kiến)</span>
         </p>
 
         <dl className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -165,7 +165,7 @@ export default function PostDetailPage() {
               <Link className="font-semibold text-primary" to={ROUTES.LOGIN}>Đăng nhập</Link> để đăng ký nhận lớp.
             </p>
           )}
-          {alreadyApplied && myApplication?.status === 'PENDING' && (
+          {alreadyApplied && myApplication?.applicationStatus === 'PENDING' && (
             <Button
               variant="ghost"
               loading={cancel.isPending}
@@ -174,7 +174,7 @@ export default function PostDetailPage() {
               <XCircle className="size-4" /> Hủy đăng ký
             </Button>
           )}
-          {isTutor && post.type === 'FIND_TUTOR' && myTutor.data && myTutor.data.profileStatus !== 'APPROVED' && (
+          {isTutor && post.type === 'FIND_TUTOR' && myTutor.data && myTutor.data.verificationStatus !== 'APPROVED' && (
             <Link to={ROUTES.TUTOR_PROFILE} className="self-center text-xs font-semibold text-primary hover:underline">
               <Wallet className="mr-1 inline size-3.5" /> Xem trạng thái hồ sơ gia sư
             </Link>
@@ -183,7 +183,7 @@ export default function PostDetailPage() {
 
         {canEdit && (
           <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
-            {post.status === 'DRAFT' && (
+            {post.postStatus === 'DRAFT' && (
               <Button
                 loading={publish.isPending}
                 onClick={() => publish.mutate(post.id, { onSuccess: () => toast.success('Đã đăng công khai'), onError: (e) => toast.error(getErrorMessage(e)) })}
@@ -197,7 +197,7 @@ export default function PostDetailPage() {
         )}
       </article>
 
-      {isAuthor && post.status !== 'DRAFT' && (
+      {isAuthor && post.postStatus !== 'DRAFT' && (
         <div className="mt-6"><ApplicantList post={post} /></div>
       )}
 

@@ -1,3 +1,5 @@
+import { useToast } from '@/shared/hooks/useToast'
+import { getErrorMessage } from '@/shared/utils/errors'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
@@ -8,15 +10,17 @@ import { PageHeader } from '@/shared/components/ui/PageHeader'
 import { CardGridSkeleton } from '@/shared/components/ui/Skeleton'
 import { Tabs } from '@/shared/components/ui/Tabs'
 import { PostCard } from '@/features/post/components/PostCard'
-import { useMyPosts } from '@/features/post/hooks/usePosts'
+import { useMyPosts, usePostMutations } from '@/features/post/hooks/usePosts'
 import type { PostStatus } from '@/shared/types/common.types'
 
 type Filter = PostStatus | 'ALL'
 
 export default function MyPostsPage() {
   const { data, isLoading, isError, refetch } = useMyPosts()
+  const toast = useToast()
+  const { close, publish } = usePostMutations()
   const [tab, setTab] = useState<Filter>('ALL')
-  const list = (data ?? []).filter((p) => tab === 'ALL' || p.status === tab)
+  const list = (data ?? []).filter((p) => tab === 'ALL' || p.postStatus === tab)
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5">
@@ -36,7 +40,13 @@ export default function MyPostsPage() {
       {isLoading ? <CardGridSkeleton count={3} /> : isError ? <ErrorState onRetry={() => void refetch()} /> : list.length === 0 ? (
         <EmptyState title="Chưa có bài đăng" action={<Link to={ROUTES.POST_CREATE}><Button>Tạo bài đăng đầu tiên</Button></Link>} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{list.map((p) => <PostCard key={p.id} post={p} />)}</div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{list.map((p) => (
+          <div key={p.id} className="flex flex-col gap-2">
+            <PostCard post={p} />
+            {p.postStatus === 'PUBLISHED' && <Button variant="outline" size="sm" loading={close.isPending && close.variables === p.id} onClick={() => close.mutate(p.id, { onSuccess: () => toast.success('Đã đóng bài đăng'), onError: (e) => toast.error(getErrorMessage(e)) })}>Đóng bài</Button>}
+            {p.postStatus === 'DRAFT' && <Button size="sm" loading={publish.isPending && publish.variables === p.id} onClick={() => publish.mutate(p.id, { onSuccess: () => toast.success('Đã đăng bài'), onError: (e) => toast.error(getErrorMessage(e)) })}>Đăng bài</Button>}
+          </div>
+        ))}</div>
       )}
     </div>
   )

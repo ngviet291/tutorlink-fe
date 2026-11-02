@@ -1,47 +1,43 @@
-import { useState } from 'react'
-import { cn } from '@/shared/utils/cn'
-
 interface AvatarProps {
-  name: string
-  src?: string
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  src?: string | null
+  name?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   className?: string
 }
 
-const sizes = {
+const sizeClass = {
+  xs: 'size-6 text-xs',
   sm: 'size-8 text-xs',
   md: 'size-10 text-sm',
-  lg: 'size-16 text-xl',
-  xl: 'size-28 text-4xl',
+  lg: 'size-12 text-base',
+  xl: 'size-16 text-lg',
 }
 
-function initial(name: string): string {
-  const parts = name.trim().split(/\s+/)
-  return (parts[parts.length - 1]?.[0] ?? '?').toUpperCase()
+function initials(name?: string): string {
+  if (!name) return '?'
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
 
-export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
-  const [failed, setFailed] = useState(false)
-  if (src && !failed) {
+export function Avatar({ src, name, size = 'md', className = '' }: AvatarProps) {
+  if (src) {
     return (
       <img
         src={src}
-        alt={name}
-        onError={() => setFailed(true)}
-        className={cn('shrink-0 rounded-full object-cover', sizes[size], className)}
+        alt={name ?? 'avatar'}
+        className={`rounded-full object-cover ${sizeClass[size]} ${className}`}
       />
     )
   }
   return (
-    <span
-      aria-label={name}
-      className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-full bg-primary-light font-bold text-primary',
-        sizes[size],
-        className,
-      )}
+    <div
+      className={`flex items-center justify-center rounded-full bg-primary/10 font-semibold text-primary ${sizeClass[size]} ${className}`}
     >
-      {initial(name)}
-    </span>
+      {initials(name)}
+    </div>
   )
 }

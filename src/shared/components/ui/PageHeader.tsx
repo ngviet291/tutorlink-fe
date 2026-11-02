@@ -1,19 +1,20 @@
-import type { ReactNode } from 'react'
-
-interface Props {
+interface PageHeaderProps {
   title: string
   description?: string
-  actions?: ReactNode
+  action?: React.ReactNode
+  /** alias của action */
+  actions?: React.ReactNode
+  className?: string
 }
 
-export function PageHeader({ title, description, actions }: Props) {
+export function PageHeader({ title, description, action, actions, className = '' }: PageHeaderProps) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className={`flex items-start justify-between gap-4 ${className}`}>
       <div>
-        <h1 className="text-2xl font-extrabold text-text sm:text-3xl">{title}</h1>
+        <h1 className="text-2xl font-extrabold text-text">{title}</h1>
         {description && <p className="mt-1 text-sm text-text-secondary">{description}</p>}
       </div>
-      {actions}
+      {(action ?? actions) && <div className="shrink-0">{action ?? actions}</div>}
     </div>
   )
 }

@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Star } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/shared/components/ui/Button'
 import { Modal } from '@/shared/components/ui/Modal'
-import { RatingInput } from '@/shared/components/ui/RatingStars'
 import { Textarea } from '@/shared/components/ui/Textarea'
 import { useToast } from '@/shared/hooks/useToast'
 import { getErrorMessage } from '@/shared/utils/errors'
-import { useReviewMutations } from '../hooks/useReviews'
+import { useSubmitReview } from '../hooks/useReviews'
 
 interface Props {
   applicationId: string
@@ -15,62 +15,75 @@ interface Props {
   onClose: () => void
 }
 
-interface FormValues {
-  rating: number
-  comment: string
-}
-
 export function ReviewForm({ applicationId, tutorName, open, onClose }: Props) {
+  const { t } = useTranslation()
   const toast = useToast()
-  const { create } = useReviewMutations()
-  const [ratingError, setRatingError] = useState('')
-  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({ defaultValues: { rating: 0, comment: '' } })
+  const submit = useSubmitReview()
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+  const [hovered, setHovered] = useState(0)
 
-  const submit = handleSubmit((v) => {
-    if (v.rating < 1) {
-      setRatingError('Vui lòng chọn số sao')
-      return
-    }
-    setRatingError('')
-    create.mutate(
-      { applicationId, rating: v.rating, comment: v.comment },
+  const handleSubmit = () => {
+    submit.mutate(
+      { applicationId, rating, comment: comment.trim() || undefined },
       {
         onSuccess: () => {
-          toast.success('Cảm ơn bạn đã đánh giá gia sư!')
-          reset()
+          toast.success(t('review.submitted'))
+          setComment('')
+          setRating(5)
           onClose()
         },
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     )
-  })
+  }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={`Đánh giá gia sư ${tutorName}`}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose}>Hủy</Button>
-          <Button onClick={() => void submit()} loading={create.isPending}>Gửi đánh giá</Button>
-        </>
-      }
-    >
-      <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-text">Mức độ hài lòng</span>
-          <Controller control={control} name="rating" render={({ field }) => <RatingInput value={field.value} onChange={field.onChange} />} />
-          {ratingError && <p role="alert" className="text-xs text-danger">{ratingError}</p>}
+    <Modal open={open} onClose={onClose} title={t('review.title', { name: tutorName })}>
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-text-secondary">{t('review.desc')}</p>
+
+        {/* Star rating */}
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => setRating(star)}
+              onMouseEnter={() => setHovered(star)}
+              onMouseLeave={() => setHovered(0)}
+              className="transition-transform hover:scale-110"
+            >
+              <Star
+                className={`size-8 ${
+                  star <= (hovered || rating)
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'text-border'
+                }`}
+              />
+            </button>
+          ))}
+          <span className="ml-2 text-sm font-semibold text-text-secondary">
+            {rating}/5
+          </span>
         </div>
+
         <Textarea
-          label="Nhận xét"
-          required
-          placeholder="Chia sẻ trải nghiệm học với gia sư..."
-          error={errors.comment?.message}
-          {...register('comment', { required: 'Vui lòng nhập nhận xét', minLength: { value: 10, message: 'Nhận xét tối thiểu 10 ký tự' } })}
+          label={t('review.comment')}
+          placeholder={t('review.commentPlaceholder')}
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          rows={3}
+          maxLength={300}
         />
-      </form>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
+          <Button loading={submit.isPending} onClick={handleSubmit}>
+            {t('review.submit')}
+          </Button>
+        </div>
+      </div>
     </Modal>
   )
 }

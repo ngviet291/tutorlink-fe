@@ -1,18 +1,65 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { queryKeys } from '@/constants/queryKeys'
 import { subjectService } from '../service/subject.service'
-import type { SubjectPayload } from '../types/subject.types'
 
 export function useSubjects() {
-  return useQuery({ queryKey: queryKeys.subjects.all, queryFn: subjectService.getSubjects, staleTime: 5 * 60_000 })
+  return useQuery({
+    queryKey: queryKeys.subjects.all,
+    queryFn: subjectService.getAll,
+    staleTime: 10 * 60 * 1000,
+  })
 }
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { http } from '@/config/axiosClient'
+import { env } from '@/config/env'
+import { delay } from '@/mocks/session'
+import { subjects, nextId } from '@/mocks/db'
+import type { SubjectResponse } from '../types/subject.types'
+
+const USE_MOCK = env.useMock
 
 export function useSubjectMutations() {
   const qc = useQueryClient()
-  const invalidate = () => qc.invalidateQueries({ queryKey: queryKeys.subjects.all })
-  return {
-    create: useMutation({ mutationFn: (p: SubjectPayload) => subjectService.createSubject(p), onSuccess: invalidate }),
-    update: useMutation({ mutationFn: (v: { id: string; payload: SubjectPayload }) => subjectService.updateSubject(v.id, v.payload), onSuccess: invalidate }),
-    remove: useMutation({ mutationFn: (id: string) => subjectService.deleteSubject(id), onSuccess: invalidate }),
-  }
+  const refresh = () => qc.invalidateQueries({ queryKey: queryKeys.subjects.all })
+
+  const create = useMutation({
+    mutationFn: async (payload: { name: string; description?: string }) => {
+      if (USE_MOCK) {
+        await delay()
+        const s: SubjectResponse = { id: nextId('subj'), name: payload.name, description: payload.description }
+        subjects.push(s)
+        return s
+      }
+      return http.post<SubjectResponse>('/v1/subjects', payload)
+    },
+    onSuccess: refresh,
+  })
+
+  const update = useMutation({
+    mutationFn: async ({ id, payload }: { id: string; payload: { name: string; description?: string } }) => {
+      if (USE_MOCK) {
+        await delay()
+        const s = subjects.find((x) => x.id === id)
+        if (s) Object.assign(s, payload)
+        return s
+      }
+      return http.put<SubjectResponse>(`/v1/subjects/${id}`, payload)
+    },
+    onSuccess: refresh,
+  })
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      if (USE_MOCK) {
+        await delay()
+        const idx = subjects.findIndex((x) => x.id === id)
+        if (idx >= 0) subjects.splice(idx, 1)
+        return
+      }
+      return http.delete(`/v1/subjects/${id}`)
+    },
+    onSuccess: refresh,
+  })
+
+  return { create, update, remove }
 }

@@ -4,18 +4,31 @@ import { notificationService } from '../service/notification.service'
 
 export function useNotifications(enabled = true) {
   return useQuery({
-    queryKey: queryKeys.notifications.all,
-    queryFn: notificationService.getNotifications,
+    queryKey: queryKeys.notifications.mine,
+    queryFn: notificationService.getMyNotifications,
     enabled,
     refetchInterval: 30_000,
   })
 }
 
-export function useNotificationMutations() {
+export function useMarkAllRead() {
   const qc = useQueryClient()
-  const refresh = () => qc.invalidateQueries({ queryKey: queryKeys.notifications.all })
-  return {
-    markRead: useMutation({ mutationFn: (id: string) => notificationService.markRead(id), onSuccess: refresh }),
-    markAll: useMutation({ mutationFn: () => notificationService.markAllRead(), onSuccess: refresh }),
-  }
+  return useMutation({
+    mutationFn: notificationService.markAllRead,
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notifications.all }),
+  })
+}
+
+export function useMarkRead() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => notificationService.markRead(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.notifications.all }),
+  })
+}
+
+export function useNotificationMutations() {
+  const markAll = useMarkAllRead()
+  const markRead = useMarkRead()
+  return { markAll, markRead }
 }

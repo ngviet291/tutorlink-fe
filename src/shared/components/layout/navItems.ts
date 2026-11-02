@@ -45,6 +45,7 @@ export const PUBLIC_NAV: { to: string; labelKey: string }[] = [
 ]
 
 const common: NavItem[] = [
+  { to: ROUTES.CHAT_INBOX, label: 'Tin nhắn', icon: MessageSquare, end: true },
   { to: ROUTES.NOTIFICATIONS, label: 'Thông báo', icon: Bell },
   { to: ROUTES.PROFILE, label: 'Tài khoản', icon: User },
 ]

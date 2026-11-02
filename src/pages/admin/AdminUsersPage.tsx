@@ -17,7 +17,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce'
 import { useToast } from '@/shared/hooks/useToast'
 import { useAdminMutations, useAdminUsers } from '@/features/admin/hooks/useAdmin'
 import type { AccountStatus } from '@/shared/types/common.types'
-import type { UserAdminRow } from '@/features/user/types/user.types'
+import type { BaseUserResponse } from '@/features/user/types/user.types'
 
 const ROLE_LABEL = { GUEST: 'Khách', STUDENT: 'Học viên', TUTOR: 'Gia sư', ADMIN: 'Admin' } as const
 
@@ -28,9 +28,9 @@ export default function AdminUsersPage() {
   const debounced = useDebounce(keyword)
   const { data, isLoading, isError, refetch } = useAdminUsers({ keyword: debounced || undefined, page })
   const { setUserStatus } = useAdminMutations()
-  const [detail, setDetail] = useState<UserAdminRow | null>(null)
+  const [detail, setDetail] = useState<BaseUserResponse | null>(null)
 
-  const change = (u: UserAdminRow, status: AccountStatus) =>
+  const change = (u: BaseUserResponse, status: AccountStatus) =>
     setUserStatus.mutate({ id: u.id, status }, {
       onSuccess: (r) => { toast.success('Đã cập nhật trạng thái tài khoản'); setDetail(r) },
       onError: (e) => toast.error(getErrorMessage(e)),
@@ -53,7 +53,7 @@ export default function AdminUsersPage() {
                   <tr key={u.id}>
                     <td className="p-3"><div className="flex items-center gap-2"><Avatar name={u.fullName} size="sm" /><div><p className="font-semibold text-text">{u.fullName}</p><p className="text-xs text-text-secondary">{u.email}</p></div></div></td>
                     <td><Badge tone="gray">{ROLE_LABEL[u.role]}</Badge></td>
-                    <td><StatusBadge kind="account" status={u.status} /></td>
+                    <td><StatusBadge kind="user" status={u.userStatus} /></td>
                     <td className="pr-3 text-right"><button type="button" className="cursor-pointer text-sm font-semibold text-primary hover:underline" onClick={() => setDetail(u)}>Chi tiết</button></td>
                   </tr>
                 ))}
@@ -68,14 +68,14 @@ export default function AdminUsersPage() {
         {detail && (
           <div className="flex flex-col gap-4 text-sm">
             <dl className="grid gap-2 sm:grid-cols-2">
-              {[['Họ tên', detail.fullName], ['Email', detail.email], ['SĐT', detail.phone], ['Vai trò', ROLE_LABEL[detail.role]], ['Khu vực', [detail.address?.district, detail.address?.city].filter(Boolean).join(', ') || '—'], ['Ngày tạo', formatDate(detail.createdAt)]].map(([k, v]) => (
+              {[['Họ tên', detail.fullName], ['Email', detail.email], ['SĐT', detail.phone], ['Vai trò', ROLE_LABEL[detail.role]], ['Khu vực', [detail.address?.ward, detail.address?.province].filter(Boolean).join(', ') || '—'], ['Ngày tạo', formatDate(detail.createdAt)]].map(([k, v]) => (
                 <div key={k}><dt className="text-xs text-text-secondary">{k}</dt><dd className="font-semibold text-text">{v}</dd></div>
               ))}
             </dl>
             <p className="text-xs text-text-secondary">Mật khẩu không bao giờ được hiển thị.</p>
             {detail.role !== 'ADMIN' && (
               <Select
-                label="Trạng thái tài khoản" value={detail.status} disabled={setUserStatus.isPending}
+                label="Trạng thái tài khoản" value={detail.userStatus} disabled={setUserStatus.isPending}
                 onChange={(e) => change(detail, e.target.value as AccountStatus)}
                 options={(Object.keys(ACCOUNT_STATUS_META) as AccountStatus[]).map((s) => ({ value: s, label: ACCOUNT_STATUS_META[s].label }))}
               />

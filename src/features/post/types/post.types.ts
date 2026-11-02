@@ -1,5 +1,6 @@
 import type {
   Address,
+  BudgetUnit,
   EducationLevel,
   PostStatus,
   PostType,
@@ -13,7 +14,7 @@ export interface PostResponse {
   title: string
   content: string
   type: PostType
-  status: PostStatus
+  postStatus: PostStatus
   author: AuthorResponse
   subject: SubjectSummaryResponse
   educationLevel: EducationLevel
@@ -21,12 +22,12 @@ export interface PostResponse {
   address: Address
   minBudget: number
   maxBudget: number
+  budgetUnit?: BudgetUnit
   sessionsPerWeek: number
   durationMinutes: number
   deadline: string
   createdAt: string
   applicationCount?: number
-  /** Số lượng gia sư/học viên đã được ghép cặp (dùng cho lịch sử) */
   matchedApplicationId?: string
 }
 
@@ -34,11 +35,18 @@ export interface PostFilter {
   keyword?: string
   type?: PostType
   subjectId?: string
-  city?: string
+  province?: string
   teachingMode?: TeachingMode | ''
   educationLevels?: EducationLevel[]
   minBudget?: number
   maxBudget?: number
+  postStatus?: PostStatus | ''
+  cursor?: string
+  limit?: number
+}
+
+export interface AdminPostFilter {
+  keyword?: string
   status?: PostStatus | ''
   page?: number
   pageSize?: number
@@ -51,11 +59,10 @@ export interface PostPayload {
   subjectId: string
   educationLevel: EducationLevel
   teachingMode: TeachingMode
-  city: string
-  district: string
-  detail?: string
+  address: Address
   minBudget: number
   maxBudget: number
+  budgetUnit?: BudgetUnit
   sessionsPerWeek: number
   durationMinutes: number
   deadline: string

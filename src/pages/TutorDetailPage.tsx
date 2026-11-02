@@ -77,17 +77,17 @@ export default function TutorDetailPage() {
         <div className="min-w-0 flex-1">
           <h1 className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-text sm:text-3xl">
             {tutor.fullName}
-            {tutor.profileStatus === 'APPROVED' ? (
+            {tutor.verificationStatus === 'APPROVED' ? (
               <Badge tone="blue" icon={<BadgeCheck className="size-3.5" />}>Đã xác minh</Badge>
             ) : (
-              <StatusBadge kind="profile" status={tutor.profileStatus} />
+              <StatusBadge kind="verification" status={tutor.verificationStatus} />
             )}
           </h1>
           <div className="mt-2"><RatingStars value={tutor.averageRating} size="md" count={tutor.reviewCount} /></div>
-          <div className="mt-3 flex flex-wrap gap-1.5">{tutor.subjects.map((s) => <SubjectTag key={s.id} name={s.name} />)}</div>
+          <div className="mt-3 flex flex-wrap gap-1.5">{tutor.subject && <SubjectTag key={tutor.subject.id} name={tutor.subject.name} />}</div>
           <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-text-secondary">
             <li className="flex items-center gap-1.5"><Briefcase className="size-4" /> {tutor.experienceYears} năm kinh nghiệm</li>
-            <li className="flex items-center gap-1.5"><MapPin className="size-4" /> {[tutor.district, tutor.city].filter(Boolean).join(', ')}</li>
+            <li className="flex items-center gap-1.5"><MapPin className="size-4" /> {[tutor.address?.province].filter(Boolean).join(', ')}</li>
             {tutor.teachingMode && <li>{TEACHING_MODE_LABEL[tutor.teachingMode]}</li>}
           </ul>
         </div>
@@ -124,10 +124,10 @@ export default function TutorDetailPage() {
               </div>
             )}
             {tab === 'certs' && (
-              tutor.certificates.length ? (
+              tutor.certificates?.length ? (
                 <ul className="flex flex-col gap-3">
-                  {tutor.certificates.map((c) => (
-                    <li key={c.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+                  {tutor.certificates.map((c, i) => (
+                    <li key={`${c.name}-${i}`} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
                       <span className="flex size-10 items-center justify-center rounded-full bg-primary-light text-primary"><Award className="size-5" /></span>
                       <div>
                         <p className="font-semibold text-text">{c.name}</p>

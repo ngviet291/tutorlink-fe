@@ -1,52 +1,83 @@
-import { useCallback } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { authService } from '../service/auth.service'
-import { clearAuth, setCredentials } from '../store/authSlice'
 import { useAppDispatch } from '@/shared/hooks/useAppStore'
-import { ROUTES } from '@/constants/routes'
+import { authService } from '../service/auth.service'
+import { setUser, clearUser } from '../store/authSlice'
+import { tokenStorage } from '../store/tokenStorage'
 import type { LoginPayload, RegisterPayload } from '../types/auth.types'
 
-interface LocationState {
-  from?: string
+export function useAuthMutations() {
+  const dispatch = useAppDispatch()
+  const qc = useQueryClient()
+
+  return {
+    login: useMutation({
+      mutationFn: (payload: LoginPayload) => authService.login(payload),
+      onSuccess: (data) => {
+        tokenStorage.setTokens(data.accessToken, data.refreshToken)
+        dispatch(setUser(data.user))
+        qc.clear()
+      },
+    }),
+
+    register: useMutation({
+      mutationFn: (payload: RegisterPayload & { role?: 'STUDENT' | 'TUTOR' }) => {
+        const { role, ...rest } = payload
+        return role === 'TUTOR'
+          ? authService.registerTutor(rest)
+          : authService.registerStudent(rest)
+      },
+      onSuccess: (data) => {
+        tokenStorage.setTokens(data.accessToken, data.refreshToken)
+        dispatch(setUser(data.user))
+        qc.clear()
+      },
+    }),
+
+    logout: useMutation({
+      mutationFn: () => authService.logout(),
+      onSettled: () => {
+        tokenStorage.clearTokens()
+        dispatch(clearUser())
+        qc.clear()
+      },
+    }),
+  }
 }
 
+// Named convenience exports for individual hooks
 export function useLogin() {
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (p: LoginPayload) => authService.login(p),
-    onSuccess: (res) => {
-      qc.clear()
-      dispatch(setCredentials(res))
-      const from = (location.state as LocationState | null)?.from
-      navigate(from ?? (res.user.role === 'ADMIN' ? ROUTES.ADMIN : ROUTES.DASHBOARD), { replace: true })
-    },
-  })
+  const { login } = useAuthMutations()
+  return login
 }
 
-export function useRegister(role: 'STUDENT' | 'TUTOR') {
+export function useRegister(role?: 'STUDENT' | 'TUTOR') {
   const dispatch = useAppDispatch()
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (p: RegisterPayload) => (role === 'TUTOR' ? authService.registerTutor(p) : authService.registerStudent(p)),
-    onSuccess: (res) => {
+    mutationFn: (payload: RegisterPayload & { role?: 'STUDENT' | 'TUTOR' }) => {
+      const { role: r, ...rest } = payload
+      const resolvedRole = r ?? role
+      return resolvedRole === 'TUTOR'
+        ? authService.registerTutor(rest)
+        : authService.registerStudent(rest)
+    },
+    onSuccess: (data) => {
+      tokenStorage.setTokens(data.accessToken, data.refreshToken)
+      dispatch(setUser(data.user))
       qc.clear()
-      dispatch(setCredentials(res))
     },
   })
 }
 
 export function useLogout() {
   const dispatch = useAppDispatch()
-  const navigate = useNavigate()
   const qc = useQueryClient()
-  return useCallback(() => {
-    void authService.logout().catch(() => undefined)
-    dispatch(clearAuth())
-    qc.clear()
-    navigate(ROUTES.HOME, { replace: true })
-  }, [dispatch, navigate, qc])
+  return useMutation({
+    mutationFn: () => authService.logout(),
+    onSettled: () => {
+      tokenStorage.clearTokens()
+      dispatch(clearUser())
+      qc.clear()
+    },
+  })
 }

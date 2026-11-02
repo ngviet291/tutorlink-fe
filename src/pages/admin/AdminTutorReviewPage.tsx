@@ -54,7 +54,7 @@ export default function AdminTutorReviewPage() {
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-text">{t.fullName}</p>
                 <p className="text-xs text-text-secondary">{t.experienceYears} năm KN · {formatVnd(t.hourlyRate)}/giờ</p>
-                <div className="mt-1 flex flex-wrap gap-1">{t.subjects.length ? t.subjects.map((s) => <SubjectTag key={s.id} name={s.name} />) : <span className="text-xs text-text-secondary">Chưa chọn môn</span>}</div>
+                <div className="mt-1 flex flex-wrap gap-1">{t.subject ? <SubjectTag key={t.subject.id} name={t.subject.name} /> : <span className="text-xs text-text-secondary">Chưa chọn môn</span>}</div>
               </div>
               <Button variant="outline" onClick={() => setDetail(t)}>Xem & duyệt</Button>
             </li>
@@ -75,14 +75,14 @@ export default function AdminTutorReviewPage() {
           <div className="flex flex-col gap-4 text-sm">
             <dl className="grid gap-2 sm:grid-cols-2">
               <div><dt className="text-xs text-text-secondary">Học vấn</dt><dd className="font-semibold text-text">{detail.education || '—'}</dd></div>
-              <div><dt className="text-xs text-text-secondary">Khu vực</dt><dd className="font-semibold text-text">{[detail.district, detail.city].filter(Boolean).join(', ') || '—'}</dd></div>
+              <div><dt className="text-xs text-text-secondary">Khu vực</dt><dd className="font-semibold text-text">{[detail.address?.province].filter(Boolean).join(', ') || '—'}</dd></div>
               <div><dt className="text-xs text-text-secondary">Kinh nghiệm</dt><dd className="font-semibold text-text">{detail.experienceYears} năm</dd></div>
               <div><dt className="text-xs text-text-secondary">Giá / giờ</dt><dd className="font-semibold text-text">{formatVnd(detail.hourlyRate)}</dd></div>
             </dl>
             <div><p className="text-xs text-text-secondary">Giới thiệu</p><p className="text-text">{detail.bio || '—'}</p></div>
             <div>
               <p className="text-xs text-text-secondary">Chứng chỉ</p>
-              {detail.certificates.length ? <ul className="list-disc pl-5 text-text">{detail.certificates.map((c) => <li key={c.id}>{c.name} — {c.issuer} ({c.year})</li>)}</ul> : <p className="text-text">Chưa có</p>}
+              {detail.certificates?.length ? <ul className="list-disc pl-5 text-text">{detail.certificates.map((c, i) => <li key={`${c.name}-${i}`}>{c.name} — {c.issuer} ({c.year})</li>)}</ul> : <p className="text-text">Chưa có</p>}
             </div>
             <Link to={ROUTES.TUTOR_DETAIL(detail.id)} className="text-xs font-semibold text-primary hover:underline" onClick={close}>Mở trang hồ sơ công khai</Link>
             <Textarea label="Ghi chú cho gia sư" value={note} onChange={(e) => { setNote(e.target.value); setNoteError('') }} error={noteError} hint="Bắt buộc khi từ chối; gia sư sẽ thấy ghi chú này." />

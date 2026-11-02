@@ -1,47 +1,53 @@
-const dateFmt = new Intl.DateTimeFormat('vi-VN', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-})
-
-const dateTimeFmt = new Intl.DateTimeFormat('vi-VN', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-})
-
-export function formatDate(iso: string): string {
-  return dateFmt.format(new Date(iso))
+/**
+ * Format an ISO date string to a localized date.
+ * e.g. "2024-03-15T10:00:00Z" → "15/03/2024"
+ */
+export function formatDate(iso: string | undefined | null, locale = 'vi-VN'): string {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 }
 
-export function formatDateTime(iso: string): string {
-  return dateTimeFmt.format(new Date(iso))
+/**
+ * Format an ISO date string to a localized datetime.
+ */
+export function formatDateTime(iso: string, locale = 'vi-VN'): string {
+  return new Date(iso).toLocaleString(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
-export function formatCountdown(ms: number): string {
-  if (ms <= 0) return '00:00:00'
-  const total = Math.floor(ms / 1000)
-  const h = Math.floor(total / 3600)
-  const m = Math.floor((total % 3600) / 60)
-  const s = total % 60
-  return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':')
-}
-
-export function timeAgo(iso: string): string {
+/**
+ * Relative time: "2 giờ trước", "vừa xong", etc.
+ */
+export function timeAgo(iso: string, locale = 'vi'): string {
   const diff = Date.now() - new Date(iso).getTime()
-  const min = Math.floor(diff / 60000)
-  if (min < 1) return 'Vừa xong'
-  if (min < 60) return `${min} phút trước`
-  const hr = Math.floor(min / 60)
-  if (hr < 24) return `${hr} giờ trước`
-  const day = Math.floor(hr / 24)
-  if (day < 30) return `${day} ngày trước`
-  return formatDate(iso)
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+  const seconds = Math.floor(diff / 1000)
+  if (seconds < 60) return rtf.format(-seconds, 'second')
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return rtf.format(-minutes, 'minute')
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return rtf.format(-hours, 'hour')
+  const days = Math.floor(hours / 24)
+  if (days < 30) return rtf.format(-days, 'day')
+  const months = Math.floor(days / 30)
+  if (months < 12) return rtf.format(-months, 'month')
+  return rtf.format(-Math.floor(months / 12), 'year')
 }
 
-/** Giá trị cho <input type="date"> */
-export function toDateInputValue(iso: string): string {
-  return iso.slice(0, 10)
+/** ISO → giá trị cho <input type="date"> (yyyy-MM-dd). */
+export function toDateInputValue(iso: string | undefined | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }

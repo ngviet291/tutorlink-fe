@@ -3,12 +3,13 @@ import { useSearchParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { FilterSidebar, emptyFilter, type FilterValues } from '@/shared/components/ui/FilterSidebar'
 import { Input } from '@/shared/components/ui/Input'
-import { Pagination } from '@/shared/components/ui/Pagination'
+import { Button } from '@/shared/components/ui/Button'
 import { CardGridSkeleton } from '@/shared/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/shared/components/ui/EmptyState'
 import { TutorCard } from '@/features/tutor/components/TutorCard'
 import { useTutors } from '@/features/tutor/hooks/useTutors'
 import { useDebounce } from '@/shared/hooks/useDebounce'
+import { useSubjects } from '@/features/subject/hooks/useSubjects'
 import type { TutorFilter } from '@/features/tutor/types/tutor.types'
 
 const RATE_MAX = 500_000
@@ -17,29 +18,33 @@ export default function FindTutorPage() {
   const [params] = useSearchParams()
   const [filter, setFilter] = useState<FilterValues>({ ...emptyFilter(RATE_MAX), subjectId: params.get('subject') ?? '' })
   const [keyword, setKeyword] = useState('')
-  const [page, setPage] = useState(1)
   const debounced = useDebounce(keyword)
+  const subjects = useSubjects()
+
+  const subjectName = useMemo(
+    () => subjects.data?.find((s) => s.id === filter.subjectId)?.name,
+    [subjects.data, filter.subjectId],
+  )
 
   const query = useMemo<TutorFilter>(
     () => ({
-      keyword: debounced || undefined,
-      subjectId: filter.subjectId || undefined,
-      city: filter.city || undefined,
-      teachingMode: filter.teachingMode,
+      subjectName: subjectName || debounced || undefined,
+      province: filter.province || undefined,
       minRate: filter.min > 0 ? filter.min : undefined,
       maxRate: filter.max < RATE_MAX ? filter.max : undefined,
-      educationLevels: filter.educationLevels,
-      page,
-      pageSize: 9,
+      limit: 12,
     }),
-    [debounced, filter, page],
+    [subjectName, debounced, filter],
   )
-  const { data, isLoading, isError, refetch, isFetching } = useTutors(query)
 
-  const onFilter = (v: FilterValues) => {
-    setFilter(v)
-    setPage(1)
-  }
+  const { data, isLoading, isError, refetch, isFetchingNextPage, hasNextPage, fetchNextPage } = useTutors(query)
+
+  const items = data?.pages.flatMap((p) => p.items) ?? []
+  const total = data?.pages[0]?.items.length !== undefined
+    ? data!.pages.reduce((s, p) => s + p.items.length, 0)
+    : 0
+
+  const onFilter = (v: FilterValues) => setFilter(v)
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -55,24 +60,27 @@ export default function FindTutorPage() {
             placeholder="Tìm theo tên, môn học, giới thiệu..."
             leftIcon={<Search className="size-4" />}
             value={keyword}
-            onChange={(e) => {
-              setKeyword(e.target.value)
-              setPage(1)
-            }}
+            onChange={(e) => setKeyword(e.target.value)}
           />
 
-          <div className="mt-4" aria-busy={isFetching}>
+          <div className="mt-4" aria-busy={isLoading || isFetchingNextPage}>
             {isLoading ? (
               <CardGridSkeleton />
             ) : isError ? (
               <ErrorState onRetry={() => void refetch()} />
-            ) : data && data.items.length > 0 ? (
+            ) : items.length > 0 ? (
               <>
-                <p className="mb-3 text-sm text-text-secondary">{data.totalItems} gia sư phù hợp</p>
+                <p className="mb-3 text-sm text-text-secondary">{total} gia sư phù hợp</p>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {data.items.map((t) => <TutorCard key={t.id} tutor={t} />)}
+                  {items.map((t) => <TutorCard key={t.id} tutor={t} />)}
                 </div>
-                <div className="mt-8"><Pagination page={data.page} totalPages={data.totalPages} onChange={setPage} /></div>
+                {hasNextPage && (
+                  <div className="mt-8 text-center">
+                    <Button variant="outline" loading={isFetchingNextPage} onClick={() => void fetchNextPage()}>
+                      Xem thêm
+                    </Button>
+                  </div>
+                )}
               </>
             ) : (
               <EmptyState title="Không tìm thấy gia sư phù hợp" description="Thử bỏ bớt bộ lọc hoặc đổi từ khóa tìm kiếm." />

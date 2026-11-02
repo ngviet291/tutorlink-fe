@@ -37,6 +37,8 @@ export const router = createBrowserRouter([
     children: [
       { path: ROUTES.LOGIN, element: page(() => import('@/pages/LoginPage')) },
       { path: ROUTES.REGISTER, element: page(() => import('@/pages/RegisterPage')) },
+      { path: ROUTES.RESET_PASSWORD, element: page(() => import('@/pages/ResetPasswordPage')) },
+      { path: ROUTES.FORGOT_PASSWORD, element: page(() => import('@/pages/ForgotPasswordPage')) },
     ],
   },
   {
@@ -49,6 +51,7 @@ export const router = createBrowserRouter([
           { path: ROUTES.POST_CREATE, element: page(() => import('@/pages/PostFormPage')) },
           { path: ROUTES.POST_EDIT(), element: page(() => import('@/pages/PostFormPage')) },
           { path: ROUTES.MY_POSTS, element: page(() => import('@/pages/MyPostsPage')) },
+          { path: ROUTES.CHAT_INBOX, element: page(() => import('@/pages/ChatInboxPage')) },
           { path: ROUTES.CHAT(), element: page(() => import('@/pages/ChatPage')) },
           { path: ROUTES.NOTIFICATIONS, element: page(() => import('@/pages/NotificationsPage')) },
           { path: ROUTES.PROFILE, element: page(() => import('@/pages/ProfilePage')) },

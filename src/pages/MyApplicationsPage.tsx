@@ -8,12 +8,16 @@ import { ListSkeleton } from '@/shared/components/ui/Skeleton'
 import { StatusBadge } from '@/shared/components/ui/StatusBadge'
 import { formatDate } from '@/shared/utils/date'
 import { OfferList } from '@/features/application/components/OfferList'
-import { useMyApplications } from '@/features/application/hooks/useApplications'
+import { useToast } from '@/shared/hooks/useToast'
+import { getErrorMessage } from '@/shared/utils/errors'
+import { useApplicationMutations, useMyApplications } from '@/features/application/hooks/useApplications'
 import type { ApplicationResponse } from '@/features/application/types/application.types'
 import { PayFeeModal } from '@/features/wallet/components/PayFeeModal'
 
 export default function MyApplicationsPage() {
   const { data, isLoading, isError, refetch } = useMyApplications()
+  const toast = useToast()
+  const { finish } = useApplicationMutations()
   const [offer, setOffer] = useState<ApplicationResponse | null>(null)
 
   return (
@@ -29,12 +33,14 @@ export default function MyApplicationsPage() {
             <li key={a.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <Link to={ROUTES.POST_DETAIL(a.post.id)} className="block truncate font-bold text-text hover:text-primary">{a.post.title}</Link>
-                <p className="mt-0.5 text-xs text-text-secondary">Đăng ký ngày {formatDate(a.createdAt)}</p>
+                <p className="mt-0.5 text-xs text-text-secondary">Đăng ký ngày {formatDate(a.appliedAt)}</p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <StatusBadge kind="application" status={a.status} />
-                {a.awaitingPayment && <Button size="sm" onClick={() => setOffer(a)}>Thanh toán phí</Button>}
-                {a.paid && <Link to={ROUTES.CHAT(a.id)}><Button size="sm" variant="secondary">Mở chat</Button></Link>}
+                <StatusBadge kind="application" status={a.applicationStatus} />
+                {a.applicationStatus === 'ACCEPTED' && <Button size="sm" onClick={() => setOffer(a)}>Thanh toán phí</Button>}
+                {a.applicationStatus === 'CONFIRMED' && <Button size="sm" onClick={() => setOffer(a)}>Thanh toán phí</Button>}
+                {(a.applicationStatus === 'PAID' || a.applicationStatus === 'CONFIRMED') && <Button size="sm" variant="outline" loading={finish.isPending && finish.variables === a.id} onClick={() => finish.mutate(a.id, { onSuccess: () => toast.success('Đã đánh dấu hoàn thành'), onError: (e) => toast.error(getErrorMessage(e)) })}>Hoàn thành lớp</Button>}
+                {(a.applicationStatus === 'PAID' || a.applicationStatus === 'FINISHED') && <Link to={ROUTES.CHAT(a.id)}><Button size="sm" variant="secondary">Mở chat</Button></Link>}
               </div>
             </li>
           ))}

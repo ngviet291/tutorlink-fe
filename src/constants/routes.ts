@@ -8,6 +8,8 @@ export const ROUTES = {
   POST_DETAIL: (id = ':id') => `/post/${id}`,
   LOGIN: '/login',
   REGISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
 
   DASHBOARD: '/dashboard',
   POST_CREATE: '/posts/create',
@@ -19,6 +21,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   WALLET: '/wallet',
   CHAT: (applicationId = ':applicationId') => `/chat/${applicationId}`,
+  CHAT_INBOX: '/chat',
   NOTIFICATIONS: '/notifications',
 
   ADMIN: '/admin',

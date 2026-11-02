@@ -17,3 +17,14 @@ export interface ChatRoom {
   contact?: ContactInfo
   messages: ChatMessage[]
 }
+
+/** Một dòng trong hộp thư: cuộc trò chuyện với một đối tác. */
+export interface ChatThread {
+  /** Mock: applicationId. Mở bằng ROUTES.CHAT(id). */
+  id: string
+  partnerName: string
+  partnerAvatarUrl?: string
+  lastMessage?: string
+  lastMessageAt?: string
+  unreadCount: number
+}

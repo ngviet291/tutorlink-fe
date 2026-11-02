@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Navbar } from './Navbar'
 import { Sidebar } from './Sidebar'
 import { MobileBottomNav } from './MobileBottomNav'
+import { ChatbotWidget } from '@/features/chatbot/components/ChatbotWidget'
 
 export function AppLayout() {
   return (
@@ -14,6 +15,7 @@ export function AppLayout() {
         </main>
       </div>
       <MobileBottomNav />
+      <ChatbotWidget />
     </div>
   )
 }

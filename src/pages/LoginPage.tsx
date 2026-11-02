@@ -24,6 +24,7 @@ export default function LoginPage() {
         <Input label="Email" type="email" autoComplete="email" leftIcon={<Mail className="size-4" />} error={errors.email?.message} {...register('email', rules.email)} />
         <Input label="Mật khẩu" type="password" autoComplete="current-password" leftIcon={<Lock className="size-4" />} error={errors.password?.message} {...register('password', { required: 'Mật khẩu là bắt buộc' })} />
         {login.isError && <p role="alert" className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300">{getErrorMessage(login.error)}</p>}
+        <div className="-mt-2 text-right"><Link to={ROUTES.FORGOT_PASSWORD} className="text-sm font-semibold text-primary hover:underline">Quên mật khẩu?</Link></div>
         <Button type="submit" size="lg" fullWidth loading={login.isPending}>Đăng nhập</Button>
         <p className="text-center text-sm text-text-secondary">
           Chưa có tài khoản? <Link to={ROUTES.REGISTER} className="font-semibold text-primary hover:underline">Đăng ký ngay</Link>

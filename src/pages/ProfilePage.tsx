@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form'
-import { CITIES } from '@/constants/enums'
+import { PROVINCES } from '@/constants/enums'
 import { Button } from '@/shared/components/ui/Button'
 import { Input } from '@/shared/components/ui/Input'
 import { PageHeader } from '@/shared/components/ui/PageHeader'
@@ -25,7 +25,7 @@ export default function ProfilePage() {
   const change = useChangePassword()
 
   const info = useForm<UpdateProfilePayload>({
-    defaultValues: { fullName: user?.fullName, phone: user?.phone, city: user?.address?.city ?? CITIES[0], district: user?.address?.district ?? '' },
+    defaultValues: { fullName: user?.fullName, phone: user?.phone, address: { province: user?.address?.province ?? PROVINCES[0], ward: user?.address?.ward ?? '' } },
   })
   const pw = useForm<PwForm>()
 
@@ -48,8 +48,8 @@ export default function ProfilePage() {
           <Input label="Email" value={user.email} disabled readOnly hint="Email không thể thay đổi" />
           <Input label="Số điện thoại" required error={info.formState.errors.phone?.message} {...info.register('phone', rules.phone)} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select label="Tỉnh / Thành phố" options={CITIES.map((c) => ({ value: c, label: c }))} {...info.register('city')} />
-            <Input label="Quận / Huyện" required error={info.formState.errors.district?.message} {...info.register('district', { required: 'Bắt buộc' })} />
+            <Select label="Tỉnh / Thành phố" options={PROVINCES.map((c) => ({ value: c, label: c }))} {...info.register('address.province')} />
+            <Input label="Phường / Xã (không bắt buộc)" {...info.register('address.ward')} />
           </div>
           <div className="flex justify-end"><Button type="submit" loading={update.isPending}>Lưu thay đổi</Button></div>
         </form>

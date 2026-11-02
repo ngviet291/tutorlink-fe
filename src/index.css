@@ -20,6 +20,8 @@
   --color-info: #3B82F6;
   --color-online: #22C55E;
   --color-offline: #6B7280;
+  --color-surface-secondary: #F5EFEB;
+  --color-text-tertiary: #9A8278;
 }
 
 .dark {
@@ -32,6 +34,8 @@
   --color-border: #3D2518;
   --color-text: #F5EDE9;
   --color-text-secondary: #C4A090;
+  --color-surface-secondary: #2A1810;
+  --color-text-tertiary: #8F7366;
 }
 
 @theme inline {
@@ -52,6 +56,10 @@
   --color-info: var(--color-info);
   --color-online: var(--color-online);
   --color-offline: var(--color-offline);
+  --color-surface-secondary: var(--color-surface-secondary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-error: var(--color-danger);
+  --color-bg: var(--color-background);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 

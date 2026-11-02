@@ -1,55 +1,23 @@
-import type { AuthUser } from '@/features/user/types/user.types'
-
-const ACCESS = 'tl_access_token'
-const REFRESH = 'tl_refresh_token'
-const USER = 'tl_user'
-
-function safeGet(key: string): string | null {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    return null
-  }
-}
-
-function safeSet(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    /* bỏ qua: private mode */
-  }
-}
-
-function safeRemove(key: string): void {
-  try {
-    localStorage.removeItem(key)
-  } catch {
-    /* bỏ qua */
-  }
-}
+const ACCESS_KEY = 'tl_access'
+const REFRESH_KEY = 'tl_refresh'
 
 export const tokenStorage = {
-  getAccessToken: (): string | null => safeGet(ACCESS),
-  getRefreshToken: (): string | null => safeGet(REFRESH),
+  getAccessToken(): string | null {
+    try { return localStorage.getItem(ACCESS_KEY) } catch { return null }
+  },
+  getRefreshToken(): string | null {
+    try { return localStorage.getItem(REFRESH_KEY) } catch { return null }
+  },
   setTokens(access: string, refresh: string): void {
-    safeSet(ACCESS, access)
-    safeSet(REFRESH, refresh)
-  },
-  getUser(): AuthUser | null {
-    const raw = safeGet(USER)
-    if (!raw) return null
     try {
-      return JSON.parse(raw) as AuthUser
-    } catch {
-      return null
-    }
+      localStorage.setItem(ACCESS_KEY, access)
+      localStorage.setItem(REFRESH_KEY, refresh)
+    } catch { /* ignore */ }
   },
-  setUser(user: AuthUser): void {
-    safeSet(USER, JSON.stringify(user))
-  },
-  clear(): void {
-    safeRemove(ACCESS)
-    safeRemove(REFRESH)
-    safeRemove(USER)
+  clearTokens(): void {
+    try {
+      localStorage.removeItem(ACCESS_KEY)
+      localStorage.removeItem(REFRESH_KEY)
+    } catch { /* ignore */ }
   },
 }

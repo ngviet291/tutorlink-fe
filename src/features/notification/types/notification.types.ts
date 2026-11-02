@@ -1,18 +1,12 @@
-export type NotificationType =
-  | 'REGISTERED'
-  | 'POST_PUBLISHED'
-  | 'PROFILE_REVIEWED'
-  | 'NEW_APPLICATION'
-  | 'SELECTED'
-  | 'PAYMENT_SUCCESS'
-  | 'NEW_MESSAGE'
+import type { NotificationType } from '@/shared/types/common.types'
 
 export interface NotificationResponse {
   id: string
-  type: NotificationType
   title: string
-  body: string
-  read: boolean
+  content: string
+  notificationType: NotificationType
+  isRead: boolean
   createdAt: string
-  link?: string
 }
+
+export { type NotificationType }

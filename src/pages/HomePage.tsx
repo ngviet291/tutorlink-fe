@@ -130,8 +130,8 @@ function Testimonials() {
 export default function HomePage() {
   const user = useAppSelector((s) => s.auth.user)
   const subjects = useSubjects()
-  const tutors = useTutors({ pageSize: 4 })
-  const posts = usePosts({ type: 'FIND_TUTOR', pageSize: 6 })
+  const tutors = useTutors({ limit: 4 })
+  const posts = usePosts({ type: 'FIND_TUTOR', limit: 6 })
 
   return (
     <>
@@ -161,7 +161,7 @@ export default function HomePage() {
           <SectionHead title="Gia Sư Được Đánh Giá Cao" to={ROUTES.FIND_TUTOR} />
           {tutors.isLoading ? <CardGridSkeleton count={4} /> : tutors.isError ? <ErrorState onRetry={() => void tutors.refetch()} /> : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {tutors.data?.items.map((t) => <TutorCard key={t.id} tutor={t} />)}
+              {tutors.data?.pages[0]?.items.map((t) => <TutorCard key={t.id} tutor={t} />)}
             </div>
           )}
         </section>
@@ -170,7 +170,7 @@ export default function HomePage() {
           <SectionHead title="Lớp Học Đang Tuyển Gia Sư" to={ROUTES.FIND_CLASS} />
           {posts.isLoading ? <CardGridSkeleton count={6} /> : posts.isError ? <ErrorState onRetry={() => void posts.refetch()} /> : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {posts.data?.items.map((p) => <PostCard key={p.id} post={p} />)}
+              {posts.data?.pages[0]?.items.map((p) => <PostCard key={p.id} post={p} />)}
             </div>
           )}
           <div className="mt-6 text-center">

@@ -1,56 +1,92 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/constants/queryKeys'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminService } from '../service/admin.service'
+import type { AdminPostFilter } from '@/features/post/types/post.types'
+import type { AdminTransactionFilter } from '@/features/wallet/types/wallet.types'
 import type { AccountStatus } from '@/shared/types/common.types'
-import type { PostFilter } from '@/features/post/types/post.types'
-import type { TransactionFilter } from '@/features/wallet/types/wallet.types'
 import type { ComplaintDecisionPayload, FeeRatePayload, ProfileReviewPayload } from '../types/admin.types'
 
-export const usePendingTutors = () =>
-  useQuery({ queryKey: queryKeys.admin.pendingTutors, queryFn: adminService.getPendingTutors })
+export const adminKeys = {
+  all: ['admin'] as const,
+  users: ['admin', 'users'] as const,
+  pendingTutors: ['admin', 'tutors', 'pending'] as const,
+  posts: ['admin', 'posts'] as const,
+  transactions: ['admin', 'transactions'] as const,
+  feeRates: ['admin', 'fee-rates'] as const,
+  complaints: ['admin', 'complaints'] as const,
+  stats: ['admin', 'stats'] as const,
+}
 
-export const useAdminUsers = (params: { keyword?: string; page?: number }) =>
-  useQuery({ queryKey: queryKeys.admin.users(params), queryFn: () => adminService.getUsers(params), placeholderData: keepPreviousData })
+export function useAdminUsers(params: { keyword?: string; page?: number; pageSize?: number } = {}) {
+  return useQuery({ queryKey: [...adminKeys.users, params], queryFn: () => adminService.getUsers(params) })
+}
 
-export const useAdminPosts = (params: PostFilter) =>
-  useQuery({ queryKey: queryKeys.admin.posts(params), queryFn: () => adminService.getPosts(params), placeholderData: keepPreviousData })
+export function usePendingTutors() {
+  return useQuery({ queryKey: adminKeys.pendingTutors, queryFn: () => adminService.getPendingTutors() })
+}
 
-export const useAdminTransactions = (params: TransactionFilter) =>
-  useQuery({ queryKey: queryKeys.admin.transactions(params), queryFn: () => adminService.getTransactions(params), placeholderData: keepPreviousData })
+export function useAdminPosts(params: AdminPostFilter = {}) {
+  return useQuery({ queryKey: [...adminKeys.posts, params], queryFn: () => adminService.getPosts(params) })
+}
 
-export const useFeeRates = () => useQuery({ queryKey: queryKeys.admin.feeRates, queryFn: adminService.getFeeRates })
-export const useComplaints = () => useQuery({ queryKey: queryKeys.admin.complaints, queryFn: adminService.getComplaints })
-export const useAdminStats = () => useQuery({ queryKey: queryKeys.admin.stats, queryFn: adminService.getStats })
+export function useAdminTransactions(params: AdminTransactionFilter = {}) {
+  return useQuery({ queryKey: [...adminKeys.transactions, params], queryFn: () => adminService.getTransactions(params) })
+}
+
+export function useFeeRates() {
+  return useQuery({ queryKey: adminKeys.feeRates, queryFn: () => adminService.getFeeRates() })
+}
+
+export function useComplaints() {
+  return useQuery({ queryKey: adminKeys.complaints, queryFn: () => adminService.getComplaints() })
+}
+
+export function useRevenueStatistics(range: { from?: string; to?: string } = {}) {
+  return useQuery({ queryKey: [...adminKeys.transactions, 'revenue', range], queryFn: () => adminService.getRevenueStatistics(range) })
+}
+
+export function useAdminStats() {
+  return useQuery({ queryKey: adminKeys.stats, queryFn: () => adminService.getStats() })
+}
 
 export function useAdminMutations() {
   const qc = useQueryClient()
-  const refresh = () => qc.invalidateQueries({ queryKey: ['admin'] })
+  const refresh = () => qc.invalidateQueries({ queryKey: adminKeys.all })
+
   return {
+    setUserStatus: useMutation({
+      mutationFn: ({ id, status }: { id: string; status: AccountStatus }) => adminService.setUserStatus(id, status),
+      onSuccess: refresh,
+    }),
     reviewTutor: useMutation({
-      mutationFn: (v: { id: string; payload: ProfileReviewPayload }) => adminService.reviewTutor(v.id, v.payload),
-      onSuccess: async () => {
-        await refresh()
-        await qc.invalidateQueries({ queryKey: queryKeys.tutors.all })
+      mutationFn: ({ id, payload }: { id: string; payload: ProfileReviewPayload }) => adminService.reviewTutor(id, payload),
+      onSuccess: () => {
+        void refresh()
+        void qc.invalidateQueries({ queryKey: ['tutors'] })
       },
     }),
-    setUserStatus: useMutation({
-      mutationFn: (v: { id: string; status: AccountStatus }) => adminService.setUserStatus(v.id, v.status),
+    refundTransaction: useMutation({
+      mutationFn: (id: string) => adminService.refundTransaction(id),
       onSuccess: refresh,
     }),
     removePost: useMutation({
-      mutationFn: (v: { id: string; reason: string }) => adminService.removePost(v.id, v.reason),
-      onSuccess: async () => {
-        await refresh()
-        await qc.invalidateQueries({ queryKey: queryKeys.posts.all })
+      mutationFn: ({ id, reason }: { id: string; reason: string }) => adminService.removePost(id, reason),
+      onSuccess: () => {
+        void refresh()
+        void qc.invalidateQueries({ queryKey: ['posts'] })
+        void qc.invalidateQueries({ queryKey: ['subjects'] })
       },
     }),
-    createFeeRate: useMutation({ mutationFn: (p: FeeRatePayload) => adminService.createFeeRate(p), onSuccess: refresh }),
+    createFeeRate: useMutation({
+      mutationFn: (payload: FeeRatePayload) => adminService.createFeeRate(payload),
+      onSuccess: refresh,
+    }),
     decideComplaint: useMutation({
-      mutationFn: (v: { reviewId: string; payload: ComplaintDecisionPayload }) => adminService.decideComplaint(v.reviewId, v.payload),
-      onSuccess: async () => {
-        await refresh()
-        await qc.invalidateQueries({ queryKey: ['reviews'] })
-        await qc.invalidateQueries({ queryKey: queryKeys.tutors.all })
+      mutationFn: ({ reviewId, payload }: { reviewId: string; payload: ComplaintDecisionPayload }) =>
+        adminService.decideComplaint(reviewId, payload),
+      onSuccess: () => {
+        void refresh()
+        void qc.invalidateQueries({ queryKey: ['reviews'] })
+        void qc.invalidateQueries({ queryKey: ['tutors'] })
       },
     }),
   }

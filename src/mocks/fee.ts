@@ -1,6 +1,11 @@
 import type { ApplicationResponse } from '@/features/application/types/application.types'
-import type { EnrollmentFeeQuote } from '@/features/wallet/types/wallet.types'
 import { feeRates } from './db'
+
+export interface EnrollmentFeeQuote {
+  monthlyTuition: number
+  feeRate: number
+  feeAmount: number
+}
 
 /** Tỉ lệ đang có hiệu lực: bản ghi active có ngày hiệu lực gần nhất không vượt quá hiện tại. */
 export function currentFeeRate(): number {
@@ -17,7 +22,7 @@ export function quoteFor(app: ApplicationResponse): EnrollmentFeeQuote {
   return { monthlyTuition, feeRate, feeAmount: Math.round((monthlyTuition * feeRate) / 1000) * 1000 }
 }
 
-/** Gia sư là bên trả phí: bài FIND_TUTOR → người ứng tuyển; bài FIND_STUDENT → tác giả. */
+/** Gia sư là bên trả phí. */
 export function payerTutorId(app: ApplicationResponse): string {
-  return app.post.type === 'FIND_TUTOR' ? app.applicant.id : app.post.author.id
+  return app.post.type === 'FIND_TUTOR' ? app.tutor.id : app.post.author.id
 }

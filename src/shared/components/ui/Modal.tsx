@@ -1,67 +1,70 @@
-import { useEffect, useId, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
+import { type ReactNode, useEffect } from 'react'
 import { X } from 'lucide-react'
-import { cn } from '@/shared/utils/cn'
 
 interface ModalProps {
   open: boolean
   onClose: () => void
-  title: string
+  title?: string
   children: ReactNode
+  className?: string
+  maxWidth?: string
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   footer?: ReactNode
-  size?: 'sm' | 'md' | 'lg'
 }
 
-const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }
+const SIZE_CLASS = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' } as const
 
-export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
-  const titleId = useId()
-
+export function Modal({ open, onClose, title, children, className = '', maxWidth, size = 'md', footer }: ModalProps) {
+  const widthClass = maxWidth ?? SIZE_CLASS[size]
+  // Close on Escape
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
 
   if (!open) return null
 
-  return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden />
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
       <div
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden
+      />
+
+      {/* Panel */}
+      <div
+        className={`relative max-h-[90vh] w-full overflow-y-auto ${widthClass} rounded-2xl border border-border bg-surface p-6 shadow-2xl ${className}`}
         role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className={cn(
-          'relative flex max-h-[92vh] w-full animate-fade-in flex-col rounded-t-2xl bg-surface shadow-xl sm:rounded-2xl',
-          widths[size],
-        )}
+        aria-modal
       >
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 id={titleId} className="text-lg font-bold text-text">
-            {title}
-          </h2>
+        {title && (
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-text">{title}</h2>
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1 text-text-secondary transition-colors hover:bg-surface-secondary"
+              aria-label="Close"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        )}
+        {!title && (
           <button
-            type="button"
             onClick={onClose}
-            aria-label="Đóng"
-            className="cursor-pointer rounded-lg p-1.5 text-text-secondary hover:bg-surface-hover"
+            className="absolute right-4 top-4 rounded-lg p-1 text-text-secondary transition-colors hover:bg-surface-secondary"
+            aria-label="Close"
           >
             <X className="size-5" />
           </button>
-        </div>
-        <div className="overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="flex flex-wrap justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
+        )}
+        {children}
+        {footer && <div className="mt-5 flex justify-end gap-2">{footer}</div>}
       </div>
-    </div>,
-    document.body,
+    </div>
   )
 }

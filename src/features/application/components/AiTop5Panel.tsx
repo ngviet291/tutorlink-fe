@@ -1,8 +1,7 @@
-import { Brain, Info, RefreshCw } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/shared/components/ui/Badge'
-import { Button } from '@/shared/components/ui/Button'
-import { EmptyState, ErrorState } from '@/shared/components/ui/EmptyState'
-import { ListSkeleton } from '@/shared/components/ui/Skeleton'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { useAiTop5 } from '../hooks/useApplications'
 import { ApplicantRow } from './ApplicantRow'
 import type { ApplicationResponse } from '../types/application.types'
@@ -11,47 +10,38 @@ interface Props {
   postId: string
   canSelect: boolean
   onSelect: (a: ApplicationResponse) => void
-  /** Số lượt đăng ký còn PENDING — nếu 0 thì không gọi AI */
   pendingCount: number
 }
 
 export function AiTop5Panel({ postId, canSelect, onSelect, pendingCount }: Props) {
-  const { data, isLoading, isError, refetch, isFetching } = useAiTop5(postId, pendingCount > 0)
-  const fallback = data?.source === 'RULE_BASED'
+  const { t } = useTranslation()
+  const { data, isLoading, isError } = useAiTop5(postId, pendingCount >= 3)
+
+  if (pendingCount < 3) return null
 
   return (
-    <section aria-labelledby="ai-top5" className="rounded-3xl border-2 border-primary/30 bg-primary-light/40 p-4 sm:p-5">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Brain className="size-6 text-primary" />
-        <h2 id="ai-top5" className="text-lg font-extrabold text-text">AI gợi ý Top 5</h2>
-        {data && (fallback ? <Badge tone="yellow">Gợi ý theo quy tắc</Badge> : <Badge tone="orange">Gợi ý bởi AI</Badge>)}
-        <Button variant="ghost" size="sm" className="ml-auto" onClick={() => void refetch()} loading={isFetching && !isLoading} aria-label="Làm mới gợi ý">
-          <RefreshCw className="size-4" />
-        </Button>
+    <section className="rounded-2xl border border-primary/30 bg-primary-light/30 p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Sparkles className="size-5 text-primary" />
+        <h2 className="font-extrabold text-primary">{t('ai.top5Title')}</h2>
+        {data?.source && (
+          <Badge tone={data.source === 'AI' ? 'blue' : 'gray'}>
+            {data.source === 'AI' ? t('ai.sourceAi') : t('ai.sourceRule')}
+          </Badge>
+        )}
       </div>
-
-      <p className="mb-4 flex items-start gap-2 rounded-xl bg-surface px-3 py-2 text-xs text-text-secondary">
-        <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-        Chỉ mang tính tham khảo. Điểm được tính theo môn học, khu vực, lịch dạy, kinh nghiệm và đánh giá (đồng điểm ưu tiên đăng ký sớm). Bạn có thể chọn bất kỳ ứng viên nào.
-      </p>
-
-      {fallback && (
-        <p role="status" className="mb-3 rounded-xl bg-amber-100 px-3 py-2 text-xs font-medium text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-          Dịch vụ AI tạm thời không khả dụng — đang hiển thị bảng điểm theo quy tắc.
-        </p>
-      )}
-
-      {pendingCount === 0 ? (
-        <EmptyState title="Chưa có ứng viên để gợi ý" description="Gợi ý sẽ xuất hiện khi có lượt đăng ký đang chờ." />
-      ) : isLoading ? (
-        <ListSkeleton rows={3} />
+      <p className="mb-4 text-xs text-text-secondary">{t('ai.top5Desc')}</p>
+      {isLoading ? (
+        <Skeleton className="h-24 w-full" />
       ) : isError ? (
-        <ErrorState message="Không thể tải gợi ý. Bạn vẫn có thể chọn từ danh sách đầy đủ bên dưới." onRetry={() => void refetch()} />
-      ) : (
-        <ol className="flex flex-col gap-3">
-          {data?.items.map((a) => <ApplicantRow key={a.id} application={a} canSelect={canSelect} onSelect={onSelect} showAi />)}
-        </ol>
-      )}
+        <p className="text-sm text-danger">{t('ai.unavailable')}</p>
+      ) : data?.items.length ? (
+        <ul className="flex flex-col gap-2">
+          {data.items.map((a) => (
+            <ApplicantRow key={a.id} application={a} canSelect={canSelect} onSelect={onSelect} showAi />
+          ))}
+        </ul>
+      ) : null}
     </section>
   )
 }

@@ -1,8 +1,9 @@
 import { http } from '@/config/axiosClient'
 import { env } from '@/config/env'
 import { ApiError } from '@/shared/types/api.types'
+import { ERROR_MESSAGES } from '@/constants/errorMessage'
 import type { AuthUser, ChangePasswordPayload, UpdateProfilePayload } from '../types/user.types'
-import { DEMO_PASSWORD, contacts, passwords } from '@/mocks/db'
+import { DEMO_PASSWORD, passwords, users } from '@/mocks/db'
 import { delay, requireUser } from '@/mocks/session'
 
 const USE_MOCK = env.useMock
@@ -22,12 +23,12 @@ export const userService = {
       const me = requireUser()
       me.fullName = payload.fullName
       me.phone = payload.phone
-      me.address = { city: payload.city, district: payload.district }
-      const c = contacts[me.id]
-      if (c) c.phone = payload.phone
+      me.gender = payload.gender
+      me.dateOfBirth = payload.dateOfBirth
+      me.address = payload.address
       return { ...me }
     }
-    return http.put<AuthUser>('/v1/users/me', payload) // TODO: nối API
+    return http.put<AuthUser>('/v1/users/me', payload)
   },
 
   async changePassword(payload: ChangePasswordPayload): Promise<void> {
@@ -35,11 +36,11 @@ export const userService = {
       await delay()
       const me = requireUser()
       if (payload.currentPassword !== (passwords[me.id] ?? DEMO_PASSWORD)) {
-        throw new ApiError('Mật khẩu hiện tại không đúng.', 'WRONG_PASSWORD', 400)
+        throw new ApiError('Wrong password', 'WRONG_PASSWORD', 400)
       }
       passwords[me.id] = payload.newPassword
       return
     }
-    await http.put<void>('/v1/users/me/password', payload) // TODO: nối API
+    await http.put<void>('/v1/auth/reset-password', payload)
   },
 }

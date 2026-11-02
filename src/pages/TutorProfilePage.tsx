@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
-import { Controller, useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm } from 'react-hook-form'
 import { CheckCircle2, Clock, Plus, Trash2, XCircle } from 'lucide-react'
-import { CITIES, TEACHING_MODES, TEACHING_MODE_LABEL } from '@/constants/enums'
+import { PROVINCES, TEACHING_MODES, TEACHING_MODE_LABEL } from '@/constants/enums'
 import { Button } from '@/shared/components/ui/Button'
 import { ErrorState } from '@/shared/components/ui/EmptyState'
 import { Input } from '@/shared/components/ui/Input'
@@ -20,14 +20,14 @@ function StatusBanner({ tutor }: { tutor: TutorResponse }) {
     PENDING: { Icon: Clock, cls: 'bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200', title: 'Hồ sơ đang chờ Admin duyệt', body: 'Bạn chưa hiển thị công khai và chưa thể đăng ký nhận lớp. Chúng tôi sẽ thông báo ngay khi có kết quả.' },
     APPROVED: { Icon: CheckCircle2, cls: 'bg-green-100 text-green-900 dark:bg-green-500/20 dark:text-green-200', title: 'Hồ sơ đã được duyệt', body: 'Hồ sơ của bạn đã hiển thị công khai. Bạn có thể đăng ký nhận lớp.' },
     REJECTED: { Icon: XCircle, cls: 'bg-red-100 text-red-900 dark:bg-red-500/20 dark:text-red-200', title: 'Hồ sơ bị từ chối', body: 'Vui lòng xem ghi chú của Admin, chỉnh sửa và gửi lại.' },
-  }[tutor.profileStatus]
+  }[tutor.verificationStatus]
   return (
     <div role="status" className={`flex items-start gap-3 rounded-2xl p-4 ${map.cls}`}>
       <map.Icon className="mt-0.5 size-5 shrink-0" />
       <div>
         <p className="font-bold">{map.title}</p>
         <p className="text-sm opacity-90">{map.body}</p>
-        {tutor.reviewNote && <p className="mt-2 rounded-lg bg-white/60 p-2 text-sm dark:bg-black/20"><strong>Ghi chú của Admin:</strong> {tutor.reviewNote}</p>}
+        {tutor.verificationNote && <p className="mt-2 rounded-lg bg-white/60 p-2 text-sm dark:bg-black/20"><strong>Ghi chú của Admin:</strong> {tutor.verificationNote}</p>}
       </div>
     </div>
   )
@@ -39,16 +39,16 @@ export default function TutorProfilePage() {
   const { data: subjects } = useSubjects()
   const save = useSaveTutorProfile()
   const { register, control, handleSubmit, reset, formState: { errors } } = useForm<TutorProfilePayload>({
-    defaultValues: { subjectIds: [], experienceYears: 0, hourlyRate: 100000, teachingMode: 'BOTH', city: CITIES[0], certificates: [] },
+    defaultValues: { subjectId: '', experienceYears: 0, hourlyRate: 100000, teachingMode: 'BOTH', address: { province: PROVINCES[0] }, certificates: [] },
   })
   const { fields, append, remove } = useFieldArray({ control, name: 'certificates' })
 
   useEffect(() => {
     if (!data) return
     reset({
-      subjectIds: data.subjects.map((s) => s.id), experienceYears: data.experienceYears, education: data.education ?? '',
-      hourlyRate: data.hourlyRate || 100000, bio: data.bio ?? '', city: data.city ?? CITIES[0], district: data.district ?? '',
-      teachingMode: data.teachingMode ?? 'BOTH', certificates: data.certificates.map((c) => ({ name: c.name, issuer: c.issuer, year: c.year })),
+      subjectId: data.subject?.id ?? '', experienceYears: data.experienceYears, education: data.education ?? '',
+      hourlyRate: data.hourlyRate || 100000, bio: data.bio ?? '', address: { province: data.address?.province ?? PROVINCES[0] },
+      teachingMode: data.teachingMode ?? 'BOTH', certificates: (data.certificates ?? []).map((c) => ({ name: c.name, issuer: c.issuer, year: c.year })),
     })
   }, [data, reset])
 
@@ -57,7 +57,7 @@ export default function TutorProfilePage() {
 
   const submit = handleSubmit((v) =>
     save.mutate(v, {
-      onSuccess: () => toast.success(data.profileStatus === 'APPROVED' ? 'Đã cập nhật hồ sơ' : 'Đã gửi hồ sơ, vui lòng chờ Admin duyệt'),
+      onSuccess: () => toast.success(data.verificationStatus === 'APPROVED' ? 'Đã cập nhật hồ sơ' : 'Đã gửi hồ sơ, vui lòng chờ Admin duyệt'),
       onError: (e) => toast.error(getErrorMessage(e)),
     }),
   )
@@ -68,31 +68,18 @@ export default function TutorProfilePage() {
       <StatusBanner tutor={data} />
 
       <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6">
-        <Controller
-          control={control} name="subjectIds" rules={{ validate: (v) => v.length > 0 || 'Chọn ít nhất 1 môn dạy' }}
-          render={({ field, fieldState }) => (
-            <fieldset>
-              <legend className="mb-2 text-sm font-medium text-text">Môn dạy <span className="text-danger">*</span></legend>
-              <div className="flex flex-wrap gap-2">
-                {(subjects ?? []).map((s) => {
-                  const on = field.value.includes(s.id)
-                  return (
-                    <label key={s.id} className={`cursor-pointer rounded-full border px-3 py-1.5 text-sm font-medium ${on ? 'border-primary bg-primary text-white' : 'border-border text-text-secondary hover:border-primary'}`}>
-                      <input type="checkbox" className="sr-only" checked={on} onChange={() => field.onChange(on ? field.value.filter((x) => x !== s.id) : [...field.value, s.id])} />
-                      {s.name}
-                    </label>
-                  )
-                })}
-              </div>
-              {fieldState.error && <p role="alert" className="mt-1 text-xs text-danger">{fieldState.error.message}</p>}
-            </fieldset>
-          )}
+        <Select
+          label="Môn dạy"
+          required
+          placeholder="Chọn môn dạy"
+          options={(subjects ?? []).map((s) => ({ value: s.id, label: s.name }))}
+          error={errors.subjectId?.message}
+          {...register('subjectId', { required: 'Chọn ít nhất 1 môn dạy' })}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Số năm kinh nghiệm" type="number" required error={errors.experienceYears?.message} {...register('experienceYears', { valueAsNumber: true, required: 'Bắt buộc', min: { value: 0, message: 'Không âm' }, max: { value: 50, message: 'Tối đa 50' } })} />
           <Input label="Giá mỗi giờ (VNĐ)" type="number" required error={errors.hourlyRate?.message} {...register('hourlyRate', { valueAsNumber: true, required: 'Bắt buộc', min: { value: 50000, message: 'Tối thiểu 50.000đ' } })} />
-          <Select label="Tỉnh / Thành phố" options={CITIES.map((c) => ({ value: c, label: c }))} {...register('city')} />
-          <Input label="Quận / Huyện" required error={errors.district?.message} {...register('district', { required: 'Bắt buộc' })} />
+          <Select label="Tỉnh / Thành phố" options={PROVINCES.map((c) => ({ value: c, label: c }))} {...register('address.province')} />
           <Select label="Hình thức dạy" options={TEACHING_MODES.map((m) => ({ value: m, label: TEACHING_MODE_LABEL[m] }))} {...register('teachingMode')} />
           <Input label="Học vấn" required placeholder="VD: Cử nhân Sư phạm Toán — ĐH Sư phạm" error={errors.education?.message} {...register('education', { required: 'Bắt buộc' })} />
         </div>
@@ -112,7 +99,7 @@ export default function TutorProfilePage() {
         </fieldset>
 
         <div className="flex justify-end border-t border-border pt-4">
-          <Button type="submit" loading={save.isPending}>{data.profileStatus === 'REJECTED' ? 'Gửi lại để duyệt' : 'Lưu hồ sơ'}</Button>
+          <Button type="submit" loading={save.isPending}>{data.verificationStatus === 'REJECTED' ? 'Gửi lại để duyệt' : 'Lưu hồ sơ'}</Button>
         </div>
       </form>
     </div>

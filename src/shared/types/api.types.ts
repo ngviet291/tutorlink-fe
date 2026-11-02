@@ -1,7 +1,13 @@
 export interface ApiResponse<T> {
-  success: boolean
-  message?: string
+  code: string
+  message: string
   data: T
+}
+
+export interface CursorResponse<T> {
+  items: T[]
+  nextCursor: string | null
+  hasMore: boolean
 }
 
 export interface PageResponse<T> {
@@ -10,12 +16,6 @@ export interface PageResponse<T> {
   pageSize: number
   totalItems: number
   totalPages: number
-}
-
-export interface PageParams {
-  page?: number
-  pageSize?: number
-  keyword?: string
 }
 
 export interface ApiErrorBody {

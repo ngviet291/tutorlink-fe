@@ -1,26 +1,26 @@
 import {
-  ACCOUNT_STATUS_META,
   APPLICATION_STATUS_META,
   POST_STATUS_META,
-  PROFILE_STATUS_META,
   TRANSACTION_STATUS_META,
+  VERIFICATION_STATUS_META,
+  USER_STATUS_META,
   type BadgeTone,
 } from '@/constants/enums'
 import type {
-  AccountStatus,
   ApplicationStatus,
   PostStatus,
-  ProfileStatus,
   TransactionStatus,
+  UserStatus,
+  VerificationStatus,
 } from '@/shared/types/common.types'
 import { Badge } from './Badge'
 
 type StatusBadgeProps =
   | { kind: 'post'; status: PostStatus; className?: string }
   | { kind: 'application'; status: ApplicationStatus; className?: string }
-  | { kind: 'profile'; status: ProfileStatus; className?: string }
+  | { kind: 'verification'; status: VerificationStatus; className?: string }
   | { kind: 'transaction'; status: TransactionStatus; className?: string }
-  | { kind: 'account'; status: AccountStatus; className?: string }
+  | { kind: 'user'; status: UserStatus; className?: string }
 
 function resolve(props: StatusBadgeProps): { label: string; tone: BadgeTone } {
   switch (props.kind) {
@@ -28,12 +28,12 @@ function resolve(props: StatusBadgeProps): { label: string; tone: BadgeTone } {
       return POST_STATUS_META[props.status]
     case 'application':
       return APPLICATION_STATUS_META[props.status]
-    case 'profile':
-      return PROFILE_STATUS_META[props.status]
+    case 'verification':
+      return VERIFICATION_STATUS_META[props.status]
     case 'transaction':
       return TRANSACTION_STATUS_META[props.status]
-    case 'account':
-      return ACCOUNT_STATUS_META[props.status]
+    case 'user':
+      return USER_STATUS_META[props.status]
   }
 }
 

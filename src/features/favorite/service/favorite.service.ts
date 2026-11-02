@@ -12,7 +12,7 @@ export const favoriteService = {
       await delay(250)
       const me = requireUser()
       const ids = favorites[me.id] ?? []
-      return tutors.filter((t) => ids.includes(t.id) && t.profileStatus === 'APPROVED').map((t) => ({ ...t, contact: undefined }))
+      return tutors.filter((t) => ids.includes(t.id) && t.verificationStatus === 'APPROVED').map((t) => ({ ...t, contact: undefined }))
     }
     return http.get<TutorResponse[]>('/v1/favorites') // TODO: nối API
   },

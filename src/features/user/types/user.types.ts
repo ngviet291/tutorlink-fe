@@ -1,17 +1,38 @@
-import type { AccountStatus, Address, Role } from '@/shared/types/common.types'
+import type { Address, Gender, Role, UserStatus } from '@/shared/types/common.types'
 
-export interface AuthUser {
+export interface BaseUserResponse {
   id: string
   fullName: string
   email: string
   phone: string
-  role: Role
   avatarUrl?: string
-  address?: Address
-  status: AccountStatus
-  /** Chỉ có với gia sư: trạng thái duyệt hồ sơ */
-  profileStatus?: 'PENDING' | 'APPROVED' | 'REJECTED'
+  gender: Gender
+  dateOfBirth: string
+  address: Address
+  userStatus: UserStatus
+  role: Role
+  createdAt?: string
 }
+
+export interface StudentSummary {
+  id: string
+  fullName: string
+  avatarUrl?: string
+}
+
+export interface StudentResponse extends BaseUserResponse {
+  grade?: string
+  learningGoal?: string
+}
+
+export interface TutorUserResponse extends BaseUserResponse {
+  bio?: string
+  education?: string
+  experienceYears?: number
+  hourlyRate?: number
+}
+
+export type AuthUser = BaseUserResponse
 
 export interface ContactInfo {
   phone: string
@@ -23,29 +44,16 @@ export interface AuthorResponse {
   fullName: string
   avatarUrl?: string
   role: Role
-  /** Luôn là dạng đã mask khi chưa mở khóa, ví dụ 09xx xxx xxx */
-  maskedPhone: string
+  /** Chỉ có sau khi kết nối thành công */
   contact?: ContactInfo
-}
-
-export interface StudentSummary {
-  id: string
-  fullName: string
-  avatarUrl?: string
-  educationLevel?: string
-  city?: string
-  contact?: ContactInfo
-}
-
-export interface UserAdminRow extends AuthUser {
-  createdAt: string
 }
 
 export interface UpdateProfilePayload {
   fullName: string
   phone: string
-  city: string
-  district: string
+  gender: Gender
+  dateOfBirth: string
+  address: Address
 }
 
 export interface ChangePasswordPayload {

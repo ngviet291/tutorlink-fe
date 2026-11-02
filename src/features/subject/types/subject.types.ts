@@ -1,14 +1,13 @@
-export interface SubjectSummaryResponse {
+export interface SubjectResponse {
   id: string
   name: string
-}
-
-export interface SubjectResponse extends SubjectSummaryResponse {
   description?: string
-  usageCount: number
+  usageCount?: number
 }
 
 export interface SubjectPayload {
   name: string
   description?: string
 }
+
+export type SubjectSummaryResponse = Pick<SubjectResponse, 'id' | 'name'>

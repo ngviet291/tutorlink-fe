@@ -5,16 +5,18 @@ import { ERROR_MESSAGES } from '@/constants/errorMessage'
 import type { AccountStatus } from '@/shared/types/common.types'
 import type { TutorResponse } from '@/features/tutor/types/tutor.types'
 import type { PostResponse } from '@/features/post/types/post.types'
-import type { PostFilter } from '@/features/post/types/post.types'
-import type { UserAdminRow } from '@/features/user/types/user.types'
-import type { TransactionFilter, TransactionResponse } from '@/features/wallet/types/wallet.types'
+import type { AdminPostFilter } from '@/features/post/types/post.types'
+import type { BaseUserResponse } from '@/features/user/types/user.types'
+import type { AdminTransactionFilter, TransactionResponse } from '@/features/wallet/types/wallet.types'
 import type {
   AdminStats, ComplaintDecisionPayload, FeeRateConfig, FeeRatePayload, ProfileReviewPayload, ReviewComplaint,
 } from '../types/admin.types'
 import {
-  applications, feeRates, nextId, notifications, posts, recountSubjectUsage, reviews, revenueHistory, transactions, tutors, users,
+  applications, feeRates, nextId, notifications, posts, recountSubjectUsage, reviews, revenueHistory, transactions, tutors, users, wallets,
 } from '@/mocks/db'
 import { delay, paginate, requireUser } from '@/mocks/session'
+import { fromBeTransaction } from '@/features/wallet/service/wallet.service'
+import type { RevenueStatistics } from '@/features/wallet/types/wallet.types'
 import { recomputeRating } from '@/features/review/service/review.service'
 
 const USE_MOCK = env.useMock
@@ -29,7 +31,7 @@ export const adminService = {
     if (USE_MOCK) {
       await delay()
       requireAdmin()
-      return tutors.filter((t) => t.profileStatus === 'PENDING')
+      return tutors.filter((t) => t.verificationStatus === 'PENDING')
     }
     return http.get<TutorResponse[]>('/v1/admin/tutors/pending') // TODO: nối API
   },
@@ -40,16 +42,13 @@ export const adminService = {
       requireAdmin()
       const t = tutors.find((x) => x.id === tutorId)
       if (!t) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, 'NOT_FOUND', 404)
-      t.profileStatus = payload.decision
-      t.reviewNote = payload.note || undefined
-      const u = users.find((x) => x.id === tutorId)
-      if (u) u.profileStatus = payload.decision
+      t.verificationStatus = payload.decision
+      t.verificationNote = payload.note || undefined
       notifications[tutorId] = [
         {
-          id: nextId('n'), type: 'PROFILE_REVIEWED', read: false, createdAt: new Date().toISOString(),
+          id: nextId('n'), notificationType: 'SYSTEM' as const, isRead: false, createdAt: new Date().toISOString(),
           title: payload.decision === 'APPROVED' ? 'Hồ sơ gia sư đã được duyệt' : 'Hồ sơ gia sư bị từ chối',
-          body: payload.decision === 'APPROVED' ? 'Bạn có thể đăng ký nhận lớp ngay bây giờ.' : (payload.note ?? 'Vui lòng cập nhật lại hồ sơ.'),
-          link: '/profile/tutor',
+          content: payload.decision === 'APPROVED' ? 'Bạn có thể đăng ký nhận lớp ngay bây giờ.' : (payload.note ?? 'Vui lòng cập nhật lại hồ sơ.'),
         },
         ...(notifications[tutorId] ?? []),
       ]
@@ -58,7 +57,7 @@ export const adminService = {
     return http.put<TutorResponse>(`/v1/admin/tutors/${tutorId}/review`, payload) // TODO: nối API
   },
 
-  async getUsers(params: { keyword?: string; page?: number; pageSize?: number } = {}): Promise<PageResponse<UserAdminRow>> {
+  async getUsers(params: { keyword?: string; page?: number; pageSize?: number } = {}): Promise<PageResponse<BaseUserResponse>> {
     if (USE_MOCK) {
       await delay()
       requireAdmin()
@@ -66,33 +65,33 @@ export const adminService = {
       const list = users.filter((u) => !k || `${u.fullName} ${u.email} ${u.phone}`.toLowerCase().includes(k))
       return paginate(list.map((u) => ({ ...u })), params.page, params.pageSize ?? 10)
     }
-    return http.get<PageResponse<UserAdminRow>>('/v1/admin/users', { params }) // TODO: nối API
+    return http.get<PageResponse<BaseUserResponse>>('/v1/admin/users', params) // TODO: nối API
   },
 
-  async setUserStatus(userId: string, status: AccountStatus): Promise<UserAdminRow> {
+  async setUserStatus(userId: string, status: AccountStatus): Promise<BaseUserResponse> {
     if (USE_MOCK) {
       await delay()
       requireAdmin()
       const u = users.find((x) => x.id === userId)
       if (!u) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, 'NOT_FOUND', 404)
       if (u.role === 'ADMIN') throw new ApiError('Không thể khóa tài khoản Admin.', 'FORBIDDEN', 403)
-      u.status = status
+      u.userStatus = status
       return { ...u }
     }
-    return http.put<UserAdminRow>(`/v1/admin/users/${userId}/status`, { status }) // TODO: nối API
+    return http.put<BaseUserResponse>(`/v1/admin/users/${userId}/status`, { status }) // TODO: nối API
   },
 
-  async getPosts(params: PostFilter = {}): Promise<PageResponse<PostResponse>> {
+  async getPosts(params: AdminPostFilter = {}): Promise<PageResponse<PostResponse>> {
     if (USE_MOCK) {
       await delay()
       requireAdmin()
       const list = posts
-        .filter((p) => !params.status || p.status === params.status)
+        .filter((p) => !params.status || p.postStatus === params.status)
         .filter((p) => !params.keyword || p.title.toLowerCase().includes(params.keyword.toLowerCase()))
         .map((p) => ({ ...p, applicationCount: applications.filter((a) => a.post.id === p.id).length }))
       return paginate(list, params.page, params.pageSize ?? 10)
     }
-    return http.get<PageResponse<PostResponse>>('/v1/admin/posts', { params }) // TODO: nối API
+    return http.get<PageResponse<PostResponse>>('/v1/admin/posts', params) // TODO: nối API
   },
 
   /** Gỡ bài vi phạm → REMOVED. */
@@ -102,9 +101,9 @@ export const adminService = {
       requireAdmin()
       const p = posts.find((x) => x.id === postId)
       if (!p) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, 'NOT_FOUND', 404)
-      p.status = 'REMOVED'
+      p.postStatus = 'REMOVED'
       notifications[p.author.id] = [
-        { id: nextId('n'), type: 'POST_PUBLISHED', title: 'Bài đăng bị gỡ', body: `"${p.title}" đã bị gỡ: ${reason}`, read: false, createdAt: new Date().toISOString() },
+        { id: nextId('n'), notificationType: 'SYSTEM' as const, title: 'Bài đăng bị gỡ', content: `"${p.title}" đã bị gỡ: ${reason}`, isRead: false, createdAt: new Date().toISOString() },
         ...(notifications[p.author.id] ?? []),
       ]
       recountSubjectUsage()
@@ -113,17 +112,17 @@ export const adminService = {
     await http.put<void>(`/v1/admin/posts/${postId}/remove`, { reason }) // TODO: nối API
   },
 
-  async getTransactions(params: TransactionFilter = {}): Promise<PageResponse<TransactionResponse>> {
+  async getTransactions(params: AdminTransactionFilter = {}): Promise<PageResponse<TransactionResponse>> {
     if (USE_MOCK) {
       await delay()
       requireAdmin()
       const list = transactions
-        .filter((t) => !params.status || t.status === params.status)
+        .filter((t) => !params.status || t.transactionStatus === params.status)
         .filter((t) => !params.tutorId || t.tutorId === params.tutorId)
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
       return paginate(list, params.page, params.pageSize ?? 10)
     }
-    return http.get<PageResponse<TransactionResponse>>('/v1/admin/transactions', { params }) // TODO: nối API
+    return http.get<PageResponse<TransactionResponse>>('/v1/admin/transactions', params) // TODO: nối API
   },
 
   async getFeeRates(): Promise<FeeRateConfig[]> {
@@ -141,13 +140,61 @@ export const adminService = {
       requireAdmin()
       if (payload.ratePercent <= 0 || payload.ratePercent > 100) throw new ApiError('Tỉ lệ phải trong khoảng 0–100%.', 'INVALID_RATE', 400)
       const created: FeeRateConfig = {
-        id: nextId('fr'), rate: payload.ratePercent / 100, effectiveFrom: payload.effectiveFrom, createdBy: 'Quản trị viên', active: true,
+        id: nextId('fr'), rate: payload.ratePercent / 100, effectiveFrom: payload.effectiveFrom, createdBy: 'Quản trị viên', active: true, fixedFee: payload.fixedFee ?? 0,
       }
-      for (const f of feeRates) if (new Date(f.effectiveFrom) <= new Date(created.effectiveFrom)) f.active = false
+      for (const f of feeRates) if (f.active && new Date(f.effectiveFrom) <= new Date(created.effectiveFrom)) { f.active = false; f.effectiveTo = created.effectiveFrom }
       feeRates.push(created)
       return created
     }
-    return http.post<FeeRateConfig>('/v1/admin/fee-rates', payload) // TODO: nối API
+    // BE: POST /v1/payments/fee-configs { feePercentage (0..1), fixedFee, effectiveFrom }
+    const r = await http.post<{ id: string; feePercentage: number; fixedFee: number; effectiveFrom: string; effectiveTo?: string }>('/v1/payments/fee-configs', { feePercentage: payload.ratePercent / 100, fixedFee: payload.fixedFee ?? 0, effectiveFrom: payload.effectiveFrom })
+    return { id: r.id, rate: r.feePercentage, fixedFee: r.fixedFee, effectiveFrom: r.effectiveFrom, effectiveTo: r.effectiveTo, createdBy: 'Quản trị viên', active: !r.effectiveTo }
+  },
+
+  /** Hoàn tiền một giao dịch phí nhận lớp (COMMISSION, SUCCESS) → REFUNDED, trả lại ví gia sư. */
+  async refundTransaction(id: string): Promise<TransactionResponse> {
+    if (USE_MOCK) {
+      await delay()
+      requireAdmin()
+      const t = transactions.find((x) => x.id === id)
+      if (!t) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, 'NOT_FOUND', 404)
+      if (t.transactionType !== 'COMMISSION' || t.transactionStatus !== 'SUCCESS') {
+        throw new ApiError('Chỉ hoàn tiền được giao dịch phí nhận lớp đã thành công.', 'NOT_REFUNDABLE', 409)
+      }
+      t.transactionStatus = 'REFUNDED'
+      if (t.tutorId) wallets[t.tutorId] = (wallets[t.tutorId] ?? 0) + t.amount
+      return { ...t }
+    }
+    return fromBeTransaction(await http.post<Parameters<typeof fromBeTransaction>[0]>(`/v1/payments/${id}/refund`))
+  },
+
+  /** Thống kê doanh thu/vận hành trong khoảng ngày (mặc định 12 tháng gần nhất). */
+  async getRevenueStatistics(range: { from?: string; to?: string } = {}): Promise<RevenueStatistics> {
+    if (USE_MOCK) {
+      await delay()
+      requireAdmin()
+      const now = new Date()
+      const from = range.from || new Date(now.getTime() - 365 * 86_400_000).toISOString().slice(0, 10)
+      const to = range.to || now.toISOString().slice(0, 10)
+      const start = new Date(from).getTime()
+      const end = new Date(to).getTime() + 86_400_000
+      const inRange = transactions.filter((t) => { const d = new Date(t.createdAt).getTime(); return d >= start && d < end })
+      const sum = (f: (t: TransactionResponse) => boolean) => inRange.filter(f).reduce((s, t) => s + t.amount, 0)
+      const count = (f: (t: TransactionResponse) => boolean) => inRange.filter(f).length
+      const commission = (t: TransactionResponse) => t.transactionType === 'COMMISSION'
+      return {
+        from, to,
+        totalRevenue: sum((t) => commission(t) && t.transactionStatus === 'SUCCESS'),
+        totalRefunded: sum((t) => commission(t) && t.transactionStatus === 'REFUNDED'),
+        totalTopUp: sum((t) => t.transactionType === 'TOP_UP' && t.transactionStatus === 'SUCCESS'),
+        successCount: count((t) => commission(t) && t.transactionStatus === 'SUCCESS'),
+        failedCount: count((t) => t.transactionStatus === 'FAILED'),
+        refundedCount: count((t) => t.transactionStatus === 'REFUNDED'),
+        topUpCount: count((t) => t.transactionType === 'TOP_UP' && t.transactionStatus === 'SUCCESS'),
+        totalTransactions: inRange.length,
+      }
+    }
+    return http.get<RevenueStatistics>('/v1/payments/statistics/revenue', range)
   },
 
   async getComplaints(): Promise<ReviewComplaint[]> {
@@ -192,19 +239,19 @@ export const adminService = {
       await delay()
       requireAdmin()
       const thisMonth = transactions
-        .filter((t) => t.type === 'ENROLLMENT_FEE' && t.status === 'SUCCESS')
+        .filter((t) => t.transactionType === 'COMMISSION' && t.transactionStatus === 'SUCCESS')
         .reduce((s, t) => s + t.amount, 0)
       const revenueByMonth = [...revenueHistory.slice(0, -1), { label: revenueHistory[revenueHistory.length - 1]?.label ?? 'T10', revenue: (revenueHistory[revenueHistory.length - 1]?.revenue ?? 0) + thisMonth }]
       const statuses = ['DRAFT', 'PUBLISHED', 'CLOSED', 'REMOVED'] as const
-      const paid = applications.filter((a) => a.paid)
+      const paid = applications.filter((a) => a.applicationStatus === 'PAID' || a.applicationStatus === 'FINISHED')
       const byTutor = new Map<string, number>()
       for (const a of paid) {
-        const tid = a.post.type === 'FIND_TUTOR' ? a.applicant.id : a.post.author.id
+        const tid = a.post.type === 'FIND_TUTOR' ? a.tutor.id : a.post.author.id
         byTutor.set(tid, (byTutor.get(tid) ?? 0) + 1)
       }
       return {
         revenueByMonth,
-        postsByStatus: statuses.map((status) => ({ status, count: posts.filter((p) => p.status === status).length })),
+        postsByStatus: statuses.map((status) => ({ status, count: posts.filter((p) => p.postStatus === status).length })),
         totalSuccessfulMatches: paid.length + 18,
         topTutors: [
           ...[...byTutor.entries()].map(([tutorId, c]) => ({ tutorId, fullName: tutors.find((t) => t.id === tutorId)?.fullName ?? '—', matchCount: c + 4 })),

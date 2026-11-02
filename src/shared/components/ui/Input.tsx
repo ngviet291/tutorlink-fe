@@ -27,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           ref={ref}
           id={inputId}
           aria-invalid={Boolean(error)}
-          className={cn(fieldBase, 'h-10', error ? 'border-danger' : 'border-border', leftIcon && 'pl-10', className)}
+          className={cn(fieldBase, 'h-10', error ? 'border-danger' : 'border-border', leftIcon ? 'pl-10' : undefined, className)}
           {...rest}
         />
       </div>

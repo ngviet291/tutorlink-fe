@@ -1,19 +1,15 @@
-import type {
-  EducationLevel,
-  ProfileStatus,
-  TeachingMode,
-} from '@/shared/types/common.types'
+import type { Address, DayOfWeek, EducationLevel, TeachingMode, VerificationStatus } from '@/shared/types/common.types'
+import type { SubjectResponse } from '@/features/subject/types/subject.types'
 import type { ContactInfo } from '@/features/user/types/user.types'
 
 export interface Certificate {
-  id: string
   name: string
   issuer: string
   year: number
 }
 
 export interface ScheduleSlot {
-  day: 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN'
+  day: DayOfWeek
   from: string
   to: string
 }
@@ -28,41 +24,38 @@ export interface TutorResponse {
   hourlyRate: number
   averageRating: number
   reviewCount?: number
-  profileStatus: ProfileStatus
-  reviewNote?: string
-  subjects: { id: string; name: string }[]
-  certificates: Certificate[]
+  verificationStatus: VerificationStatus
+  verificationNote?: string
+  /** BE trả về single subject theo spec mới */
+  subject?: SubjectResponse
+  address?: Address
   teachingMode?: TeachingMode
-  educationLevels?: EducationLevel[]
-  city?: string
-  district?: string
-  schedule?: ScheduleSlot[]
-  maskedPhone?: string
   /** Chỉ có sau khi kết nối thành công */
   contact?: ContactInfo
   createdAt?: string
+  certificates?: Certificate[]
+  educationLevels?: EducationLevel[]
+  schedule?: ScheduleSlot[]
 }
 
 export interface TutorFilter {
-  keyword?: string
-  subjectId?: string
-  city?: string
+  subjectName?: string
+  province?: string
   teachingMode?: TeachingMode | ''
   minRate?: number
   maxRate?: number
-  educationLevels?: EducationLevel[]
-  page?: number
-  pageSize?: number
+  minRating?: number
+  cursor?: string
+  limit?: number
 }
 
 export interface TutorProfilePayload {
-  subjectIds: string[]
+  subjectId: string
   experienceYears: number
   education: string
   hourlyRate: number
   bio: string
-  city: string
-  district: string
+  address: Address
   teachingMode: TeachingMode
-  certificates: { name: string; issuer: string; year: number }[]
+  certificates: Certificate[]
 }

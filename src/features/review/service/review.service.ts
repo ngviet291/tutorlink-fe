@@ -31,9 +31,9 @@ export const reviewService = {
       await delay()
       const me = requireUser()
       const a = applications.find((x) => x.id === payload.applicationId)
-      if (!a || !a.paid) throw new ApiError('Lớp chưa được kết nối nên chưa thể đánh giá.', 'INVALID_STATE', 409)
-      const studentId = a.post.type === 'FIND_TUTOR' ? a.post.author.id : a.applicant.id
-      const tutorId = a.post.type === 'FIND_TUTOR' ? a.applicant.id : a.post.author.id
+      if (!a || (a.applicationStatus !== 'PAID' && a.applicationStatus !== 'FINISHED')) throw new ApiError('Lớp chưa được kết nối nên chưa thể đánh giá.', 'INVALID_STATE', 409)
+      const studentId = a.post.type === 'FIND_TUTOR' ? a.post.author.id : a.tutor.id
+      const tutorId = a.post.type === 'FIND_TUTOR' ? a.tutor.id : a.post.author.id
       if (studentId !== me.id) throw new ApiError(ERROR_MESSAGES.FORBIDDEN, 'FORBIDDEN', 403)
       if (reviews.some((r) => r.id.startsWith(`r-${a.id}`))) throw new ApiError('Bạn đã đánh giá lớp này rồi.', 'ALREADY_REVIEWED', 409)
       const review: ReviewResponse = {
