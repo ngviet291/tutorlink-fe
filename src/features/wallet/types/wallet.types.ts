@@ -10,7 +10,6 @@ export interface TransactionResponse {
   amount: number
   transactionStatus: TransactionStatus
   applicationId?: string
-  /** Gia sư trả phí (dùng cho Admin lọc giao dịch) */
   tutorId?: string
   paymentMethod?: PaymentMethod
   createdAt: string

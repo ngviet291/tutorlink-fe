@@ -37,7 +37,12 @@ export interface PostResponse {
   matchedApplicationId?: string
 
 }
-
+export interface AdminPostFilter {
+  status?: PostStatus;
+  keyword?: string;
+  page?: number;
+  pageSize?: number;
+}
 export interface PostFilter {
   keyword?: string;
   type?: PostType;

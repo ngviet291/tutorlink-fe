@@ -38,7 +38,7 @@ import { fromBeTransaction } from "@/features/wallet/service/wallet.service";
 import type { RevenueStatistics } from "@/features/wallet/types/wallet.types";
 import { recomputeRating } from "@/features/review/service/review.service";
 
-const USE_MOCK = mockConfig.admin ;
+const USE_MOCK = mockConfig.admin;
 
 function requireAdmin(): void {
   const me = requireUser();
