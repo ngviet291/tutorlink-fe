@@ -1,113 +1,214 @@
-import { useProvinces, useWards } from "@/shared/hooks/useAddress";
+import { useTranslation } from "react-i18next";
 
-export interface FilterValue {
-  provinceCode?: number;
-  wardCode?: number;
+import { Button } from "./Button";
+import { useSubjects } from "@/features/subject/hooks/useSubjects";
+
+import type { TeachingMode } from "@/shared/types/common.types";
+import type { EducationLevel } from "@/constants/enums";
+
+import { EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL } from "@/constants/enums";
+import { useProvinces } from "@/shared/hooks/useAddress";
+export interface FilterValues {
+  subjectId: string;
+  province: string;
+  teachingMode: TeachingMode | "";
+  educationLevels: EducationLevel[];
+  min: number;
+  max: number;
+}
+
+export function emptyFilter(rangeMax: number): FilterValues {
+  return {
+    subjectId: "",
+    province: "",
+    teachingMode: "",
+    educationLevels: [],
+    min: 0,
+    max: rangeMax,
+  };
 }
 
 interface FilterSidebarProps {
-  value: FilterValue;
-  onChange: (next: FilterValue) => void;
+  value: FilterValues;
+  onChange: (v: FilterValues) => void;
+  rangeLabel?: string;
+  rangeMax?: number;
+  rangeStep?: number;
   className?: string;
 }
-
-const selectClass =
-  "w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm " +
-  "focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 " +
-  "disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400";
 
 export function FilterSidebar({
   value,
   onChange,
-  className,
+  rangeLabel = "Mức giá",
+  rangeMax = 1_000_000,
+  rangeStep = 10_000,
+  className = "",
 }: FilterSidebarProps) {
-  const { provinceCode, wardCode } = value;
+  const { t } = useTranslation();
+
+  const subjects = useSubjects();
 
   const {
     data: provinces = [],
-    isLoading: loadingProvinces,
+    isLoading: provincesLoading,
     isError: provincesError,
   } = useProvinces();
 
-  const {
-    data: wards = [],
-    isLoading: loadingWards,
-    isError: wardsError,
-  } = useWards(provinceCode);
+  const set = (patch: Partial<FilterValues>) =>
+    onChange({ ...value, ...patch });
 
-  const hasFilter = provinceCode !== undefined || wardCode !== undefined;
+  const toggleLevel = (lvl: EducationLevel) => {
+    const next = value.educationLevels.includes(lvl)
+      ? value.educationLevels.filter((x) => x !== lvl)
+      : [...value.educationLevels, lvl];
+
+    set({ educationLevels: next });
+  };
 
   return (
-    <aside className={`flex w-full flex-col gap-5 ${className ?? ""}`}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold">Bộ lọc</h2>
-        {hasFilter && (
-          <button
-            type="button"
-            onClick={() => onChange({})}
-            className="text-sm text-neutral-600 underline-offset-2 hover:underline">
-            Xóa bộ lọc
-          </button>
-        )}
+    <aside
+      className={`flex w-full flex-col gap-4 rounded-2xl border border-border bg-surface p-4 lg:w-64 lg:shrink-0 ${className}`}>
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-text-secondary">
+          Môn học
+        </label>
+
+        <select
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+          value={value.subjectId}
+          onChange={(e) => set({ subjectId: e.target.value })}>
+          <option value="">Tất cả môn</option>
+
+          {(subjects.data ?? []).map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="filter-province" className="text-sm font-medium">
-          Tỉnh/thành phố
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-text-secondary">
+          Khu vực
         </label>
+
         <select
-          id="filter-province"
-          className={selectClass}
-          value={provinceCode ?? ""}
-          disabled={loadingProvinces}
-          onChange={(e) =>
-            onChange({
-              provinceCode: e.target.value ? Number(e.target.value) : undefined,
-              wardCode: undefined, // đổi tỉnh thì reset phường/xã
-            })
-          }>
-          <option value="">Tất cả</option>
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+          value={value.province}
+          disabled={provincesLoading || provincesError}
+          onChange={(e) => set({ province: e.target.value })}>
+          <option value="">
+            {provincesError ? "Không tải được tỉnh/thành" : "Tất cả tỉnh/thành"}
+          </option>
+
           {provinces.map((p) => (
-            <option key={p.code} value={p.code}>
+            <option key={p.code} value={p.name}>
               {p.name}
             </option>
           ))}
         </select>
-        {provincesError && (
-          <p className="text-xs text-red-600">Không tải được danh sách tỉnh.</p>
-        )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="filter-ward" className="text-sm font-medium">
-          Phường/xã
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-text-secondary">
+          Hình thức dạy
         </label>
+
         <select
-          id="filter-ward"
-          className={selectClass}
-          value={wardCode ?? ""}
-          disabled={provinceCode === undefined || loadingWards}
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+          value={value.teachingMode}
           onChange={(e) =>
-            onChange({
-              provinceCode,
-              wardCode: e.target.value ? Number(e.target.value) : undefined,
+            set({
+              teachingMode: e.target.value as TeachingMode | "",
             })
           }>
-          <option value="">
-            {provinceCode === undefined ? "Chọn tỉnh trước" : "Tất cả"}
-          </option>
-          {wards.map((w) => (
-            <option key={w.code} value={w.code}>
-              {w.name}
-            </option>
-          ))}
+          <option value="">Tất cả</option>
+          <option value="ONLINE">Online</option>
+          <option value="OFFLINE">Offline</option>
+          <option value="BOTH">Cả hai</option>
         </select>
-        {wardsError && (
-          <p className="text-xs text-red-600">
-            Không tải được danh sách phường/xã.
-          </p>
-        )}
       </div>
+
+      <div>
+        <p className="mb-2 text-xs font-semibold text-text-secondary">
+          Cấp học
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          {EDUCATION_LEVELS.map((lvl) => {
+            const active = value.educationLevels.includes(lvl);
+
+            return (
+              <button
+                key={lvl}
+                type="button"
+                onClick={() => toggleLevel(lvl)}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                  active
+                    ? "border-primary bg-primary text-white"
+                    : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
+                }`}>
+                {EDUCATION_LEVEL_LABEL[lvl]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs font-semibold text-text-secondary">
+          {rangeLabel}
+        </label>
+
+        <div className="flex items-center gap-2 text-xs text-text-secondary">
+          <span>{(value.min / 1000).toFixed(0)}k</span>
+          <span className="flex-1 text-center">—</span>
+          <span>
+            {value.max >= rangeMax
+              ? "Max"
+              : `${(value.max / 1000).toFixed(0)}k`}
+          </span>
+        </div>
+
+        <input
+          type="range"
+          min={0}
+          max={rangeMax}
+          step={rangeStep}
+          value={value.min}
+          onChange={(e) =>
+            set({
+              min: Math.min(Number(e.target.value), value.max - rangeStep),
+            })
+          }
+          className="mt-1 w-full accent-primary"
+        />
+
+        <input
+          type="range"
+          min={0}
+          max={rangeMax}
+          step={rangeStep}
+          value={value.max}
+          onChange={(e) =>
+            set({
+              max: Math.max(Number(e.target.value), value.min + rangeStep),
+            })
+          }
+          className="w-full accent-primary"
+        />
+      </div>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onChange(emptyFilter(rangeMax))}
+        className="mt-1">
+        {t("common.reset", {
+          defaultValue: "Đặt lại bộ lọc",
+        })}
+      </Button>
     </aside>
   );
 }

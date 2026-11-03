@@ -51,7 +51,7 @@ export default function RegisterTutorPage() {
         experienceYears: v.experienceYears,
         education: v.education,
         subjectIds: v.subjectIds,
-        
+        certificates: v.certificates,
       },
       {
         onSuccess: () => {
