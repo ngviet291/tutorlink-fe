@@ -1,30 +1,34 @@
-import { useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
-import { useAppDispatch } from '@/shared/hooks/useAppStore'
-import { PageSpinner } from '@/shared/components/ui/Spinner'
-import { userService } from '@/features/user/service/user.service'
-import { setUser } from '../store/authSlice'
-import { tokenStorage } from '../store/tokenStorage'
+import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { useAppDispatch } from "@/shared/hooks/useAppStore";
+import { PageSpinner } from "@/shared/components/ui/Spinner";
+import { userService } from "@/features/user/service/user.service";
+import { setUser, clearUser } from "../store/authSlice";
+import { tokenStorage } from "@/config/di/container";
 
-/**
- * Khôi phục phiên đăng nhập khi tải lại trang: nếu còn token thì lấy thông tin user (mock hoặc API thật).
- * Render children sau khi khôi phục xong để guard không đá người dùng về /login oan.
- */
 export function AuthInitializer({ children }: { children: ReactNode }) {
-  const dispatch = useAppDispatch()
-  const [ready, setReady] = useState(() => !tokenStorage.getAccessToken())
+  const dispatch = useAppDispatch();
+  const [ready, setReady] = useState(false);
+  const initialize = async () => {
+    try {
+      const token = await tokenStorage.getAccessToken();
 
+      if (token) {
+        const user = await userService.getMe();
+        dispatch(setUser(user));
+      }
+    } catch {
+      await tokenStorage.clear();
+      dispatch(clearUser());
+    } finally {
+      setReady(true);
+    }
+  };
   useEffect(() => {
-    if (ready) return
-    let cancelled = false
-    userService
-      .getMe()
-      .then((user) => { if (!cancelled) dispatch(setUser(user)) })
-      .catch(() => tokenStorage.clearTokens())
-      .finally(() => { if (!cancelled) setReady(true) })
-    return () => { cancelled = true }
-  }, [dispatch, ready])
+    initialize();
+  }, [dispatch]);
 
-  if (!ready) return <PageSpinner />
-  return <>{children}</>
+  if (!ready) return <PageSpinner />;
+
+  return <>{children}</>;
 }

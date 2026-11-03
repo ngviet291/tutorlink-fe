@@ -5,7 +5,7 @@ export const env = {
 
   features: {
     auth: false, // false = API thật
-    user: true, // true = Mock
+    user: false, // true = Mock
     tutor: true,
     subject: false,
     student: true,
