@@ -73,6 +73,7 @@ export function FilterSidebar({
           value={value.subjectId}
           onChange={(e) => set({ subjectId: e.target.value })}>
           <option value="">Tất cả môn</option>
+
           {(subjects.data ?? []).map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -111,7 +112,6 @@ export function FilterSidebar({
         )}
       </div>
 
-      {/* Hình thức */}
       <div>
         <label className="mb-1 block text-xs font-semibold text-text-secondary">
           Hình thức dạy
@@ -129,7 +129,6 @@ export function FilterSidebar({
         </select>
       </div>
 
-      {/* Cấp học */}
       <div>
         <p className="mb-2 text-xs font-semibold text-text-secondary">
           Cấp học
@@ -154,7 +153,6 @@ export function FilterSidebar({
         </div>
       </div>
 
-      {/* Range giá */}
       <div>
         <label className="mb-1 block text-xs font-semibold text-text-secondary">
           {rangeLabel}
@@ -168,6 +166,7 @@ export function FilterSidebar({
               : `${(value.max / 1000).toFixed(0)}k`}
           </span>
         </div>
+
         <input
           type="range"
           min={0}
@@ -181,6 +180,7 @@ export function FilterSidebar({
           }
           className="mt-1 w-full accent-primary"
         />
+
         <input
           type="range"
           min={0}

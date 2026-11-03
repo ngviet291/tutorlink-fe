@@ -65,11 +65,11 @@ export class AuthService {
   private async startSession(
     pending: Promise<AuthResponse>,
   ): Promise<AuthUser> {
-    const { accessToken, refreshToken, user } = await pending;
+    const response = await pending;
 
-    await this.tokens.saveAccessToken(accessToken);
-    await this.tokens.saveRefreshToken(refreshToken);
+    await this.tokens.saveAccessToken(response.accessToken);
+    await this.tokens.saveRefreshToken(response.refreshToken);
 
-    return user;
+    return response.user;
   }
 }

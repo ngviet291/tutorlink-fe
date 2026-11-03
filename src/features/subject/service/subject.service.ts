@@ -2,6 +2,7 @@ import { http } from "@/config/axiosClient";
 import { mockConfig } from "@/config/env";
 import { delay } from "@/mocks/session";
 import { subjects } from "@/mocks/db";
+import type { CursorResponse } from "@/shared/types/api.types";
 import type { SubjectResponse } from "../types/subject.types";
 
 const ALL_PAGE_SIZE = 50;

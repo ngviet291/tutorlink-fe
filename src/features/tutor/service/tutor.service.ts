@@ -61,7 +61,7 @@ export const tutorService = {
       );
     }
     return http
-      .get<CursorResponse<TutorResponse>>("/v1/users/tutors/search", params)
+      .get<CursorResponse<TutorResponse>>("/v1/users/tutors/search", { params })
       .then((res) => res.data);
   },
 

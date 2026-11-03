@@ -162,7 +162,7 @@ export const walletService = {
     const r = await http
       .get<CursorResponse<BeTransaction>>("/v1/payments/history", { params })
       .then((res) => res.data);
-    return { ...r, items: r.items.map(fromBeTransaction) };
+    return { ...r, content: r.content.map(fromBeTransaction) };
   },
 
   async getFeeQuote(applicationId: string): Promise<EnrollmentFeeQuote> {
