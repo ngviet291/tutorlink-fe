@@ -15,6 +15,7 @@ import { useTutors } from "@/features/tutor/hooks/useTutors";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { TutorFilter } from "@/features/tutor/types/tutor.types";
+import { useSearchTracking } from "@/features/tracking/hooks";
 
 const RATE_MAX = 500_000;
 
@@ -47,20 +48,39 @@ export default function FindTutorPage() {
   const {
     data,
     isLoading,
+    isFetching,
     isError,
     refetch,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
   } = useTutors(query);
+  const items = data?.pages.flatMap((page) => page.content) ?? [];
 
-  const items = data?.pages.flatMap((p) => p.content) ?? [];
-  const total =
-    data?.pages[0]?.content.length !== undefined
-      ? data!.pages.reduce((s, p) => s + p.content.length, 0)
-      : 0;
+  const total = items.length;
 
   const onFilter = (v: FilterValues) => setFilter(v);
+
+  const hasSearch = Boolean(
+    debounced ||
+    filter.subjectId ||
+    filter.province ||
+    filter.min > 0 ||
+    filter.max < RATE_MAX,
+  );
+  useSearchTracking({
+    active: hasSearch,
+    ready: !isFetching && !isError,
+    key: JSON.stringify(query),
+    query: debounced,
+    filters: {
+      subject: subjectName,
+      province: query.province,
+      minRate: query.minRate,
+      maxRate: query.maxRate,
+    },
+    resultCount: items.length,
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">

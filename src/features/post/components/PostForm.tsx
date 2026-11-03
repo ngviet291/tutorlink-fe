@@ -1,19 +1,22 @@
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+
 import {
-  BUDGET_UNIT_LABEL,
   EDUCATION_LEVELS,
   TEACHING_MODES,
   EDUCATION_LEVEL_LABEL,
   TEACHING_MODE_LABEL,
 } from "@/constants/enums";
+
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { Select } from "@/shared/components/ui/Select";
 import { Textarea } from "@/shared/components/ui/Textarea";
+
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { PostPayload, PostResponse } from "../types/post.types";
 import type { PostType } from "@/shared/types/common.types";
+
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 
 interface PostFormProps {
@@ -57,7 +60,8 @@ export function PostForm({
     },
   });
 
-  // Tỉnh/thành lấy từ API (BE cache). Form này chỉ có tỉnh nên không truyền wardField.
+  // Tỉnh/thành lấy từ API (BE cache).
+  // Form này chỉ có tỉnh nên không truyền wardField.
   const { provinceOptions, isLoadingProvinces, manualEntry } = useAddressSelect(
     {
       control,
@@ -66,21 +70,32 @@ export function PostForm({
     },
   );
 
-  const submitAs = (asDraft: boolean) =>
-    handleSubmit((data) => onSubmit(data, asDraft))();
+  // Submit bài đăng dưới dạng nháp hoặc đăng công khai.
+  const submitAs = (asDraft: boolean) => {
+    return handleSubmit(async (data) => {
+      await onSubmit(data, asDraft);
+    })();
+  };
 
   const postTypeOptions: { value: PostType; label: string }[] = [
-    { value: "FIND_TUTOR", label: t("post.type.FIND_TUTOR") },
-    { value: "FIND_STUDENT", label: t("post.type.FIND_STUDENT") },
+    {
+      value: "FIND_TUTOR",
+      label: t("post.type.FIND_TUTOR"),
+    },
+    {
+      value: "FIND_STUDENT",
+      label: t("post.type.FIND_STUDENT"),
+    },
   ];
 
   return (
     <form className="space-y-5">
       {/* Post type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="mb-1 block text-sm font-medium text-gray-700">
           {t("post.title")}
         </label>
+
         <div className="flex gap-3">
           <Controller
             name="type"
@@ -90,7 +105,8 @@ export function PostForm({
                 {postTypeOptions.map((opt) => (
                   <label
                     key={opt.value}
-                    className="flex items-center gap-2 cursor-pointer">
+                    className="flex cursor-pointer items-center gap-2"
+                  >
                     <input
                       type="radio"
                       value={opt.value}
@@ -98,6 +114,7 @@ export function PostForm({
                       onChange={() => field.onChange(opt.value)}
                       className="accent-blue-600"
                     />
+
                     <span className="text-sm">{opt.label}</span>
                   </label>
                 ))}
@@ -107,40 +124,51 @@ export function PostForm({
         </div>
       </div>
 
+      {/* Title */}
       <Input
         label={t("post.title")}
         error={errors.title?.message}
-        {...register("title", { required: t("validation.required") })}
+        {...register("title", {
+          required: t("validation.required"),
+        })}
       />
 
+      {/* Content */}
       <Textarea
         label={t("post.description")}
         error={errors.content?.message}
         rows={4}
-        {...register("content", { required: t("validation.required") })}
+        {...register("content", {
+          required: t("validation.required"),
+        })}
       />
 
       {/* Subject */}
       <Controller
         name="subjectId"
         control={control}
-        rules={{ required: t("validation.required") }}
+        rules={{
+          required: t("validation.required"),
+        }}
         render={({ field }) => (
           <Select
             label={t("post.subject")}
             error={errors.subjectId?.message}
             value={field.value}
-            onChange={field.onChange}>
+            onChange={field.onChange}
+          >
             <option value="">{t("tutor.selectSubject")}</option>
-            {subjects.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
+
+            {subjects.map((subject) => (
+              <option key={subject.id} value={subject.id}>
+                {subject.name}
               </option>
             ))}
           </Select>
         )}
       />
 
+      {/* Education level and teaching mode */}
       <div className="grid grid-cols-2 gap-4">
         <Controller
           name="educationLevel"
@@ -149,10 +177,11 @@ export function PostForm({
             <Select
               label={t("post.educationLevel")}
               value={field.value}
-              onChange={field.onChange}>
-              {EDUCATION_LEVELS.map((l) => (
-                <option key={l} value={l}>
-                  {EDUCATION_LEVEL_LABEL[l]}
+              onChange={field.onChange}
+            >
+              {EDUCATION_LEVELS.map((level) => (
+                <option key={level} value={level}>
+                  {EDUCATION_LEVEL_LABEL[level]}
                 </option>
               ))}
             </Select>
@@ -166,10 +195,11 @@ export function PostForm({
             <Select
               label={t("post.teachingMode")}
               value={field.value}
-              onChange={field.onChange}>
-              {TEACHING_MODES.map((m) => (
-                <option key={m} value={m}>
-                  {TEACHING_MODE_LABEL[m]}
+              onChange={field.onChange}
+            >
+              {TEACHING_MODES.map((mode) => (
+                <option key={mode} value={mode}>
+                  {TEACHING_MODE_LABEL[mode]}
                 </option>
               ))}
             </Select>
@@ -177,6 +207,7 @@ export function PostForm({
         />
       </div>
 
+      {/* Budget */}
       <div className="grid grid-cols-2 gap-4">
         <Input
           label={`${t("post.budgetPerMonth")} min`}
@@ -184,43 +215,59 @@ export function PostForm({
           error={errors.minBudget?.message}
           {...register("minBudget", {
             valueAsNumber: true,
-            min: { value: 0, message: t("validation.minZero") },
+            min: {
+              value: 0,
+              message: t("validation.minZero"),
+            },
           })}
         />
+
         <Input
           label={`${t("post.budgetPerMonth")} max`}
           type="number"
           error={errors.maxBudget?.message}
           {...register("maxBudget", {
             valueAsNumber: true,
-            min: { value: 0, message: t("validation.minZero") },
+            min: {
+              value: 0,
+              message: t("validation.minZero"),
+            },
           })}
         />
       </div>
 
+      {/* Sessions and duration */}
       <div className="grid grid-cols-2 gap-4">
         <Input
           label={t("post.sessionsPerWeek")}
           type="number"
-          {...register("sessionsPerWeek", { valueAsNumber: true })}
+          {...register("sessionsPerWeek", {
+            valueAsNumber: true,
+          })}
         />
+
         <Input
           label={t("post.duration")}
           type="number"
-          {...register("durationMinutes", { valueAsNumber: true })}
+          {...register("durationMinutes", {
+            valueAsNumber: true,
+          })}
         />
       </div>
 
+      {/* Deadline */}
       <Input
         label={t("post.deadline")}
         type="date"
         error={errors.deadline?.message}
-        {...register("deadline", { required: t("validation.required") })}
+        {...register("deadline", {
+          required: t("validation.required"),
+        })}
       />
 
       {/* Province */}
       {manualEntry ? (
-        // API địa chỉ lỗi: cho nhập tay để không chặn đăng bài
+        // API địa chỉ lỗi: cho nhập tay để không chặn đăng bài.
         <Input label={t("common.province")} {...register("address.province")} />
       ) : (
         <Controller
@@ -231,14 +278,16 @@ export function PostForm({
               label={t("common.province")}
               value={field.value ?? ""}
               onChange={field.onChange}
-              disabled={isLoadingProvinces}>
+              disabled={isLoadingProvinces}
+            >
               <option value="">{t("common.selectProvince")}</option>
+
               {/* Bỏ lựa chọn rỗng của hook vì đã có nhãn i18n ở trên */}
               {provinceOptions
-                .filter((o) => o.value !== "")
-                .map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
+                .filter((option) => option.value !== "")
+                .map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
             </Select>
@@ -246,20 +295,24 @@ export function PostForm({
         />
       )}
 
+      {/* Actions */}
       <div className="flex gap-3 pt-2">
         <Button
           type="button"
           variant="secondary"
           onClick={() => submitAs(true)}
           loading={isSubmitting}
-          className="flex-1">
+          className="flex-1"
+        >
           {t("post.draftSaved")}
         </Button>
+
         <Button
           type="button"
           onClick={() => submitAs(false)}
           loading={isSubmitting}
-          className="flex-1">
+          className="flex-1"
+        >
           {t("post.publishPost")}
         </Button>
       </div>

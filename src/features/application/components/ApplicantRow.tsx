@@ -80,7 +80,7 @@ export function ApplicantRow({ application: a, canSelect, onSelect, showAi }: Pr
         </div>
 
         <div className="flex shrink-0 flex-row gap-2 sm:flex-col">
-          <Link to={ROUTES.TUTOR_DETAIL(tutor.id)}>
+          <Link to={ROUTES.TUTOR_DETAIL(tutor.id)} state={{ section: showAi ? 'TOP' : 'OTHERS', rank: a.aiRank }}>            
             <Button variant="outline" size="sm" fullWidth>{t('tutor.viewProfile')}</Button>
           </Link>
           {a.applicationStatus === 'ACCEPTED' && (

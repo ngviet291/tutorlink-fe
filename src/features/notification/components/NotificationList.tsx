@@ -1,5 +1,4 @@
-import { useNavigate } from 'react-router-dom'
-import { Bell, CreditCard, FileText, MessageSquare, ShieldCheck, Star, Sparkles, UserCheck, UserPlus } from 'lucide-react'
+import { Bell, CreditCard, FileText, MessageSquare, ShieldCheck, Star, Sparkles, UserPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/shared/utils/cn'
 import { timeAgo } from '@/shared/utils/date'
@@ -25,7 +24,6 @@ interface Props {
 }
 
 export function NotificationList({ items, onNavigate, compact }: Props) {
-  const navigate = useNavigate()
   const { t } = useTranslation()
   const { markRead } = useNotificationMutations()
 

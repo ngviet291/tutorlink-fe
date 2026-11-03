@@ -1,5 +1,5 @@
 import { http } from "@/config/axiosClient";
-import { env, mockConfig } from "@/config/env";
+import { mockConfig } from "@/config/env";
 import { ApiError } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type {

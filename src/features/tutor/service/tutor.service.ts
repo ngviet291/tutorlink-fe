@@ -1,4 +1,4 @@
-import { env, mockConfig } from "@/config/env";
+import { mockConfig } from "@/config/env";
 import { ApiError, type CursorResponse } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type {
@@ -12,7 +12,6 @@ import {
   recountSubjectUsage,
   subjects,
   tutors,
-  users,
 } from "@/mocks/db";
 import { delay, cursorPaginate, requireUser } from "@/mocks/session";
 import { http } from "@/config/axiosClient";

@@ -11,6 +11,7 @@ import {
   Wifi,
   XCircle,
 } from "lucide-react";
+
 import {
   BUDGET_UNIT_LABEL,
   EDUCATION_LEVEL_LABEL,
@@ -18,6 +19,7 @@ import {
   TEACHING_MODE_LABEL,
 } from "@/constants/enums";
 import { ROUTES } from "@/constants/routes";
+
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -28,15 +30,21 @@ import { Skeleton } from "@/shared/components/ui/Skeleton";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { Tooltip } from "@/shared/components/ui/Tooltip";
+
 import { formatBudgetRange } from "@/shared/utils/currency";
 import { formatDate } from "@/shared/utils/date";
 import { getErrorMessage } from "@/shared/utils/errors";
+
 import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { useToast } from "@/shared/hooks/useToast";
+
 import { ApplicantList } from "@/features/application/components/ApplicantList";
 import { ApplyModal } from "@/features/application/components/ApplyModal";
-import { useMyApplications } from "@/features/application/hooks/useApplications";
-import { useApplicationMutations } from "@/features/application/hooks/useApplications";
+import {
+  useApplicationMutations,
+  useMyApplications,
+} from "@/features/application/hooks/useApplications";
+
 import { usePost, usePostMutations } from "@/features/post/hooks/usePosts";
 import { useMyTutorProfile } from "@/features/tutor/hooks/useTutors";
 
@@ -44,14 +52,19 @@ export default function PostDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+
   const user = useAppSelector((s) => s.auth.user);
+
   const { data: post, isLoading, isError, refetch } = usePost(id);
+
   const { remove, publish } = usePostMutations();
   const { cancel } = useApplicationMutations();
+
   const [applyOpen, setApplyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const isTutor = user?.role === "TUTOR";
+
   const myApps = useMyApplications(Boolean(user));
   const myTutor = useMyTutorProfile(isTutor);
 
@@ -64,6 +77,7 @@ export default function PostDetailPage() {
       </div>
     );
   }
+
   if (isError || !post) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
@@ -76,38 +90,50 @@ export default function PostDetailPage() {
   }
 
   const isAuthor = user?.id === post.author.id;
+
   const myApplication = myApps.data?.find(
     (a) =>
       a.post.id === post.id &&
       (a.tutor.id === user?.id || a.student.id === user?.id),
   );
+
   const alreadyApplied = Boolean(
     myApplication && myApplication.applicationStatus !== "CANCELLED",
   );
 
-  // Người đủ điều kiện đăng ký: gia sư APPROVED → bài FIND_TUTOR; học viên → bài FIND_STUDENT
+  // Người đủ điều kiện đăng ký:
+  // Gia sư APPROVED -> bài FIND_TUTOR
+  // Học viên -> bài FIND_STUDENT
   const roleMatches =
     post.type === "FIND_TUTOR"
       ? user?.role === "TUTOR"
       : user?.role === "STUDENT";
+
   const tutorApproved =
     post.type === "FIND_TUTOR"
       ? myTutor.data?.verificationStatus === "APPROVED"
       : true;
 
   let disabledReason: string | undefined;
-  if (isAuthor) disabledReason = "Bạn không thể đăng ký bài của chính mình";
-  else if (alreadyApplied) disabledReason = "Bạn đã đăng ký bài này rồi";
-  else if (post.status !== "PUBLISHED")
+
+  if (isAuthor) {
+    disabledReason = "Bạn không thể đăng ký bài của chính mình";
+  } else if (alreadyApplied) {
+    disabledReason = "Bạn đã đăng ký bài này rồi";
+  } else if (post.status !== "PUBLISHED") {
     disabledReason = "Bài đăng không còn nhận đăng ký";
-  else if (isTutor && post.type === "FIND_TUTOR" && !tutorApproved)
+  } else if (isTutor && post.type === "FIND_TUTOR" && !tutorApproved) {
     disabledReason = "Hồ sơ gia sư của bạn chưa được duyệt";
+  }
 
   const onApply = () => {
     if (!user) {
-      navigate(ROUTES.LOGIN, { state: { from: ROUTES.POST_DETAIL(post.id) } });
+      navigate(ROUTES.LOGIN, {
+        state: { from: ROUTES.POST_DETAIL(post.id) },
+      });
       return;
     }
+
     setApplyOpen(true);
   };
 
@@ -123,7 +149,11 @@ export default function PostDetailPage() {
   const canEdit =
     isAuthor && post.status !== "CLOSED" && post.status !== "REMOVED";
 
-  const info: { icon: typeof MapPin; label: string; value: string }[] = [
+  const info: {
+    icon: typeof MapPin;
+    label: string;
+    value: string;
+  }[] = [
     {
       icon: MapPin,
       label: "Khu vực",
@@ -155,15 +185,20 @@ export default function PostDetailPage() {
           <Badge tone={post.type === "FIND_TUTOR" ? "orange" : "blue"}>
             {POST_TYPE_LABEL[post.type]}
           </Badge>
+
           <SubjectTag name={post.subject.name} />
+
           <Badge tone="gray">
             {EDUCATION_LEVEL_LABEL[post.educationLevel]}
           </Badge>
+
           <StatusBadge kind="post" status={post.status} />
         </div>
+
         <h1 className="text-2xl font-extrabold leading-snug text-text sm:text-3xl">
           {post.title}
         </h1>
+
         <p className="mt-3 text-2xl font-extrabold text-primary">
           {formatBudgetRange(post.minBudget, post.maxBudget)}{" "}
           <span className="text-sm font-medium text-text-secondary">
@@ -182,8 +217,10 @@ export default function PostDetailPage() {
               className="flex items-start gap-3 rounded-xl bg-surface-hover p-3"
             >
               <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
+
               <div>
                 <dt className="text-xs text-text-secondary">{label}</dt>
+
                 <dd className="text-sm font-semibold text-text">{value}</dd>
               </div>
             </div>
@@ -193,6 +230,7 @@ export default function PostDetailPage() {
         <h2 className="mb-2 mt-6 text-lg font-bold text-text">
           Mô tả chi tiết
         </h2>
+
         <p className="whitespace-pre-line text-text-secondary">
           {post.content}
         </p>
@@ -211,14 +249,18 @@ export default function PostDetailPage() {
               src={post.author.avatarUrl}
               size="lg"
             />
+
             <div>
               <p className="text-xs text-text-secondary">Người đăng</p>
+
               <p className="font-bold text-text">{post.author.fullName}</p>
+
               <p className="text-xs text-text-secondary">
                 {post.applicationCount ?? 0} lượt đăng ký
               </p>
             </div>
           </div>
+
           <MaskedContact className="sm:w-72" contact={post.author.contact} />
         </div>
 
@@ -236,6 +278,7 @@ export default function PostDetailPage() {
               </Button>
             </Tooltip>
           )}
+
           {!isAuthor && user && !roleMatches && !disabledReason && (
             <p className="self-center text-xs text-text-secondary">
               {post.type === "FIND_TUTOR"
@@ -243,6 +286,7 @@ export default function PostDetailPage() {
                 : "Chỉ học viên mới đăng ký bài này."}
             </p>
           )}
+
           {!user && (
             <p className="self-center text-xs text-text-secondary">
               <Link className="font-semibold text-primary" to={ROUTES.LOGIN}>
@@ -251,6 +295,7 @@ export default function PostDetailPage() {
               để đăng ký nhận lớp.
             </p>
           )}
+
           {alreadyApplied && myApplication?.applicationStatus === "PENDING" && (
             <Button
               variant="ghost"
@@ -262,9 +307,11 @@ export default function PostDetailPage() {
                 })
               }
             >
-              <XCircle className="size-4" /> Hủy đăng ký
+              <XCircle className="size-4" />
+              Hủy đăng ký
             </Button>
           )}
+
           {isTutor &&
             post.type === "FIND_TUTOR" &&
             myTutor.data &&
@@ -273,8 +320,8 @@ export default function PostDetailPage() {
                 to={ROUTES.TUTOR_PROFILE}
                 className="self-center text-xs font-semibold text-primary hover:underline"
               >
-                <Wallet className="mr-1 inline size-3.5" /> Xem trạng thái hồ sơ
-                gia sư
+                <Wallet className="mr-1 inline size-3.5" />
+                Xem trạng thái hồ sơ gia sư
               </Link>
             )}
         </div>
@@ -294,13 +341,17 @@ export default function PostDetailPage() {
                 Đăng công khai
               </Button>
             )}
+
             <Link to={ROUTES.POST_EDIT(post.id)}>
               <Button variant="outline">
-                <Pencil className="size-4" /> Sửa bài
+                <Pencil className="size-4" />
+                Sửa bài
               </Button>
             </Link>
+
             <Button variant="danger" onClick={() => setDeleteOpen(true)}>
-              <Trash2 className="size-4" /> Xóa bài
+              <Trash2 className="size-4" />
+              Xóa bài
             </Button>
           </div>
         )}
@@ -317,6 +368,7 @@ export default function PostDetailPage() {
         open={applyOpen}
         onClose={() => setApplyOpen(false)}
       />
+
       <ConfirmDialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}

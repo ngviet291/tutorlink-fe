@@ -16,9 +16,9 @@ const sideClass = {
 }
 
 export function Tooltip({ content, text, children, side = 'top' }: TooltipProps) {
+  const [visible, setVisible] = useState(false)
   const label = content ?? text
   if (!label) return <>{children}</>
-  const [visible, setVisible] = useState(false)
 
   return (
     <div

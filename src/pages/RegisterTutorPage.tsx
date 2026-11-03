@@ -3,7 +3,6 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
-import { CertificateUpload } from "@/features/auth/components/CertificateUpload";
 import { useToast } from "@/shared/hooks/useToast";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { useRegister } from "@/features/auth/hooks/useAuth";
@@ -15,6 +14,7 @@ import {
   type CommonRegisterValues,
 } from "@/features/auth/components/CommonRegisterFields";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
+import { CertificateUpload } from "@/features/auth/components/CertificateUpload";
 
 interface TutorFormValues extends CommonRegisterValues {
   experienceYears: number;
@@ -70,7 +70,8 @@ export default function RegisterTutorPage() {
         <form
           onSubmit={(e) => void onSubmit(e)}
           className="flex flex-col gap-4"
-          noValidate>
+          noValidate
+        >
           <CommonRegisterFields />
 
           <Input
@@ -118,7 +119,8 @@ export default function RegisterTutorPage() {
                             checked
                               ? "border-primary bg-primary-light text-primary"
                               : "border-border text-text-secondary hover:border-primary/50"
-                          }`}>
+                          }`}
+                        >
                           <input
                             type="checkbox"
                             checked={checked}
@@ -167,7 +169,8 @@ export default function RegisterTutorPage() {
           {registerMutation.isError && (
             <p
               role="alert"
-              className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300">
+              className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300"
+            >
               {getErrorMessage(registerMutation.error)}
             </p>
           )}
@@ -175,7 +178,8 @@ export default function RegisterTutorPage() {
             type="submit"
             size="lg"
             fullWidth
-            loading={registerMutation.isPending}>
+            loading={registerMutation.isPending}
+          >
             Đăng ký gia sư
           </Button>
         </form>

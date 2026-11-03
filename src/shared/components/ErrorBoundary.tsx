@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { trackClientError } from '@/features/tracking/tracker'
 
 interface Props {
   children: ReactNode
@@ -18,6 +19,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('UI error:', error, info.componentStack)
+    trackClientError(error.message)
   }
 
   render() {

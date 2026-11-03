@@ -594,6 +594,26 @@ const postSeeds: PostSeed[] = [
     deadlineDays: 6,
     createdAgo: 6 * DAY,
   },
+  // THÊM POST MỚI CHO USER s-1
+  {
+    id: "p-test-1",
+    title: "Tìm gia sư Toán lớp 10 tại Quận 7",
+    content:
+      "Mình cần tìm một bạn sinh viên hoặc giáo viên có kinh nghiệm dạy Toán lớp 10. Cháu nhà học lực trung bình khá, cần gia sư kiên nhẫn, bám sát chương trình trên trường và hướng dẫn làm bài tập về nhà.",
+    type: "FIND_TUTOR",
+    postStatus: "PUBLISHED",
+    by: "s-1",
+    subject: "019cef3d-54e0-7e12-85ae-da011bb1fa7d", // Toán
+    level: "HIGH_SCHOOL",
+    mode: "OFFLINE",
+    province: "Hồ Chí Minh",
+    min: 100_000,
+    max: 150_000,
+    spw: 3,
+    dur: 90,
+    deadlineDays: 8,
+    createdAgo: 0.5 * DAY,
+  },
 ];
 
 export const posts: PostResponse[] = postSeeds.map((s) => ({
@@ -632,6 +652,44 @@ const studentRef = (id: string) => {
   if (!u) throw new Error(`student ${id}`);
   return u;
 };
+
+export const mockPosts: PostResponse[] = [
+  {
+    id: "01a1a213-5bae-7e1f-bbeb-ed7c592a5e4a",
+    title: "Tìm gia sư Toán lớp 10 tại Quận 7",
+    content:
+      "Mình cần tìm một bạn sinh viên hoặc giáo viên có kinh nghiệm dạy Toán lớp 10. Cháu nhà học lực trung bình khá, cần gia sư kiên nhẫn, bám sát chương trình trên trường và hướng dẫn làm bài tập về nhà.",
+    type: "FIND_TUTOR",
+    postStatus: "PUBLISHED",
+    subject: {
+      id: "019cef3d-54e0-7e12-85ae-da011bb1fa7d",
+      name: "Toán",
+    },
+    educationLevel: "HIGH_SCHOOL",
+    teachingMode: "OFFLINE",
+    address: {
+      province: "Hồ Chí Minh",
+    },
+    minBudget: 100_000,
+    maxBudget: 150_000,
+    sessionsPerWeek: 3,
+    durationMinutes: 90,
+    deadline: "2026-11-11T23:59:59Z",
+    author: {
+      id: "019d4764-2a40-7a87-b0d2-dcba8c64189b",
+      fullName: "Phạm Anh Tâm",
+      avatarUrl:
+        "https://res.cloudinary.com/tutorlink-demo/image/upload/avatars/student1.jpg",
+      role: "STUDENT",
+    },
+    createdAt: "2026-11-03T10:00:00Z",
+  },
+];
+
+export const allPosts: PostResponse[] = [
+  ...posts,
+  ...mockPosts,
+];
 
 function app(
   id: string,

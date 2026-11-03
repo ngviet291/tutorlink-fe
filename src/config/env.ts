@@ -19,6 +19,8 @@ export const env = {
     post: false,
     review: true,
     wallet: true,
+
+    tracking: false, // false = Gọi API thật
   },
 
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
@@ -44,4 +46,5 @@ export const mockConfig = {
   post: env.features.post,
   review: env.features.review,
   wallet: env.features.wallet,
+  tracking: env.features.tracking,
 };

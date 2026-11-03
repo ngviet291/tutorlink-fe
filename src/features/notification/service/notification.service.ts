@@ -4,7 +4,7 @@ import type { NotificationResponse } from "../types/notification.types";
 import { notifications } from "@/mocks/db";
 import { delay, requireUser } from "@/mocks/session";
 
-const USE_MOCK = env.useMock;
+const USE_MOCK = true;
 
 export const notificationService = {
   async getMyNotifications(): Promise<NotificationResponse[]> {
