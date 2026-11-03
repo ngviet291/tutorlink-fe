@@ -342,6 +342,9 @@ const vi = {
     sourceRule: "Gợi ý",
     unavailable: "Dịch vụ AI tạm thời không khả dụng.",
   },
+  chatbot: {
+    greeting: "Xin chào! Mình là trợ lý TutorLink. Bạn cần hỗ trợ gì?",
+  },
   chat: {
     open: "Mở chat",
   },
@@ -834,6 +837,9 @@ const en = {
     sourceAi: "AI",
     sourceRule: "Suggested",
     unavailable: "AI service is temporarily unavailable.",
+  },
+  chatbot: {
+    greeting: "Hello! I’m the TutorLink assistant. How can I help you?",
   },
   chat: {
     open: "Open chat",

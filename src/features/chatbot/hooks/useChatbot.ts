@@ -3,9 +3,12 @@ import { useSelector } from "react-redux";
 import { useMutation } from "@tanstack/react-query";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { chatbotService } from "../service/chatbot.service";
-import type { ChatbotMessage, ChatbotPost } from "../types/chatbot.types";
-
-const GREETING = "Xin chào! Mình là trợ lý TutorLink. Bạn cần hỗ trợ gì?";
+import type {
+  ChatbotConversation,
+  ChatbotMessage,
+  ChatbotPost,
+} from "../types/chatbot.types";
+import { useTranslation } from "react-i18next";
 
 const makeMsg = (
   role: ChatbotMessage["role"],
@@ -21,7 +24,6 @@ const makeMsg = (
   posts,
 });
 
-// Id cuộc trò chuyện nhớ theo từng user để reload không mất và không lẫn giữa các tài khoản.
 const storageKey = (userId: string) => `chatbot_conversation_${userId}`;
 
 const readSaved = (key: string): string | undefined => {
@@ -39,26 +41,27 @@ const writeSaved = (key: string, value: string | null) => {
   }
 };
 
-/**
- * State + gọi API cho chatbot.
- * Thành viên: nhớ conversationId và tải lại lịch sử (kèm bài đăng gợi ý) sau khi reload / đăng nhập lại.
- * Guest: BE không lưu nên chỉ nằm trong bộ nhớ.
- */
 export function useChatbot() {
+  const { t } = useTranslation();
+  const greeting = t("chatbot.greeting");
   const userId = useSelector(
     (s: { auth: { user: { id: string } | null } }) => s.auth.user?.id,
   );
   const key = userId ? storageKey(userId) : undefined;
 
   const [messages, setMessages] = useState<ChatbotMessage[]>(() => [
-    makeMsg("assistant", GREETING),
+    makeMsg("assistant", greeting),
   ]);
+  const [conversations, setConversations] = useState<ChatbotConversation[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const conversationId = useRef<string | undefined>(undefined);
 
-  // Đổi tài khoản / đăng xuất thì làm mới; có conversation đã lưu thì tải lại lịch sử.
   useEffect(() => {
     conversationId.current = undefined;
-    setMessages([makeMsg("assistant", GREETING)]);
+    setMessages([makeMsg("assistant", greeting)]);
+    setConversations([]);
+    setHistoryError(null);
 
     const saved = key ? readSaved(key) : undefined;
     if (!key || !saved) return;
@@ -69,9 +72,10 @@ export function useChatbot() {
       .then((history) => {
         if (cancelled) return;
         conversationId.current = saved;
-        setMessages([makeMsg("assistant", GREETING), ...history]);
+        setMessages([makeMsg("assistant", greeting), ...history]);
       })
-      .catch(() => writeSaved(key, null)); // hội thoại đã bị xoá hoặc không còn quyền truy cập
+      .catch(() => writeSaved(key, null));
+
     return () => {
       cancelled = true;
     };
@@ -101,16 +105,21 @@ export function useChatbot() {
     },
   });
 
-  // Xóa cuộc trò chuyện: thành viên → xóa trên server rồi mới làm sạch local; guest → chỉ có local.
   const clearMutation = useMutation({
     mutationFn: async () => {
       const id = conversationId.current;
       if (id) await chatbotService.deleteConversation(id);
     },
     onSuccess: () => {
+      const deletedId = conversationId.current;
       conversationId.current = undefined;
       if (key) writeSaved(key, null);
-      setMessages([makeMsg("assistant", GREETING)]);
+      if (deletedId) {
+        setConversations((prev) =>
+          prev.filter((item) => item.id !== deletedId),
+        );
+      }
+      setMessages([makeMsg("assistant", greeting)]);
     },
   });
 
@@ -124,12 +133,64 @@ export function useChatbot() {
     [sendMutation],
   );
 
+  const refreshConversations = useCallback(async () => {
+    if (!userId) {
+      setConversations([]);
+      return;
+    }
+    setIsLoadingHistory(true);
+    setHistoryError(null);
+    try {
+      const result = await chatbotService.getConversations();
+      setConversations(result);
+    } catch (error) {
+      setHistoryError(getErrorMessage(error));
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, [userId]);
+
+  const loadConversation = useCallback(
+    async (id: string) => {
+      if (sendMutation.isPending || !userId) return false;
+      setIsLoadingHistory(true);
+      setHistoryError(null);
+      try {
+        const history = await chatbotService.getMessages(id);
+        conversationId.current = id;
+        if (key) writeSaved(key, id);
+        setMessages([makeMsg("assistant", greeting), ...history]);
+        return true;
+      } catch (error) {
+        setHistoryError(getErrorMessage(error));
+        return false;
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    },
+    [key, sendMutation.isPending, userId],
+  );
+
+  /** Bắt đầu chat mới nhưng không xóa hội thoại cũ trên server. */
+  const newConversation = useCallback(() => {
+    if (sendMutation.isPending) return;
+    conversationId.current = undefined;
+    if (key) writeSaved(key, null);
+    setMessages([makeMsg("assistant", greeting)]);
+  }, [key, sendMutation.isPending]);
+
   return {
     messages,
     send,
-    /** Xóa cuộc trò chuyện hiện tại. Reject nếu server lỗi để UI báo lại. */
     clear: clearMutation.mutateAsync,
     isSending: sendMutation.isPending,
     isClearing: clearMutation.isPending,
+    conversations,
+    refreshConversations,
+    loadConversation,
+    newConversation,
+    isLoadingHistory,
+    historyError,
+    canViewHistory: Boolean(userId),
   };
 }

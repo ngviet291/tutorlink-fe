@@ -19,21 +19,23 @@ export interface ChatbotMessage {
   role: ChatbotRole;
   content: string;
   createdAt: string;
-  /** true khi tin nhắn này là thông báo lỗi do client sinh ra. */
   isError?: boolean;
-  /** Bài đăng gợi ý kèm theo câu trả lời của bot. */
   posts?: ChatbotPost[];
 }
 
-/** Khớp ChatMessageRequest của BE. */
+export interface ChatbotConversation {
+  id: string;
+  title: string;
+  lastMessageAt: string;
+}
+
 export interface ChatbotRequest {
-  /** undefined ở tin đầu tiên; guest thì BE luôn trả null */
+  //undefined là guest, string là userId của thành viên đã đăng nhập
   conversationId?: string;
   message: string;
   location?: { ward?: string; province?: string };
 }
 
-/** Khớp ChatResponse của BE (message → reply). */
 export interface ChatbotResponse {
   conversationId?: string;
   reply: string;

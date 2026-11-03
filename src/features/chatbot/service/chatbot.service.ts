@@ -2,6 +2,7 @@ import axios from "axios";
 import { env } from "@/config/env";
 import { http } from "@/config/axiosClient";
 import type {
+  ChatbotConversation,
   ChatbotMessage,
   ChatbotPost,
   ChatbotRequest,
@@ -10,10 +11,6 @@ import type {
 
 /* ──────────────────────────────────────────────────────────────────────────
  * CHATBOT API
- *
- *   - VITE_CHATBOT_API_URL có giá trị → gọi thẳng URL đó (dịch vụ chatbot riêng).
- *   - Ngược lại → backend chính: POST {VITE_API_BASE_URL}/v1/chatbot/messages
- *     (public: Guest + Student + Tutor; có token thì `http` tự gắn Bearer).
  * ────────────────────────────────────────────────────────────────────────── */
 
 const BACKEND_PATH = "/v1/chatbot/messages";
@@ -21,7 +18,6 @@ const CONVERSATIONS_PATH = "/v1/chatbot/conversations";
 const REQUEST_TIMEOUT_MS = 30_000;
 const NOT_FOUND = 404;
 
-/** ChatbotRequest → ChatMessageRequest của BE. */
 function toRequestBody(req: ChatbotRequest): unknown {
   return {
     conversationId: req.conversationId,
@@ -30,7 +26,6 @@ function toRequestBody(req: ChatbotRequest): unknown {
   };
 }
 
-/** ChatResponse của BE → ChatbotResponse. (interceptor đã bóc envelope `data`) */
 function fromResponseBody(
   data: unknown,
   fallbackConversationId?: string,
@@ -50,7 +45,6 @@ function fromResponseBody(
   };
 }
 
-/** Khớp ChatMessageResponse của BE. `posts` là các bài đăng bot đã gợi ý kèm tin nhắn đó. */
 interface ChatMessageDto {
   id: string;
   role: "USER" | "ASSISTANT";
@@ -59,20 +53,41 @@ interface ChatMessageDto {
   posts?: ChatbotPost[];
 }
 
-/** Lỗi đã bị interceptor đổi thành ApiError (có `status`) hoặc vẫn là AxiosError. */
+interface ConversationDto {
+  id: string;
+  title: string;
+  lastMessageAt: string;
+}
+
 function isNotFound(error: unknown): boolean {
   if (axios.isAxiosError(error)) return error.response?.status === NOT_FOUND;
   return (error as { status?: number } | null)?.status === NOT_FOUND;
 }
 
+function unwrapList<T>(data: T[] | { data: T[] }): T[] {
+  if (Array.isArray(data)) return data as T[];
+  return (data as { data: T[] }).data;
+}
+
 export const chatbotService = {
-  /** Lịch sử một cuộc trò chuyện của thành viên (cần đăng nhập). */
+  /** Danh sách hội thoại của thành viên (cần đăng nhập). */
+  async getConversations(): Promise<ChatbotConversation[]> {
+    const res = await http.get<ConversationDto[] | { data: ConversationDto[] }>(
+      CONVERSATIONS_PATH,
+    );
+    return unwrapList(res.data).map((conversation) => ({
+      id: conversation.id,
+      title: conversation.title || "Cuộc trò chuyện",
+      lastMessageAt: conversation.lastMessageAt,
+    }));
+  },
+
+  /** Lịch sử tin nhắn của một cuộc trò chuyện (cần đăng nhập). */
   async getMessages(conversationId: string): Promise<ChatbotMessage[]> {
     const res = await http.get<ChatMessageDto[] | { data: ChatMessageDto[] }>(
       `${CONVERSATIONS_PATH}/${conversationId}/messages`,
     );
-    const list = Array.isArray(res.data) ? res.data : res.data.data;
-    return list.map((m) => ({
+    return unwrapList(res.data).map((m) => ({
       id: m.id,
       role: m.role === "USER" ? "user" : "assistant",
       content: m.content,
@@ -86,7 +101,6 @@ export const chatbotService = {
     try {
       await http.delete(`${CONVERSATIONS_PATH}/${conversationId}`);
     } catch (error) {
-      // 404: hội thoại đã bị xóa từ trước → mục tiêu đã đạt, coi như thành công
       if (isNotFound(error)) return;
       throw error;
     }
