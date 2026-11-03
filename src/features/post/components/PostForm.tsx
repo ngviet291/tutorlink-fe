@@ -45,8 +45,11 @@ export function PostForm({ defaultValues, onSubmit, isSubmitting }: PostFormProp
     },
   })
 
-  const submitAs = (asDraft: boolean) =>
-    handleSubmit((data) => onSubmit(data, asDraft))()
+  const submitAs = (asDraft: boolean) => {
+    return handleSubmit(async (data) => {
+      await onSubmit(data, asDraft)
+    })()
+  }
 
   const postTypeOptions: { value: PostType; label: string }[] = [
     { value: 'FIND_TUTOR', label: t('post.type.FIND_TUTOR') },

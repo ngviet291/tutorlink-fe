@@ -32,6 +32,7 @@ interface FilterSidebarProps {
   rangeMax?: number
   rangeStep?: number
   className?: string
+  onSearchPerformed?: (resultCount: number) => void
 }
 
 const PROVINCES = [
@@ -50,7 +51,7 @@ export function FilterSidebar({
   const { t } = useTranslation()
   const subjects = useSubjects()
 
-  const set = (patch: Partial<FilterValues>) => onChange({ ...value, ...patch })
+    const set = (patch: Partial<FilterValues>) => onChange({ ...value, ...patch })
 
   const toggleLevel = (lvl: EducationLevel) => {
     const next = value.educationLevels.includes(lvl)

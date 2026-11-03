@@ -1,5 +1,5 @@
 import { http } from "@/config/axiosClient";
-import { env, mockConfig } from "@/config/env";
+import { mockConfig } from "@/config/env";
 import { ApiError, type CursorResponse } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type {
@@ -50,10 +50,9 @@ export const walletService = {
       const me = requireUser();
       return { balance: wallets[me.id] ?? 0 };
     }
-    const r = await http.get<{ balance: number }>(
-      "/v1/payments/wallet/balance",
-    );
-    return { balance: Number(0) };
+    return http
+      .get<{ balance: number }>("/v1/payments/wallet/balance")
+      .then((res) => ({ balance: Number(res.data.balance) }));
   },
 
   async topUp(payload: TopUpPayload): Promise<TopUpResponse> {

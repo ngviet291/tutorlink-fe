@@ -3,7 +3,6 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
-import { Select } from "@/shared/components/ui/Select";
 import { useToast } from "@/shared/hooks/useToast";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { useRegister } from "@/features/auth/hooks/useAuth";

@@ -10,6 +10,7 @@ import { router } from './app/router'
 import { ErrorBoundary } from './shared/components/ErrorBoundary'
 import { ToastContainer } from './shared/components/ui/Toast'
 import { AuthInitializer } from './features/auth/components/AuthInitializer'
+import { initTracking } from './features/tracking/tracker'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,6 +26,8 @@ try {
 } catch {
   /* bỏ qua */
 }
+
+initTracking(router)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

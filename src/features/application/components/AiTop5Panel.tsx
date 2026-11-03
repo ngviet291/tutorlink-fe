@@ -5,6 +5,7 @@ import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { useAiTop5 } from '../hooks/useApplications'
 import { ApplicantRow } from './ApplicantRow'
 import type { ApplicationResponse } from '../types/application.types'
+import { RANK_MIN_PENDING } from '../rank'
 
 interface Props {
   postId: string
@@ -15,9 +16,9 @@ interface Props {
 
 export function AiTop5Panel({ postId, canSelect, onSelect, pendingCount }: Props) {
   const { t } = useTranslation()
-  const { data, isLoading, isError } = useAiTop5(postId, pendingCount >= 3)
+  const { data, isLoading, isError } = useAiTop5(postId, pendingCount >= RANK_MIN_PENDING)
 
-  if (pendingCount < 3) return null
+  if (pendingCount < RANK_MIN_PENDING) return null
 
   return (
     <section className="rounded-2xl border border-primary/30 bg-primary-light/30 p-4">

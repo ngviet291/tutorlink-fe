@@ -1,5 +1,3 @@
-import { subjects } from "@/mocks/db";
-
 const flag = import.meta.env.VITE_USE_MOCK as string | undefined;
 
 export const env = {
@@ -21,6 +19,8 @@ export const env = {
     post: true,
     review: true,
     wallet: true,
+
+    tracking: false, // false = Gọi API thật
   },
 
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
@@ -45,4 +45,5 @@ export const mockConfig = {
   post: env.features.post,
   review: env.features.review,
   wallet: env.features.wallet,
+  tracking: env.features.tracking,
 };

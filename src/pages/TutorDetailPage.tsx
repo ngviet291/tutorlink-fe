@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Award, BadgeCheck, Briefcase, GraduationCap, Heart, MapPin, MessageCircle } from 'lucide-react'
 import { DAY_LABEL, EDUCATION_LEVEL_LABEL, TEACHING_MODE_LABEL } from '@/constants/enums'
 import { ROUTES } from '@/constants/routes'
@@ -19,6 +19,7 @@ import { ReviewList } from '@/features/review/components/ReviewList'
 import { useTutor } from '@/features/tutor/hooks/useTutors'
 import { useFavorites, useToggleFavorite } from '@/features/favorite/hooks/useFavorites'
 import { StatusBadge } from '@/shared/components/ui/StatusBadge'
+import { useTutorProfileTracking } from '@/features/tracking/hooks'
 
 type Tab = 'about' | 'certs' | 'reviews' | 'schedule'
 
@@ -31,8 +32,12 @@ export default function TutorDetailPage() {
   const [tab, setTab] = useState<Tab>('about')
   const canFavorite = user?.role === 'STUDENT'
   const favorites = useFavorites(canFavorite)
-  const toggle = useToggleFavorite()
+  const toggle = useToggleFavorite('profile')
   const isFav = Boolean(favorites.data?.some((t) => t.id === id))
+  
+  const { state: navState } = useLocation()
+  const origin = navState as { section?: 'TOP' | 'OTHERS'; rank?: number } | null
+  useTutorProfileTracking(tutor?.id, origin ?? undefined)
 
   if (isLoading) {
     return (

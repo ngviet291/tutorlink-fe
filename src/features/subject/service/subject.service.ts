@@ -1,5 +1,5 @@
 import { http } from "@/config/axiosClient";
-import { env, mockConfig } from "@/config/env";
+import { mockConfig } from "@/config/env";
 import { delay } from "@/mocks/session";
 import { subjects } from "@/mocks/db";
 import type { SubjectResponse } from "../types/subject.types";

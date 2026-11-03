@@ -1,12 +1,11 @@
-import { env, mockConfig } from "@/config/env";
+import { mockConfig } from "@/config/env";
 import { ApiError } from "@/shared/types/api.types";
-import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type {
   AuthUser,
   ChangePasswordPayload,
   UpdateProfilePayload,
 } from "../types/user.types";
-import { DEMO_PASSWORD, passwords, users } from "@/mocks/db";
+import { DEMO_PASSWORD, passwords } from "@/mocks/db";
 import { delay, requireUser } from "@/mocks/session";
 import { http } from "@/config/axiosClient";
 

@@ -29,6 +29,7 @@ export interface PostResponse {
   createdAt: string
   applicationCount?: number
   matchedApplicationId?: string
+
 }
 
 export interface PostFilter {

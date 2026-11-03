@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { EmptyState, ErrorState } from '@/shared/components/ui/EmptyState'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
@@ -10,6 +10,8 @@ import { AiTop5Panel } from './AiTop5Panel'
 import { ApplicantRow } from './ApplicantRow'
 import type { ApplicationResponse } from '../types/application.types'
 import type { PostResponse } from '@/features/post/types/post.types'
+import { track } from '@/features/tracking/tracker'
+import { RANK_MIN_PENDING } from '../rank'
 
 export function ApplicantList({ post }: { post: PostResponse }) {
   const { t } = useTranslation()
@@ -21,6 +23,17 @@ export function ApplicantList({ post }: { post: PostResponse }) {
   const hasAccepted = data?.some((a) => ['ACCEPTED', 'CONFIRMED', 'PAID', 'FINISHED'].includes(a.applicationStatus)) ?? false
   const canSelect = post.postStatus === 'PUBLISHED' && !hasAccepted
   const pending = data?.filter((a) => a.applicationStatus === 'PENDING').length ?? 0
+
+  const opened = useRef(false)
+  useEffect(() => {
+    if (!data || opened.current) return
+    opened.current = true
+    track('application_list_opened', {
+      postId: post.id,
+      applicantCount: data.length,
+      ranked: pending >= RANK_MIN_PENDING,
+    })
+  }, [data, pending, post.id])
 
   const confirm = () => {
     if (!target) return

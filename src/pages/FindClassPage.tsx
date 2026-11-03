@@ -11,6 +11,7 @@ import { usePosts } from '@/features/post/hooks/usePosts'
 import { useDebounce } from '@/shared/hooks/useDebounce'
 import type { PostType } from '@/shared/types/common.types'
 import type { PostFilter } from '@/features/post/types/post.types'
+import { useSearchTracking } from '@/features/tracking/hooks'
 
 const BUDGET_MAX = 10_000_000
 
@@ -35,9 +36,30 @@ export default function FindClassPage() {
     [type, debounced, filter],
   )
 
-  const { data, isLoading, isError, refetch, isFetchingNextPage, hasNextPage, fetchNextPage } = usePosts(query)
+  const { data, isLoading, isFetching, isError, refetch, isFetchingNextPage, hasNextPage, fetchNextPage } = usePosts(query)
 
   const items = data?.pages.flatMap((p) => p.items) ?? []
+
+    const hasSearch = Boolean(
+      debounced || filter.subjectId || filter.province || filter.teachingMode ||
+      filter.educationLevels.length || filter.min > 0 || filter.max < BUDGET_MAX,
+    )
+    useSearchTracking({
+      active: hasSearch,
+      ready: !isFetching && !isError,
+      key: JSON.stringify(query),
+      query: debounced,
+      filters: {
+        type,
+        subjectId: query.subjectId,
+        province: query.province,
+        teachingMode: query.teachingMode,
+        educationLevels: query.educationLevels,
+        minBudget: query.minBudget,
+        maxBudget: query.maxBudget,
+      },
+      resultCount: items.length,
+    })
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">

@@ -17,6 +17,7 @@ import { getErrorMessage } from '@/shared/utils/errors'
 import { usePost, usePostMutations } from '@/features/post/hooks/usePosts'
 import { useSubjects } from '@/features/subject/hooks/useSubjects'
 import type { PostPayload } from '@/features/post/types/post.types'
+import { markPostFormCompleted, usePostFormAbandonTracking } from '@/features/tracking/hooks'
 
 type FormValues = Omit<PostPayload, 'type'>
 
@@ -32,12 +33,14 @@ export default function PostFormPage() {
   const { data: existing, isLoading, isError, refetch } = usePost(id)
   const { create, update } = usePostMutations()
   const type: PostPayload['type'] = existing?.type ?? (user?.role === 'TUTOR' ? 'FIND_STUDENT' : 'FIND_TUTOR')
-
-  const { register, reset, getValues, trigger, formState: { errors } } = useForm<FormValues>({
+  
+  const { register, reset, getValues, trigger, formState: { errors, isDirty } } = useForm<FormValues>({
     defaultValues: {
       educationLevel: 'SECONDARY', teachingMode: 'BOTH', address: { province: PROVINCES[0] }, sessionsPerWeek: 2, durationMinutes: 90, deadline: tomorrow(),
     },
   })
+
+  usePostFormAbandonTracking(isDirty)
 
   useEffect(() => {
     if (!existing) return
@@ -59,6 +62,7 @@ export default function PostFormPage() {
     if (!(await trigger())) return
     const payload: PostPayload = { ...getValues(), type }
     const done = (msg: string) => {
+      markPostFormCompleted()
       toast.success(msg)
       navigate(ROUTES.MY_POSTS)
     }

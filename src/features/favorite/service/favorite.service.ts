@@ -1,5 +1,5 @@
 import { http } from "@/config/axiosClient";
-import { env, mockConfig } from "@/config/env";
+import { mockConfig } from "@/config/env";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 import { favorites, tutors } from "@/mocks/db";
 import { delay, requireUser } from "@/mocks/session";
