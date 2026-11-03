@@ -601,7 +601,7 @@ const postSeeds: PostSeed[] = [
     content:
       "Mình cần tìm một bạn sinh viên hoặc giáo viên có kinh nghiệm dạy Toán lớp 10. Cháu nhà học lực trung bình khá, cần gia sư kiên nhẫn, bám sát chương trình trên trường và hướng dẫn làm bài tập về nhà.",
     type: "FIND_TUTOR",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "s-1",
     subject: "019cef3d-54e0-7e12-85ae-da011bb1fa7d", // Toán
     level: "HIGH_SCHOOL",
@@ -660,7 +660,7 @@ export const mockPosts: PostResponse[] = [
     content:
       "Mình cần tìm một bạn sinh viên hoặc giáo viên có kinh nghiệm dạy Toán lớp 10. Cháu nhà học lực trung bình khá, cần gia sư kiên nhẫn, bám sát chương trình trên trường và hướng dẫn làm bài tập về nhà.",
     type: "FIND_TUTOR",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     subject: {
       id: "019cef3d-54e0-7e12-85ae-da011bb1fa7d",
       name: "Toán",
@@ -686,10 +686,7 @@ export const mockPosts: PostResponse[] = [
   },
 ];
 
-export const allPosts: PostResponse[] = [
-  ...posts,
-  ...mockPosts,
-];
+export const allPosts: PostResponse[] = [...posts, ...mockPosts];
 
 function app(
   id: string,
