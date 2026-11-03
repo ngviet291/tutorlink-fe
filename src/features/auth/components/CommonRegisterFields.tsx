@@ -1,8 +1,8 @@
 import { useFormContext } from "react-hook-form";
-import { PROVINCES } from "@/constants/enums";
 import { Input } from "@/shared/components/ui/Input";
 import { Select } from "@/shared/components/ui/Select";
 import { rules } from "@/features/auth/validation/auth.validation";
+import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 
 export interface CommonRegisterValues {
   fullName: string;
@@ -18,22 +18,21 @@ export interface CommonRegisterValues {
 }
 
 export const COMMON_DEFAULTS: CommonRegisterValues = {
-  fullName: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-  phone: "",
+  fullName: "Nguyễn Phước Thịnh",
+  email: "nguyenphuocthinh020@gmail.com",
+  password: "Admin@123",
+  confirmPassword: "Admin@123",
+  phone: "0338687106",
   gender: "MALE",
-  dateOfBirth: "",
-  street: "",
-  ward: "",
-  province: PROVINCES[0],
+  dateOfBirth: "10/07/2005",
+  street: "Tân Hiệp",
+  ward: "Xã Tân Thới",
+  province: "Tỉnh Đồng Tháp",
 };
 
 const GENDERS = [
   { value: "MALE", label: "Nam" },
   { value: "FEMALE", label: "Nữ" },
-  { value: "OTHER", label: "Khác" },
 ];
 
 /** Chuyển giá trị form phẳng thành payload chung (address lồng nhau). */
@@ -53,8 +52,24 @@ export function CommonRegisterFields() {
   const {
     register,
     getValues,
+    control,
+    setValue,
     formState: { errors },
   } = useFormContext<CommonRegisterValues>();
+
+  const {
+    provinceOptions,
+    wardOptions,
+    onProvinceChange,
+    wardDisabled,
+    isLoadingProvinces,
+    manualEntry,
+  } = useAddressSelect({
+    control,
+    setValue,
+    provinceField: "province",
+    wardField: "ward",
+  });
 
   return (
     <>
@@ -130,19 +145,45 @@ export function CommonRegisterFields() {
         {...register("street", { required: "Nhập địa chỉ" })}
       />
       <div className="grid grid-cols-2 gap-3">
-        <Input
-          label="Phường / Xã"
-          required
-          error={errors.ward?.message}
-          {...register("ward", { required: "Nhập phường/xã" })}
-        />
-        <Select
-          label="Tỉnh / Thành phố"
-          required
-          options={PROVINCES.map((c) => ({ value: c, label: c }))}
-          error={errors.province?.message}
-          {...register("province", { required: "Chọn tỉnh/thành" })}
-        />
+        {manualEntry ? (
+          // API địa chỉ lỗi: cho nhập tay để không chặn đăng ký
+          <>
+            <Input
+              label="Tỉnh / Thành phố"
+              required
+              error={errors.province?.message}
+              {...register("province", { required: "Nhập tỉnh/thành" })}
+            />
+            <Input
+              label="Phường / Xã"
+              required
+              error={errors.ward?.message}
+              {...register("ward", { required: "Nhập phường/xã" })}
+            />
+          </>
+        ) : (
+          <>
+            <Select
+              label="Tỉnh / Thành phố"
+              required
+              disabled={isLoadingProvinces}
+              options={provinceOptions}
+              error={errors.province?.message}
+              {...register("province", {
+                required: "Chọn tỉnh/thành",
+                onChange: onProvinceChange,
+              })}
+            />
+            <Select
+              label="Phường / Xã"
+              required
+              disabled={wardDisabled}
+              options={wardOptions}
+              error={errors.ward?.message}
+              {...register("ward", { required: "Chọn phường/xã" })}
+            />
+          </>
+        )}
       </div>
     </>
   );

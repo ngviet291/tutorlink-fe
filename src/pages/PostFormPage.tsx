@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { PROVINCES, EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL, TEACHING_MODES, TEACHING_MODE_LABEL } from '@/constants/enums'
+import { EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL, TEACHING_MODES, TEACHING_MODE_LABEL } from '@/constants/enums'
 import { ROUTES } from '@/constants/routes'
 import { Button } from '@/shared/components/ui/Button'
 import { ErrorState } from '@/shared/components/ui/EmptyState'
@@ -11,6 +11,7 @@ import { Select } from '@/shared/components/ui/Select'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { Textarea } from '@/shared/components/ui/Textarea'
 import { useAppSelector } from '@/shared/hooks/useAppStore'
+import { useAddressSelect } from '@/shared/hooks/useAddressSelect'
 import { useToast } from '@/shared/hooks/useToast'
 import { toDateInputValue } from '@/shared/utils/date'
 import { getErrorMessage } from '@/shared/utils/errors'
@@ -20,7 +21,8 @@ import type { PostPayload } from '@/features/post/types/post.types'
 
 type FormValues = Omit<PostPayload, 'type'>
 
-const tomorrow = (): string => new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10)
+// Hạn mặc định: 7 ngày kể từ hôm nay
+const defaultDeadline = (): string => new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10)
 
 export default function PostFormPage() {
   const { id } = useParams()
@@ -33,21 +35,45 @@ export default function PostFormPage() {
   const { create, update } = usePostMutations()
   const type: PostPayload['type'] = existing?.type ?? (user?.role === 'TUTOR' ? 'FIND_STUDENT' : 'FIND_TUTOR')
 
-  const { register, reset, getValues, trigger, formState: { errors } } = useForm<FormValues>({
+  const { register, reset, getValues, setValue, trigger, control, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
-      educationLevel: 'SECONDARY', teachingMode: 'BOTH', address: { province: PROVINCES[0] }, sessionsPerWeek: 2, durationMinutes: 90, deadline: tomorrow(),
+      educationLevel: 'SECONDARY', teachingMode: 'BOTH', address: { province: '', ward: '' },
+      budgetUnit: 'PER_MONTH', sessionsPerWeek: 2, durationMinutes: 90, deadline: defaultDeadline(),
     },
   })
 
+  const {
+    provinceOptions, wardOptions, onProvinceChange,
+    isLoadingProvinces, isLoadingWards, wardDisabled, manualEntry,
+  } = useAddressSelect<FormValues>({
+    control,
+    setValue,
+    provinceField: 'address.province',
+    wardField: 'address.ward',
+  })
+
+  // Edit: chỉ reset khi môn học và danh sách tỉnh đã tải xong,
+  // nếu không <select> không có option khớp để hiển thị giá trị đã lưu.
+  const optionsReady = Boolean(subjects) && !isLoadingProvinces
   useEffect(() => {
-    if (!existing) return
+    if (!existing || !optionsReady) return
     reset({
       title: existing.title, content: existing.content, subjectId: existing.subject.id, educationLevel: existing.educationLevel,
-      teachingMode: existing.teachingMode, address: { province: existing.address?.province, ward: existing.address?.ward, street: existing.address?.street },
-      minBudget: existing.minBudget, maxBudget: existing.maxBudget, sessionsPerWeek: existing.sessionsPerWeek,
-      durationMinutes: existing.durationMinutes, deadline: toDateInputValue(existing.deadline),
+      teachingMode: existing.teachingMode, address: { province: existing.address?.province ?? '', ward: existing.address?.ward ?? '', street: existing.address?.street },
+      minBudget: existing.minBudget, maxBudget: existing.maxBudget, budgetUnit: existing.budgetUnit ?? 'PER_MONTH',
+      sessionsPerWeek: existing.sessionsPerWeek, durationMinutes: existing.durationMinutes, deadline: toDateInputValue(existing.deadline),
     })
-  }, [existing, reset])
+  }, [existing, optionsReady, reset])
+
+  // Phường/xã chỉ tải được sau khi tỉnh đã được set, nên set lại ward đã lưu một lần
+  // khi danh sách phường/xã sẵn sàng.
+  const wardSynced = useRef(false)
+  useEffect(() => {
+    if (!existing || wardSynced.current) return
+    if (isLoadingWards || wardOptions.length <= 1) return
+    wardSynced.current = true
+    setValue('address.ward', existing.address?.ward ?? '')
+  }, [existing, isLoadingWards, wardOptions, setValue])
 
   if (isEdit && isLoading) return <Skeleton className="mx-auto h-96 max-w-3xl" />
   if (isEdit && (isError || !existing)) return <ErrorState message="Không tải được bài đăng." onRetry={() => void refetch()} />
@@ -90,8 +116,31 @@ export default function PostFormPage() {
           <Select label="Cấp học" required options={EDUCATION_LEVELS.map((l) => ({ value: l, label: EDUCATION_LEVEL_LABEL[l] }))} {...register('educationLevel')} />
           <Select label="Hình thức" required options={TEACHING_MODES.map((m) => ({ value: m, label: TEACHING_MODE_LABEL[m] }))} {...register('teachingMode')} />
           <Input label="Hạn nhận đăng ký" type="date" required error={errors.deadline?.message} {...register('deadline', req('Hạn nhận đăng ký'))} />
-          <Select label="Tỉnh / Thành phố" required options={PROVINCES.map((c) => ({ value: c, label: c }))} {...register('address.province')} />
-          <Input label="Phường / Xã (không bắt buộc)" {...register('address.ward')} />
+
+          {/* Tỉnh / Phường-Xã: API lỗi thì cho nhập tay để không chặn đăng bài */}
+          {manualEntry ? (
+            <>
+              <Input label="Tỉnh / Thành phố" required error={errors.address?.province?.message} {...register('address.province', req('Tỉnh / Thành phố'))} />
+              <Input label="Phường / Xã (không bắt buộc)" {...register('address.ward')} />
+            </>
+          ) : (
+            <>
+              <Select
+                label="Tỉnh / Thành phố"
+                required
+                options={provinceOptions}
+                disabled={isLoadingProvinces}
+                error={errors.address?.province?.message}
+                {...register('address.province', { ...req('Tỉnh / Thành phố'), onChange: onProvinceChange })}
+              />
+              <Select
+                label="Phường / Xã (không bắt buộc)"
+                options={wardOptions}
+                disabled={wardDisabled}
+                {...register('address.ward')}
+              />
+            </>
+          )}
         </div>
         <Input label="Địa chỉ chi tiết (không bắt buộc)" hint="Chỉ nên ghi khu vực chung, không ghi số nhà/SĐT." {...register('address.street')} />
         <div className="grid gap-4 sm:grid-cols-2">

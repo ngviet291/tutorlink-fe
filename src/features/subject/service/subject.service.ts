@@ -1,18 +1,60 @@
-import { http } from "@/config/axiosClient";
-import { env, mockConfig } from "@/config/env";
-import { delay } from "@/mocks/session";
-import { subjects } from "@/mocks/db";
-import type { SubjectResponse } from "../types/subject.types";
+import type { SubjectRequest } from "../types/subject.dto";
+import type {
+  SubjectPageParams,
+  SubjectResponse,
+} from "../types/subject.types";
+import type { SubjectGateway } from "../api/subject.gateway";
+import type { CursorResponse } from "@/shared/types/common.dto";
 
-const USE_MOCK = mockConfig.subject;
+const ALL_PAGE_SIZE = 50;
+const MAX_PAGES = 100; // chặn vòng lặp vô hạn nếu BE trả cursor sai
 
-export const subjectService = {
+/**
+ * Use-case của môn học: chỉ gọi gateway.
+ */
+export class SubjectService {
+  private readonly gateway: SubjectGateway;
+
+  constructor(gateway: SubjectGateway) {
+    this.gateway = gateway;
+  }
+
+  getPage(
+    params?: SubjectPageParams,
+  ): Promise<CursorResponse<SubjectResponse>> {
+    return this.gateway.getPage(params);
+  }
+
+  /** Lấy toàn bộ môn học (duyệt hết các trang) — dùng cho dropdown/đăng ký. */
   async getAll(): Promise<SubjectResponse[]> {
-    if (USE_MOCK) {
-      await delay(200);
-      return subjects;
+    const all: SubjectResponse[] = [];
+    let cursor: string | undefined;
+
+    for (let i = 0; i < MAX_PAGES; i++) {
+      const page = await this.gateway.getPage({
+        cursor,
+        limit: ALL_PAGE_SIZE,
+      });
+      all.push(...page.content);
+      if (!page.hasNext || !page.nextCursor) break;
+      cursor = page.nextCursor;
     }
-    const response = await http.get<SubjectResponse[]>("/v1/subjects");
-    return response.data;
-  },
-};
+    return all;
+  }
+
+  getById(id: string): Promise<SubjectResponse> {
+    return this.gateway.getById(id);
+  }
+
+  create(req: SubjectRequest): Promise<SubjectResponse> {
+    return this.gateway.create(req);
+  }
+
+  update(id: string, req: SubjectRequest): Promise<SubjectResponse> {
+    return this.gateway.update(id, req);
+  }
+
+  remove(id: string): Promise<void> {
+    return this.gateway.remove(id);
+  }
+}
