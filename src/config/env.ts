@@ -27,6 +27,7 @@ export const env = {
 
   chatbotApiUrl: import.meta.env.VITE_CHATBOT_API_URL ?? "",
   chatbotApiKey: import.meta.env.VITE_CHATBOT_API_KEY ?? "",
+  provinceOpenUrl: import.meta.env.PROVINCE_OPEN_URL ?? "",
 };
 
 export const mockConfig = {

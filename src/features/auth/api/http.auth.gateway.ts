@@ -12,7 +12,10 @@ import type {
   ResetPasswordRequest,
 } from "../types/auth.dto";
 import type { AuthResponse, AuthTokens } from "../types/auth.types";
-import { toAuthResponse } from "../mappers/auth.mapper";
+import {
+  toAuthResponse,
+  toRegisterTutorFormData,
+} from "../mappers/auth.mapper";
 import type { AuthGateway } from "./auth.gateway";
 
 const AUTH = "/v1/auth";
@@ -47,9 +50,12 @@ export class HttpAuthGateway implements AuthGateway {
   }
 
   async registerTutor(req: RegisterTutorRequest): Promise<AuthResponse> {
-    return toAuthResponse(
-      await this.http.post<AuthenticateResponse>(`${AUTH}/register/tutor`, req),
+    const res = await this.http.post<AuthenticateResponse>(
+      `${AUTH}/register/tutor`,
+      toRegisterTutorFormData(req),
+      { headers: { "Content-Type": "multipart/form-data" } },
     );
+    return toAuthResponse(res);
   }
 
   async refreshToken(req: RefreshTokenRequest): Promise<AuthTokens> {

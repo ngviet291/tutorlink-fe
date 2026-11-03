@@ -19,6 +19,7 @@ interface TutorFormValues extends CommonRegisterValues {
   experienceYears: number;
   education: string;
   subjectIds: string[];
+  certificates: File[];
 }
 
 export default function RegisterTutorPage() {
@@ -29,9 +30,10 @@ export default function RegisterTutorPage() {
   const methods = useForm<TutorFormValues>({
     defaultValues: {
       ...COMMON_DEFAULTS,
-      experienceYears: 0,
-      education: "",
+      experienceYears: 1,
+      education: "Trường Đai Học Công Nghiệp TPHCM",
       subjectIds: [],
+      certificates: [],
     },
   });
   const {
@@ -48,6 +50,7 @@ export default function RegisterTutorPage() {
         experienceYears: v.experienceYears,
         education: v.education,
         subjectIds: v.subjectIds,
+        
       },
       {
         onSuccess: () => {
@@ -145,6 +148,17 @@ export default function RegisterTutorPage() {
                     </p>
                   )}
                 </fieldset>
+              )}
+            />
+            <Controller
+              name="certificates"
+              control={control}
+              render={({ field }) => (
+                <CertificateUpload
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.certificates?.message}
+                />
               )}
             />
           </div>
