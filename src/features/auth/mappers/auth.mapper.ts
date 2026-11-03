@@ -1,4 +1,7 @@
-import type { AuthenticateResponse } from "../types/auth.dto";
+import type {
+  AuthenticateResponse,
+  RegisterTutorRequest,
+} from "../types/auth.dto";
 import type { AuthResponse } from "../types/auth.types";
 import type { BaseUserResponse } from "@/features/user/types/user.dto";
 import type { AuthUser } from "@/features/user/types/user.types";
@@ -40,3 +43,27 @@ export function toAuthResponse(dto: AuthenticateResponse): AuthResponse {
     user: toAuthUser(dto.user),
   };
 }
+
+export const toRegisterTutorFormData = ({
+  certificates = [],
+  ...data
+}: RegisterTutorRequest): FormData => {
+  const form = new FormData();
+  // Part JSON phải có type application/json thì Spring mới parse vào @RequestPart
+  form.append(
+    "data",
+    new Blob([JSON.stringify(data)], { type: "application/json" }),
+  );
+  certificates.forEach((file) => form.append("certificates", file));
+  if (import.meta.env.DEV) {
+    for (const [key, value] of form.entries()) {
+      console.log(
+        key,
+        value instanceof File
+          ? `File(${value.name}, ${value.size}B)`
+          : "[json]",
+      );
+    }
+  }
+  return form;
+};

@@ -1,5 +1,3 @@
-import { subjects } from "@/mocks/db";
-
 const flag = import.meta.env.VITE_USE_MOCK as string | undefined;
 
 export const env = {
@@ -27,6 +25,7 @@ export const env = {
 
   chatbotApiUrl: import.meta.env.VITE_CHATBOT_API_URL ?? "",
   chatbotApiKey: import.meta.env.VITE_CHATBOT_API_KEY ?? "",
+  provinceOpenUrl: import.meta.env.PROVINCE_OPEN_URL ?? "",
 };
 
 export const mockConfig = {

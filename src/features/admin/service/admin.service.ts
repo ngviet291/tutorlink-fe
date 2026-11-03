@@ -143,7 +143,7 @@ export const adminService = {
       await delay();
       requireAdmin();
       const list = posts
-        .filter((p) => !params.status || p.postStatus === params.status)
+        .filter((p) => !params.status || p.status === params.status)
         .filter(
           (p) =>
             !params.keyword ||
@@ -168,7 +168,7 @@ export const adminService = {
       requireAdmin();
       const p = posts.find((x) => x.id === postId);
       if (!p) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      p.postStatus = "REMOVED";
+      p.status = "REMOVED";
       notifications[p.author.id] = [
         {
           id: nextId("n"),
@@ -444,7 +444,7 @@ export const adminService = {
         revenueByMonth,
         postsByStatus: statuses.map((status) => ({
           status,
-          count: posts.filter((p) => p.postStatus === status).length,
+          count: posts.filter((p) => p.status === status).length,
         })),
         totalSuccessfulMatches: paid.length + 18,
         topTutors: [

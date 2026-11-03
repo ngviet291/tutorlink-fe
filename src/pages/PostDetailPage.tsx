@@ -68,7 +68,7 @@ export default function PostDetailPage() {
   let disabledReason: string | undefined
   if (isAuthor) disabledReason = 'Bạn không thể đăng ký bài của chính mình'
   else if (alreadyApplied) disabledReason = 'Bạn đã đăng ký bài này rồi'
-  else if (post.postStatus !== 'PUBLISHED') disabledReason = 'Bài đăng không còn nhận đăng ký'
+  else if (post.status !== 'PUBLISHED') disabledReason = 'Bài đăng không còn nhận đăng ký'
   else if (isTutor && post.type === 'FIND_TUTOR' && !tutorApproved) disabledReason = 'Hồ sơ gia sư của bạn chưa được duyệt'
 
   const onApply = () => {
@@ -88,7 +88,7 @@ export default function PostDetailPage() {
       onError: (e) => toast.error(getErrorMessage(e)),
     })
 
-  const canEdit = isAuthor && post.postStatus !== 'CLOSED' && post.postStatus !== 'REMOVED'
+  const canEdit = isAuthor && post.status !== 'CLOSED' && post.status !== 'REMOVED'
 
   const info: { icon: typeof MapPin; label: string; value: string }[] = [
     { icon: MapPin, label: 'Khu vực', value: [post.address?.street, post.address?.ward, post.address?.province].filter(Boolean).join(', ') },
@@ -104,7 +104,7 @@ export default function PostDetailPage() {
           <Badge tone={post.type === 'FIND_TUTOR' ? 'orange' : 'blue'}>{POST_TYPE_LABEL[post.type]}</Badge>
           <SubjectTag name={post.subject.name} />
           <Badge tone="gray">{EDUCATION_LEVEL_LABEL[post.educationLevel]}</Badge>
-          <StatusBadge kind="post" status={post.postStatus} />
+          <StatusBadge kind="post" status={post.status} />
         </div>
         <h1 className="text-2xl font-extrabold leading-snug text-text sm:text-3xl">{post.title}</h1>
         <p className="mt-3 text-2xl font-extrabold text-primary">
@@ -183,7 +183,7 @@ export default function PostDetailPage() {
 
         {canEdit && (
           <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
-            {post.postStatus === 'DRAFT' && (
+            {post.status === 'DRAFT' && (
               <Button
                 loading={publish.isPending}
                 onClick={() => publish.mutate(post.id, { onSuccess: () => toast.success('Đã đăng công khai'), onError: (e) => toast.error(getErrorMessage(e)) })}
@@ -197,7 +197,7 @@ export default function PostDetailPage() {
         )}
       </article>
 
-      {isAuthor && post.postStatus !== 'DRAFT' && (
+      {isAuthor && post.status !== 'DRAFT' && (
         <div className="mt-6"><ApplicantList post={post} /></div>
       )}
 

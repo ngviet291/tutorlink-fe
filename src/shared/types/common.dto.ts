@@ -5,6 +5,21 @@ import type { MediaType } from "@/shared/types/common.types";
 
 export type { ApiResponse } from "./api.types";
 
+// Khớp với BE: address/dto/response/ProvinceResponse.java và WardResponse.java
+// (BE đã trả đúng dạng FE cần nên dùng thẳng, không cần mapper).
+
+export interface Province {
+  code: number;
+  name: string;
+  codename: string;
+}
+
+export interface Ward {
+  code: number;
+  name: string;
+  provinceCode: number;
+}
+
 /** BE: common/dto/response/AccountBanErrorResponse.java */
 export interface AccountBanErrorResponse extends ErrorResponse {
   lockedUntil?: string;

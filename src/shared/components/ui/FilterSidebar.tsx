@@ -7,8 +7,7 @@ import type { TeachingMode } from "@/shared/types/common.types";
 import type { EducationLevel } from "@/constants/enums";
 
 import { EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL } from "@/constants/enums";
-import { useProvinces } from "@/features/address/hooks/useAddresses";
-
+import { useProvinces } from "@/shared/hooks/useAddress";
 export interface FilterValues {
   subjectId: string;
   province: string;
@@ -69,8 +68,7 @@ export function FilterSidebar({
 
   return (
     <aside
-      className={`flex w-full flex-col gap-4 rounded-2xl border border-border bg-surface p-4 lg:w-64 lg:shrink-0 ${className}`}
-    >
+      className={`flex w-full flex-col gap-4 rounded-2xl border border-border bg-surface p-4 lg:w-64 lg:shrink-0 ${className}`}>
       <div>
         <label className="mb-1 block text-xs font-semibold text-text-secondary">
           Môn học
@@ -79,8 +77,7 @@ export function FilterSidebar({
         <select
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
           value={value.subjectId}
-          onChange={(e) => set({ subjectId: e.target.value })}
-        >
+          onChange={(e) => set({ subjectId: e.target.value })}>
           <option value="">Tất cả môn</option>
 
           {(subjects.data ?? []).map((s) => (
@@ -100,8 +97,7 @@ export function FilterSidebar({
           className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
           value={value.province}
           disabled={provincesLoading || provincesError}
-          onChange={(e) => set({ province: e.target.value })}
-        >
+          onChange={(e) => set({ province: e.target.value })}>
           <option value="">
             {provincesError ? "Không tải được tỉnh/thành" : "Tất cả tỉnh/thành"}
           </option>
@@ -126,8 +122,7 @@ export function FilterSidebar({
             set({
               teachingMode: e.target.value as TeachingMode | "",
             })
-          }
-        >
+          }>
           <option value="">Tất cả</option>
           <option value="ONLINE">Online</option>
           <option value="OFFLINE">Offline</option>
@@ -153,8 +148,7 @@ export function FilterSidebar({
                   active
                     ? "border-primary bg-primary text-white"
                     : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
-                }`}
-              >
+                }`}>
                 {EDUCATION_LEVEL_LABEL[lvl]}
               </button>
             );
@@ -210,8 +204,7 @@ export function FilterSidebar({
         variant="ghost"
         size="sm"
         onClick={() => onChange(emptyFilter(rangeMax))}
-        className="mt-1"
-      >
+        className="mt-1">
         {t("common.reset", {
           defaultValue: "Đặt lại bộ lọc",
         })}

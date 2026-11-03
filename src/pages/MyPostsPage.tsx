@@ -25,7 +25,7 @@ export default function MyPostsPage() {
   } = useMyPosts();
   const [tab, setTab] = useState<Filter>("ALL");
   const allPosts = data?.pages.flatMap((p) => p.content) ?? [];
-  const list = allPosts.filter((p) => tab === "ALL" || p.postStatus === tab);
+  const list = allPosts.filter((p) => tab === "ALL" || p.status === tab);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5">

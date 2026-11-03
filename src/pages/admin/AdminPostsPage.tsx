@@ -77,9 +77,9 @@ export default function AdminPostsPage() {
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  <StatusBadge kind="post" status={p.postStatus} />
+                  <StatusBadge kind="post" status={p.status} />
                   <Button variant="ghost" size="sm" onClick={() => setViewing(p)}><Users className="size-4" /> {p.applicationCount ?? 0}</Button>
-                  {p.postStatus !== 'REMOVED' && p.postStatus !== 'CLOSED' && <Button variant="danger" size="sm" onClick={() => setTarget(p)}><Ban className="size-4" /> Gỡ bài</Button>}
+                  {p.status !== 'REMOVED' && p.status !== 'CLOSED' && <Button variant="danger" size="sm" onClick={() => setTarget(p)}><Ban className="size-4" /> Gỡ bài</Button>}
                 </div>
               </li>
             ))}

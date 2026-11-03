@@ -20,14 +20,14 @@ export interface PostResponse {
   title: string;
   content: string;
   type: PostType;
-  postStatus: PostStatus;
+  status: PostStatus;
   author: AuthorResponse;
   subject: SubjectSummaryResponse;
   educationLevel: EducationLevel;
   teachingMode: TeachingMode;
   address: Address | null;
-  minBudget: number | null;
-  maxBudget: number | null;
+  minBudget: number;
+  maxBudget: number;
   budgetUnit?: BudgetUnit;
   sessionsPerWeek: number;
   durationMinutes: number;

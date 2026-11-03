@@ -86,12 +86,24 @@ export const APPLICATION_STATUS_META: Record<
     },
     tone: "gray",
   },
+  CONFIRMED: {
+    get label() {
+      return t("application.status.CONFIRMED");
+    },
+    tone: "blue",
+  },
   // CONFIRMED: { get label() { return t('application.status.CONFIRMED') }, tone: 'blue' },
   PAID: {
     get label() {
       return t("application.status.PAID");
     },
     tone: "blue",
+  },
+  FINISHED: {
+    get label() {
+      return t("application.status.FINISHED");
+    },
+    tone: "green",
   },
   // FINISHED:  { get label() { return t('application.status.FINISHED') },  tone: 'green' },
 };
@@ -148,7 +160,12 @@ export const TRANSACTION_STATUS_META: Record<
     },
     tone: "gray",
   },
-  // REFUNDED:  { get label() { return t('wallet.transactionStatus.REFUNDED') },  tone: 'orange' },
+  REFUNDED: {
+    get label() {
+      return t("wallet.transactionStatus.REFUNDED");
+    },
+    tone: "orange",
+  },
 };
 
 export const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
@@ -271,18 +288,5 @@ export const EDUCATION_LEVELS: EducationLevel[] = [
   "UNIVERSITY",
 ]; //other
 export const TEACHING_MODES: TeachingMode[] = ["ONLINE", "OFFLINE", "BOTH"];
-
-export const PROVINCES = [
-  "Hồ Chí Minh",
-  "Hà Nội",
-  "Đà Nẵng",
-  "Cần Thơ",
-  "Hải Phòng",
-  "Bình Dương",
-  "Đồng Nai",
-  "Khánh Hòa",
-  "An Giang",
-  "Kiên Giang",
-] as const;
 
 export const PAYMENT_WINDOW_HOURS = 24;

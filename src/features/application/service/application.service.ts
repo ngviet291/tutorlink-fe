@@ -54,7 +54,7 @@ export const applicationService = {
       await delay();
       const me = requireUser();
       const post = posts.find((p) => p.id === payload.postId);
-      if (!post || post.postStatus !== "PUBLISHED") {
+      if (!post || post.status !== "PUBLISHED") {
         throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
       }
       if (post.author.id === me.id)
@@ -238,7 +238,7 @@ export const applicationService = {
       });
       a.applicationStatus = "PAID";
       const post = posts.find((p) => p.id === a.post.id);
-      if (post) post.postStatus = "CLOSED";
+      if (post) post.status = "CLOSED";
       for (const uid of [a.student.id, a.tutor.id]) {
         notify(uid, {
           notificationType: "PAYMENT",

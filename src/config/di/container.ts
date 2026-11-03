@@ -6,6 +6,9 @@ import { createPrivateClient } from "../http/privateClient";
 import { env } from "../env";
 import { SecureTokenStorage } from "../storage/SecureTokenStorage.web";
 import { AxiosHttpClient } from "../AxiosHttpClient";
+import { HttpSubjectGateway } from "@/features/subject/api/http.subject.gateway";
+import { SubjectService } from "@/features/subject/service/subject.service";
+import { HttpAddressGateway } from "@/shared/api/http.address.gateway";
 
 // Toàn bộ bean được quản lí ở đây
 export const tokenStorage = new SecureTokenStorage();
@@ -17,5 +20,8 @@ const publicHttpClient = new AxiosHttpClient(publicHttp);
 const privateHttpClient = new AxiosHttpClient(privateHttp);
 
 const gateway: AuthGateway = new HttpAuthGateway(publicHttpClient);
+const subjectGateway = new HttpSubjectGateway(privateHttpClient); // client có gắn token, không phải client PUBLIC
 
+export const subjectService = new SubjectService(subjectGateway);
+export const addressGateway = new HttpAddressGateway(privateHttpClient);
 export const authService = new AuthService(gateway, tokenStorage);

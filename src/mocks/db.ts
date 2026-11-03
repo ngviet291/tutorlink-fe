@@ -376,7 +376,7 @@ interface PostSeed {
   title: string;
   content: string;
   type: PostResponse["type"];
-  postStatus: PostResponse["postStatus"];
+  status: PostResponse["status"];
   by: string;
   subject: string;
   level: PostResponse["educationLevel"];
@@ -397,7 +397,7 @@ const postSeeds: PostSeed[] = [
     content:
       "Con đang học lớp 9, cần củng cố đại số và hình học, luyện đề thi vào 10.",
     type: "FIND_TUTOR",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "s-1",
     subject: "019cef3d-54e0-7e12-85ae-da011bb1fa7d",
     level: "SECONDARY",
@@ -416,7 +416,7 @@ const postSeeds: PostSeed[] = [
     content:
       "Em muốn cải thiện phản xạ giao tiếp và phát âm, học online buổi tối.",
     type: "FIND_TUTOR",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "s-2",
     subject: "019cef3d-7038-7158-afd2-4302a0e0fe8c",
     level: "HIGH_SCHOOL",
@@ -434,7 +434,7 @@ const postSeeds: PostSeed[] = [
     title: "Gia sư Hóa 12 luyện thi đại học tại Hà Nội",
     content: "Cần giáo viên Hóa có kinh nghiệm luyện thi khối A, B.",
     type: "FIND_TUTOR",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "s-3",
     subject: "019cef3d-5cb0-7b92-b114-2b73bc1efde7",
     level: "HIGH_SCHOOL",
@@ -452,7 +452,7 @@ const postSeeds: PostSeed[] = [
     title: "Tìm gia sư Tin học cho học sinh THCS",
     content: "Học Scratch và Python cơ bản.",
     type: "FIND_TUTOR",
-    postStatus: "DRAFT",
+    status: "DRAFT",
     by: "s-1",
     subject: "019cef3d-7808-7483-8158-511aa2f5576d",
     level: "SECONDARY",
@@ -470,7 +470,7 @@ const postSeeds: PostSeed[] = [
     title: "Cần gia sư Văn lớp 8",
     content: "Cần cô giáo dạy Văn giúp con viết bài tốt hơn.",
     type: "FIND_TUTOR",
-    postStatus: "CLOSED",
+    status: "CLOSED",
     by: "s-2",
     subject: "019cef3d-7bf0-7519-9e8f-edb503144692",
     level: "SECONDARY",
@@ -489,7 +489,7 @@ const postSeeds: PostSeed[] = [
     content:
       "Mình có 5 năm kinh nghiệm, còn trống lịch tối thứ 2, 4 và cả ngày thứ 7.",
     type: "FIND_STUDENT",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "t-1",
     subject: "019cef3d-54e0-7e12-85ae-da011bb1fa7d",
     level: "HIGH_SCHOOL",
@@ -508,7 +508,7 @@ const postSeeds: PostSeed[] = [
     content:
       "Dạy theo chuyên đề, có tài liệu riêng. Nhận nhóm nhỏ 1–3 học sinh.",
     type: "FIND_STUDENT",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "t-3",
     subject: "019cef3d-5cb0-7b92-b114-2b73bc1efde7",
     level: "HIGH_SCHOOL",
@@ -526,7 +526,7 @@ const postSeeds: PostSeed[] = [
     title: "Cần gia sư Tiếng Anh cho bé lớp 3",
     content: "Bé cần làm quen tiếng Anh qua trò chơi, giao tiếp cơ bản.",
     type: "FIND_TUTOR",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "s-3",
     subject: "019cef3d-7038-7158-afd2-4302a0e0fe8c",
     level: "PRIMARY",
@@ -544,7 +544,7 @@ const postSeeds: PostSeed[] = [
     title: "Dạy lập trình Python cho học sinh THPT",
     content: "Lộ trình từ cơ bản đến thuật toán, phù hợp đội tuyển Tin học.",
     type: "FIND_STUDENT",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "t-4",
     subject: "019cef3d-7808-7483-8158-511aa2f5576d",
     level: "HIGH_SCHOOL",
@@ -562,7 +562,7 @@ const postSeeds: PostSeed[] = [
     title: "Cần gia sư Vật lý lớp 10",
     content: "Củng cố cơ học và nhiệt học.",
     type: "FIND_TUTOR",
-    postStatus: "CLOSED",
+    status: "CLOSED",
     by: "s-3",
     subject: "019cef3d-58c8-73f5-9c26-747646e8272f",
     level: "HIGH_SCHOOL",
@@ -581,7 +581,7 @@ const postSeeds: PostSeed[] = [
     content:
       "Con mất căn bản phần phân số và tỉ lệ thức, cần gia sư kiên nhẫn.",
     type: "FIND_TUTOR",
-    postStatus: "PUBLISHED",
+    status: "PUBLISHED",
     by: "s-2",
     subject: "019cef3d-54e0-7e12-85ae-da011bb1fa7d",
     level: "SECONDARY",
@@ -601,7 +601,7 @@ export const posts: PostResponse[] = postSeeds.map((s) => ({
   title: s.title,
   content: s.content,
   type: s.type,
-  postStatus: s.postStatus,
+  status: s.status,
   author: author(s.by),
   subject: sub(s.subject),
   educationLevel: s.level,

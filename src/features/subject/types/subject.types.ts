@@ -1,3 +1,5 @@
+import type { SubjectRequest } from "./subject.dto";
+
 export interface SubjectResponse {
   id: string;
   name: string;
@@ -9,7 +11,10 @@ export interface SubjectResponse {
 export interface SubjectPayload {
   name: string;
   description?: string;
-  category?: string;
+  category: SubjectRequest["category"];
 }
-
+export interface SubjectPageParams {
+  cursor?: string;
+  limit?: number;
+}
 export type SubjectSummaryResponse = Pick<SubjectResponse, "id" | "name">;

@@ -31,7 +31,7 @@ export function PostCard({ post }: { post: PostResponse }) {
           </Badge>
           <SubjectTag name={post.subject.name} />
         </div>
-        <StatusBadge kind="post" status={post.postStatus} />
+        <StatusBadge kind="post" status={post.status} />
       </div>
 
       <h3 className="line-clamp-2 text-base font-bold text-text group-hover:text-primary">

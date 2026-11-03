@@ -242,7 +242,7 @@ export default function DashboardPage() {
                   </span>
                   <span className="flex shrink-0 items-center gap-2 text-xs text-text-secondary">
                     <Users className="size-3.5" /> {p.applicationCount ?? 0}
-                    <StatusBadge kind="post" status={p.postStatus} />
+                    <StatusBadge kind="post" status={p.status} />
                   </span>
                 </Link>
               </li>

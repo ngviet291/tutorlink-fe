@@ -12,14 +12,32 @@ import type { PostFilter, PostPayload } from "../types/post.types";
 export function usePosts(params: Omit<PostFilter, "cursor"> = {}) {
   return useInfiniteQuery({
     queryKey: queryKeys.posts.list(params),
-    queryFn: ({ pageParam }) =>
-      postService.getPosts({
+
+    queryFn: async ({ pageParam }) => {
+      const result = await postService.getPosts({
         ...params,
         cursor: pageParam as string | undefined,
-      }),
+      });
+
+      if (
+        !result ||
+        !Array.isArray(result.content) ||
+        typeof result.hasNext !== "boolean"
+      ) {
+        console.error("Invalid getPosts response:", result);
+        throw new Error("Invalid pagination response from GET /v1/posts");
+      }
+
+      return result;
+    },
+
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) =>
-      last.hasNext ? (last.nextCursor ?? undefined) : undefined,
+
+    getNextPageParam: (lastPage) => {
+      if (!lastPage) return undefined;
+
+      return lastPage.hasNext ? (lastPage.nextCursor ?? undefined) : undefined;
+    },
   });
 }
 
@@ -40,14 +58,32 @@ export function usePost(id: string | undefined) {
 export function useMyPosts(params: Omit<PostFilter, "cursor"> = {}) {
   return useInfiniteQuery({
     queryKey: [...queryKeys.posts.mine, params],
-    queryFn: ({ pageParam }) =>
-      postService.getMyPosts({
+
+    queryFn: async ({ pageParam }) => {
+      const result = await postService.getMyPosts({
         ...params,
         cursor: pageParam as string | undefined,
-      }),
+      });
+
+      if (
+        !result ||
+        !Array.isArray(result.content) ||
+        typeof result.hasNext !== "boolean"
+      ) {
+        console.error("Invalid getMyPosts response:", result);
+        throw new Error("Invalid pagination response from GET /v1/posts/me");
+      }
+
+      return result;
+    },
+
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) =>
-      last.hasNext ? (last.nextCursor ?? undefined) : undefined,
+
+    getNextPageParam: (lastPage) => {
+      if (!lastPage?.hasNext) return undefined;
+
+      return lastPage.nextCursor ?? undefined;
+    },
   });
 }
 
