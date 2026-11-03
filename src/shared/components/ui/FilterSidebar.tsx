@@ -1,208 +1,113 @@
-import { useTranslation } from "react-i18next";
-import { Button } from "./Button";
-import { useSubjects } from "@/features/subject/hooks/useSubjects";
-import { useProvinces } from "@/shared/hooks/useAddress";
-import type { TeachingMode } from "@/shared/types/common.types";
-import type { EducationLevel } from "@/constants/enums";
-import { EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL } from "@/constants/enums";
+import { useProvinces, useWards } from "@/shared/hooks/useAddress";
 
-export interface FilterValues {
-  subjectId: string;
-  province: string;
-  teachingMode: TeachingMode | "";
-  educationLevels: EducationLevel[];
-  min: number;
-  max: number;
-}
-
-export function emptyFilter(rangeMax: number): FilterValues {
-  return {
-    subjectId: "",
-    province: "",
-    teachingMode: "",
-    educationLevels: [],
-    min: 0,
-    max: rangeMax,
-  };
+export interface FilterValue {
+  provinceCode?: number;
+  wardCode?: number;
 }
 
 interface FilterSidebarProps {
-  value: FilterValues;
-  onChange: (v: FilterValues) => void;
-  rangeLabel?: string;
-  rangeMax?: number;
-  rangeStep?: number;
+  value: FilterValue;
+  onChange: (next: FilterValue) => void;
   className?: string;
 }
 
-const fieldClass =
-  "w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary";
+const selectClass =
+  "w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm " +
+  "focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 " +
+  "disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400";
 
 export function FilterSidebar({
   value,
   onChange,
-  rangeLabel = "Mức giá",
-  rangeMax = 1_000_000,
-  rangeStep = 10_000,
-  className = "",
+  className,
 }: FilterSidebarProps) {
-  const { t } = useTranslation();
-  const subjects = useSubjects();
-  const provinces = useProvinces();
+  const { provinceCode, wardCode } = value;
 
-  const set = (patch: Partial<FilterValues>) =>
-    onChange({ ...value, ...patch });
+  const {
+    data: provinces = [],
+    isLoading: loadingProvinces,
+    isError: provincesError,
+  } = useProvinces();
 
-  const toggleLevel = (lvl: EducationLevel) => {
-    const next = value.educationLevels.includes(lvl)
-      ? value.educationLevels.filter((x) => x !== lvl)
-      : [...value.educationLevels, lvl];
-    set({ educationLevels: next });
-  };
+  const {
+    data: wards = [],
+    isLoading: loadingWards,
+    isError: wardsError,
+  } = useWards(provinceCode);
+
+  const hasFilter = provinceCode !== undefined || wardCode !== undefined;
 
   return (
-    <aside
-      className={`flex w-full flex-col gap-4 rounded-2xl border border-border bg-surface p-4 lg:w-64 lg:shrink-0 ${className}`}>
-      {/* Môn học */}
-      <div>
-        <label className="mb-1 block text-xs font-semibold text-text-secondary">
-          Môn học
-        </label>
-        <select
-          className={fieldClass}
-          value={value.subjectId}
-          onChange={(e) => set({ subjectId: e.target.value })}>
-          <option value="">Tất cả môn</option>
-          {(subjects.data ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Tỉnh/Thành: lấy từ API, API lỗi thì cho nhập tay để không chặn lọc */}
-      <div>
-        <label className="mb-1 block text-xs font-semibold text-text-secondary">
-          Khu vực
-        </label>
-        {provinces.isError ? (
-          <input
-            className={fieldClass}
-            placeholder="Nhập tỉnh/thành"
-            value={value.province}
-            onChange={(e) => set({ province: e.target.value })}
-          />
-        ) : (
-          <select
-            className={fieldClass}
-            value={value.province}
-            disabled={provinces.isLoading}
-            onChange={(e) => set({ province: e.target.value })}>
-            <option value="">
-              {provinces.isLoading ? "Đang tải..." : "Tất cả tỉnh/thành"}
-            </option>
-            {(provinces.data ?? []).map((p) => (
-              <option key={p.code} value={p.name}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+    <aside className={`flex w-full flex-col gap-5 ${className ?? ""}`}>
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Bộ lọc</h2>
+        {hasFilter && (
+          <button
+            type="button"
+            onClick={() => onChange({})}
+            className="text-sm text-neutral-600 underline-offset-2 hover:underline">
+            Xóa bộ lọc
+          </button>
         )}
       </div>
 
-      {/* Hình thức */}
-      <div>
-        <label className="mb-1 block text-xs font-semibold text-text-secondary">
-          Hình thức dạy
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="filter-province" className="text-sm font-medium">
+          Tỉnh/thành phố
         </label>
         <select
-          className={fieldClass}
-          value={value.teachingMode}
+          id="filter-province"
+          className={selectClass}
+          value={provinceCode ?? ""}
+          disabled={loadingProvinces}
           onChange={(e) =>
-            set({ teachingMode: e.target.value as TeachingMode | "" })
+            onChange({
+              provinceCode: e.target.value ? Number(e.target.value) : undefined,
+              wardCode: undefined, // đổi tỉnh thì reset phường/xã
+            })
           }>
           <option value="">Tất cả</option>
-          <option value="ONLINE">Online</option>
-          <option value="OFFLINE">Offline</option>
-          <option value="BOTH">Cả hai</option>
+          {provinces.map((p) => (
+            <option key={p.code} value={p.code}>
+              {p.name}
+            </option>
+          ))}
         </select>
+        {provincesError && (
+          <p className="text-xs text-red-600">Không tải được danh sách tỉnh.</p>
+        )}
       </div>
 
-      {/* Cấp học */}
-      <div>
-        <p className="mb-2 text-xs font-semibold text-text-secondary">
-          Cấp học
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {EDUCATION_LEVELS.map((lvl) => {
-            const active = value.educationLevels.includes(lvl);
-            return (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => toggleLevel(lvl)}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                  active
-                    ? "border-primary bg-primary text-white"
-                    : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
-                }`}>
-                {EDUCATION_LEVEL_LABEL[lvl]}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Range giá */}
-      <div>
-        <label className="mb-1 block text-xs font-semibold text-text-secondary">
-          {rangeLabel}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="filter-ward" className="text-sm font-medium">
+          Phường/xã
         </label>
-        <div className="flex items-center gap-2 text-xs text-text-secondary">
-          <span>{(value.min / 1000).toFixed(0)}k</span>
-          <span className="flex-1 text-center">—</span>
-          <span>
-            {value.max >= rangeMax
-              ? "Max"
-              : `${(value.max / 1000).toFixed(0)}k`}
-          </span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={rangeMax}
-          step={rangeStep}
-          value={value.min}
+        <select
+          id="filter-ward"
+          className={selectClass}
+          value={wardCode ?? ""}
+          disabled={provinceCode === undefined || loadingWards}
           onChange={(e) =>
-            set({
-              min: Math.min(Number(e.target.value), value.max - rangeStep),
+            onChange({
+              provinceCode,
+              wardCode: e.target.value ? Number(e.target.value) : undefined,
             })
-          }
-          className="mt-1 w-full accent-primary"
-        />
-        <input
-          type="range"
-          min={0}
-          max={rangeMax}
-          step={rangeStep}
-          value={value.max}
-          onChange={(e) =>
-            set({
-              max: Math.max(Number(e.target.value), value.min + rangeStep),
-            })
-          }
-          className="w-full accent-primary"
-        />
+          }>
+          <option value="">
+            {provinceCode === undefined ? "Chọn tỉnh trước" : "Tất cả"}
+          </option>
+          {wards.map((w) => (
+            <option key={w.code} value={w.code}>
+              {w.name}
+            </option>
+          ))}
+        </select>
+        {wardsError && (
+          <p className="text-xs text-red-600">
+            Không tải được danh sách phường/xã.
+          </p>
+        )}
       </div>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onChange(emptyFilter(rangeMax))}
-        className="mt-1">
-        {t("common.reset", { defaultValue: "Đặt lại bộ lọc" })}
-      </Button>
     </aside>
   );
 }

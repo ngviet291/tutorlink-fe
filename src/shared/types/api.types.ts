@@ -5,9 +5,9 @@ export interface ApiResponse<T> {
 }
 
 export interface CursorResponse<T> {
-  items: T[]
-  nextCursor: string | null
-  hasMore: boolean
+  content: T[]
+  hasNext: boolean
+  nextCursor?: string
 }
 
 export interface PageResponse<T> {

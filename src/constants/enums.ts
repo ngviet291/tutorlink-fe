@@ -92,6 +92,7 @@ export const APPLICATION_STATUS_META: Record<
     },
     tone: "blue",
   },
+  // CONFIRMED: { get label() { return t('application.status.CONFIRMED') }, tone: 'blue' },
   PAID: {
     get label() {
       return t("application.status.PAID");
@@ -104,6 +105,7 @@ export const APPLICATION_STATUS_META: Record<
     },
     tone: "green",
   },
+  // FINISHED:  { get label() { return t('application.status.FINISHED') },  tone: 'green' },
 };
 
 export const VERIFICATION_STATUS_META: Record<
@@ -158,12 +160,7 @@ export const TRANSACTION_STATUS_META: Record<
     },
     tone: "gray",
   },
-  REFUNDED: {
-    get label() {
-      return t("wallet.transactionStatus.REFUNDED");
-    },
-    tone: "orange",
-  },
+  // REFUNDED:  { get label() { return t('wallet.transactionStatus.REFUNDED') },  tone: 'orange' },
 };
 
 export const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
@@ -188,18 +185,8 @@ export const USER_STATUS_META: Record<
     },
     tone: "green",
   },
-  INACTIVE: {
-    get label() {
-      return t("admin.userStatus.INACTIVE");
-    },
-    tone: "gray",
-  },
-  PENDING_VERIFICATION: {
-    get label() {
-      return t("admin.userStatus.PENDING_VERIFICATION");
-    },
-    tone: "yellow",
-  },
+  // INACTIVE: { get label() { return t('admin.userStatus.INACTIVE') }, tone: 'gray' },
+  // PENDING_VERIFICATION: { get label() { return t('admin.userStatus.PENDING_VERIFICATION') }, tone: 'yellow' },
   BANNED: {
     get label() {
       return t("admin.userStatus.BANNED");
@@ -221,21 +208,11 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
   get CHAT() {
     return t("chat.open");
   },
-  get TRANSACTION() {
-    return t("wallet.title");
-  },
-  get MESSAGE() {
-    return t("chat.open");
-  },
-  get REVIEW() {
-    return "Đánh giá";
-  },
-  get POST() {
-    return "Bài đăng";
-  },
-  get MATCHING() {
-    return t("ai.top5Title");
-  },
+  // get TRANSACTION() { return t('wallet.title') },
+  // get MESSAGE()     { return t('chat.open') },
+  // get REVIEW()      { return 'Đánh giá' },
+  // get POST()        { return 'Bài đăng' },
+  // get MATCHING()    { return t('ai.top5Title') },
 };
 
 export const POST_TYPE_LABEL: Record<PostType, string> = {
@@ -272,13 +249,10 @@ export const EDUCATION_LEVEL_LABEL: Record<EducationLevel, string> = {
   get UNIVERSITY() {
     return t("common.educationLevel.UNIVERSITY");
   },
-  get OTHER() {
-    return t("common.educationLevel.OTHER");
-  },
+  // get OTHER()       { return t('common.educationLevel.OTHER') },
 };
 
 export const BUDGET_UNIT_LABEL: Record<BudgetUnit, string> = {
-  PER_HOUR: "mỗi giờ",
   PER_SESSION: "mỗi buổi",
   PER_MONTH: "mỗi tháng",
 };
@@ -307,8 +281,8 @@ export const EDUCATION_LEVELS: EducationLevel[] = [
   "SECONDARY",
   "HIGH_SCHOOL",
   "UNIVERSITY",
-  "OTHER",
-];
+]; //other
 export const TEACHING_MODES: TeachingMode[] = ["ONLINE", "OFFLINE", "BOTH"];
+
 
 export const PAYMENT_WINDOW_HOURS = 24;

@@ -1,5 +1,5 @@
 import { http } from "@/config/axiosClient";
-import { env, mockConfig } from "@/config/env";
+import { mockConfig } from "@/config/env";
 import { ApiError, type CursorResponse } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type {
@@ -19,6 +19,20 @@ import {
 import { delay, cursorPaginate, requireUser } from "@/mocks/session";
 
 const USE_MOCK = mockConfig.post;
+
+// ─── Kiểu BE trả về (status thay vì postStatus) ──────────────────────────────
+
+interface BePostResponse extends Omit<PostResponse, "postStatus"> {
+  status: PostResponse["postStatus"];
+}
+
+/** Map field `status` của BE → `postStatus` mà FE dùng. */
+function fromBe(raw: BePostResponse): PostResponse {
+  const { status, ...rest } = raw;
+  return { ...rest, postStatus: status };
+}
+
+// ─── Mock helpers ─────────────────────────────────────────────────────────────
 
 function canSee(
   post: PostResponse,
@@ -40,22 +54,24 @@ function withCount(p: PostResponse): PostResponse {
 
 function matches(p: PostResponse, f: PostFilter): boolean {
   if (f.type && p.type !== f.type) return false;
-  if (f.subjectId && p.subject.id !== f.subjectId) return false;
-  if (f.province && p.address.province !== f.province) return false;
+  if (
+    f.subjectName &&
+    !p.subject.name.toLowerCase().includes(f.subjectName.toLowerCase())
+  )
+    return false;
+  if (f.province && p.address?.province !== f.province) return false;
   if (
     f.teachingMode &&
     p.teachingMode !== f.teachingMode &&
     p.teachingMode !== "BOTH"
   )
     return false;
-  if (
-    f.educationLevels?.length &&
-    !f.educationLevels.includes(p.educationLevel)
-  )
+  if (f.educationLevel && p.educationLevel !== f.educationLevel) return false;
+  // Ngân sách null = không giới hạn (max) hoặc từ 0 (min)
+  if (f.minBudget !== undefined && (p.maxBudget ?? Infinity) < f.minBudget)
     return false;
-  if (f.minBudget !== undefined && p.maxBudget < f.minBudget) return false;
-  if (f.maxBudget !== undefined && p.minBudget > f.maxBudget) return false;
-  if (f.postStatus && p.postStatus !== f.postStatus) return false;
+  if (f.maxBudget !== undefined && (p.minBudget ?? 0) > f.maxBudget)
+    return false;
   if (f.keyword) {
     const k = f.keyword.toLowerCase();
     if (!`${p.title} ${p.content} ${p.subject.name}`.toLowerCase().includes(k))
@@ -90,6 +106,7 @@ function toPost(
     address: payload.address,
     minBudget: payload.minBudget,
     maxBudget: payload.maxBudget,
+    budgetUnit: payload.budgetUnit,
     sessionsPerWeek: payload.sessionsPerWeek,
     durationMinutes: payload.durationMinutes,
     deadline: new Date(payload.deadline).toISOString(),
@@ -97,7 +114,10 @@ function toPost(
   };
 }
 
+// ─── Service ──────────────────────────────────────────────────────────────────
+
 export const postService = {
+  /** GET /v1/posts — public, cursor-based pagination */
   async getPosts(
     params: PostFilter = {},
   ): Promise<CursorResponse<PostResponse>> {
@@ -105,7 +125,7 @@ export const postService = {
       await delay();
       const all = posts
         .filter((p) => p.postStatus === "PUBLISHED")
-        .filter((p) => matches(p, { ...params, postStatus: undefined }))
+        .filter((p) => matches(p, params))
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
       return cursorPaginate(
         all,
@@ -114,11 +134,24 @@ export const postService = {
         params.limit ?? 10,
       );
     }
-    return http
-      .get<CursorResponse<PostResponse>>("/v1/posts")
-      .then((res) => res.data);
+    // Chuyển params FE → query string BE:
+    //   subjectName → subjectName (đã đúng tên BE)
+    //   educationLevel → educationLevel (đã đúng)
+    //   bỏ field rỗng/undefined để không gửi query param thừa
+    const { educationLevel, teachingMode, ...rest } = params;
+    const query = {
+      ...rest,
+      ...(educationLevel ? { educationLevel } : {}),
+      ...(teachingMode ? { teachingMode } : {}),
+    };
+    const { data: raw } = await http.get<CursorResponse<BePostResponse>>(
+      "/v1/posts",
+      { params: query },
+    );
+    return { ...raw, content: (raw.content ?? []).map(fromBe) };
   },
 
+  /** GET /v1/posts/:id — public */
   async getPostById(id: string): Promise<PostResponse> {
     if (USE_MOCK) {
       await delay(250);
@@ -137,9 +170,10 @@ export const postService = {
       }
       return withCount(post);
     }
-    return http.get<PostResponse>(`/v1/posts/${id}`).then((res) => res.data);
+    return fromBe((await http.get<BePostResponse>(`/v1/posts/${id}`)).data);
   },
 
+  /** POST /v1/posts — tạo bài đăng mới */
   async createPost(
     payload: PostPayload,
     asDraft = true,
@@ -155,14 +189,15 @@ export const postService = {
       recountSubjectUsage();
       return withCount(post);
     }
-    return http
-      .post<PostResponse>("/v1/posts", {
-        ...payload,
-        postStatus: asDraft ? "DRAFT" : "PUBLISHED",
-      })
-      .then((res) => res.data);
+    // BE nhận `status` trong body (không phải postStatus)
+    const { data: raw } = await http.post<BePostResponse>("/v1/posts", {
+      ...payload,
+      status: asDraft ? "DRAFT" : "PUBLISHED",
+    });
+    return fromBe(raw);
   },
 
+  /** PUT /v1/posts/:id — cập nhật bài đăng */
   async updatePost(id: string, payload: PostPayload): Promise<PostResponse> {
     if (USE_MOCK) {
       await delay();
@@ -179,11 +214,12 @@ export const postService = {
       recountSubjectUsage();
       return withCount(updated);
     }
-    return http
-      .put<PostResponse>(`/v1/posts/${id}`, payload)
-      .then((res) => res.data);
+    return fromBe(
+      (await http.put<BePostResponse>(`/v1/posts/${id}`, payload)).data,
+    );
   },
 
+  /** DELETE /v1/posts/:id — xóa bài đăng */
   async deletePost(id: string): Promise<void> {
     if (USE_MOCK) {
       await delay();
@@ -199,15 +235,35 @@ export const postService = {
     await http.delete(`/v1/posts/${id}`);
   },
 
-  async getMyPosts(): Promise<PostResponse[]> {
+  /**
+   * GET /v1/posts/me — bài đăng của người dùng hiện tại.
+   * BE trả CursorResponse, dùng useInfiniteQuery ở usePosts.ts.
+   */
+  async getMyPosts(
+    params: PostFilter = {},
+  ): Promise<CursorResponse<PostResponse>> {
     if (USE_MOCK) {
       await delay();
       const me = requireUser();
-      return posts.filter((p) => p.author.id === me.id).map(withCount);
+      const all = posts
+        .filter((p) => p.author.id === me.id)
+        .filter((p) => matches(p, params))
+        .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+      return cursorPaginate(
+        all.map(withCount),
+        params.cursor,
+        (p) => p.id,
+        params.limit ?? 10,
+      );
     }
-    return http.get<PostResponse[]>("/v1/posts/me").then((res) => res.data);
+    const { data: raw } = await http.get<CursorResponse<BePostResponse>>(
+      "/v1/posts/me",
+      { params },
+    );
+    return { ...raw, content: (raw.content ?? []).map(fromBe) };
   },
 
+  /** PATCH /v1/posts/:id/publish — admin duyệt bài */
   async publishPost(id: string): Promise<PostResponse> {
     if (USE_MOCK) {
       await delay();
@@ -230,12 +286,12 @@ export const postService = {
       }
       return withCount(post);
     }
-    return http
-      .patch<PostResponse>(`/v1/posts/${id}/publish`)
-      .then((res) => res.data);
+    return fromBe(
+      (await http.patch<BePostResponse>(`/v1/posts/${id}/publish`)).data,
+    );
   },
 
-  /** Chủ bài đóng bài: PUBLISHED → CLOSED (không nhận thêm ứng tuyển). */
+  /** PATCH /v1/posts/:id/close — chủ bài đóng bài (PUBLISHED → CLOSED) */
   async closePost(id: string): Promise<void> {
     if (USE_MOCK) {
       await delay();
@@ -253,6 +309,6 @@ export const postService = {
       post.postStatus = "CLOSED";
       return;
     }
-    await http.patch<void>(`/v1/posts/${id}/close`);
+    await http.patch(`/v1/posts/${id}/close`);
   },
 };

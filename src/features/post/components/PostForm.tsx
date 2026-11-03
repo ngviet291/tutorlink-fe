@@ -1,6 +1,5 @@
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import type { BudgetUnit } from "@/shared/types/common.types";
 import {
   BUDGET_UNIT_LABEL,
   EDUCATION_LEVELS,
@@ -48,7 +47,6 @@ export function PostForm({
       address: defaultValues?.address ?? {},
       minBudget: defaultValues?.minBudget ?? 0,
       maxBudget: defaultValues?.maxBudget ?? 0,
-      budgetUnit: defaultValues?.budgetUnit ?? "PER_MONTH",
       sessionsPerWeek: defaultValues?.sessionsPerWeek ?? 2,
       durationMinutes: defaultValues?.durationMinutes ?? 90,
       deadline: defaultValues?.deadline
@@ -179,14 +177,6 @@ export function PostForm({
         />
       </div>
 
-      <Select
-        label="Đơn vị ngân sách"
-        options={(Object.keys(BUDGET_UNIT_LABEL) as BudgetUnit[]).map((u) => ({
-          value: u,
-          label: BUDGET_UNIT_LABEL[u],
-        }))}
-        {...register("budgetUnit")}
-      />
       <div className="grid grid-cols-2 gap-4">
         <Input
           label={`${t("post.budgetPerMonth")} min`}

@@ -8,6 +8,7 @@ import { EmptyState, ErrorState } from '@/shared/components/ui/EmptyState'
 import { Segmented } from '@/shared/components/ui/Tabs'
 import { PostCard } from '@/features/post/components/PostCard'
 import { usePosts } from '@/features/post/hooks/usePosts'
+import { useSubjects } from '@/features/subject/hooks/useSubjects'
 import { useDebounce } from '@/shared/hooks/useDebounce'
 import type { PostType } from '@/shared/types/common.types'
 import type { PostFilter } from '@/features/post/types/post.types'
@@ -19,25 +20,33 @@ export default function FindClassPage() {
   const [filter, setFilter] = useState<FilterValues>(emptyFilter(BUDGET_MAX))
   const [keyword, setKeyword] = useState('')
   const debounced = useDebounce(keyword)
+  const { data: subjects } = useSubjects()
+
+  // FilterSidebar lưu subjectId (cho UI dropdown), nhưng BE nhận subjectName
+  const subjectName = useMemo(
+    () => subjects?.find((s) => s.id === filter.subjectId)?.name,
+    [subjects, filter.subjectId],
+  )
 
   const query = useMemo<PostFilter>(
     () => ({
       type,
       keyword: debounced || undefined,
-      subjectId: filter.subjectId || undefined,
+      subjectName: subjectName || undefined,
       province: filter.province || undefined,
       teachingMode: filter.teachingMode || undefined,
-      educationLevels: filter.educationLevels.length ? filter.educationLevels : undefined,
+      // BE nhận single educationLevel — lấy giá trị đầu tiên nếu có
+      educationLevel: filter.educationLevels[0] || undefined,
       minBudget: filter.min > 0 ? filter.min : undefined,
       maxBudget: filter.max < BUDGET_MAX ? filter.max : undefined,
       limit: 12,
     }),
-    [type, debounced, filter],
+    [type, debounced, subjectName, filter],
   )
 
   const { data, isLoading, isError, refetch, isFetchingNextPage, hasNextPage, fetchNextPage } = usePosts(query)
 
-  const items = data?.pages.flatMap((p) => p.items) ?? []
+  const items = data?.pages.flatMap((p) => p.content) ?? []
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">

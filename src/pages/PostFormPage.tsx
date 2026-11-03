@@ -1,172 +1,327 @@
-import { useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
-import { EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL, TEACHING_MODES, TEACHING_MODE_LABEL } from '@/constants/enums'
-import { ROUTES } from '@/constants/routes'
-import { Button } from '@/shared/components/ui/Button'
-import { ErrorState } from '@/shared/components/ui/EmptyState'
-import { Input } from '@/shared/components/ui/Input'
-import { PageHeader } from '@/shared/components/ui/PageHeader'
-import { Select } from '@/shared/components/ui/Select'
-import { Skeleton } from '@/shared/components/ui/Skeleton'
-import { Textarea } from '@/shared/components/ui/Textarea'
-import { useAppSelector } from '@/shared/hooks/useAppStore'
-import { useAddressSelect } from '@/shared/hooks/useAddressSelect'
-import { useToast } from '@/shared/hooks/useToast'
-import { toDateInputValue } from '@/shared/utils/date'
-import { getErrorMessage } from '@/shared/utils/errors'
-import { usePost, usePostMutations } from '@/features/post/hooks/usePosts'
-import { useSubjects } from '@/features/subject/hooks/useSubjects'
-import type { PostPayload } from '@/features/post/types/post.types'
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  CalendarDays,
+  Clock,
+  Info,
+  MapPin,
+  Pencil,
+  Trash2,
+  Wallet,
+  Wifi,
+  XCircle,
+} from "lucide-react";
+import {
+  BUDGET_UNIT_LABEL,
+  EDUCATION_LEVEL_LABEL,
+  POST_TYPE_LABEL,
+  TEACHING_MODE_LABEL,
+} from "@/constants/enums";
+import { ROUTES } from "@/constants/routes";
+import { Avatar } from "@/shared/components/ui/Avatar";
+import { Badge } from "@/shared/components/ui/Badge";
+import { Button } from "@/shared/components/ui/Button";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { ErrorState } from "@/shared/components/ui/EmptyState";
+import { MaskedContact } from "@/shared/components/ui/MaskedContact";
+import { Skeleton } from "@/shared/components/ui/Skeleton";
+import { StatusBadge } from "@/shared/components/ui/StatusBadge";
+import { SubjectTag } from "@/shared/components/ui/SubjectTag";
+import { Tooltip } from "@/shared/components/ui/Tooltip";
+import { formatBudgetRange } from "@/shared/utils/currency";
+import { formatDate } from "@/shared/utils/date";
+import { getErrorMessage } from "@/shared/utils/errors";
+import { useAppSelector } from "@/shared/hooks/useAppStore";
+import { useToast } from "@/shared/hooks/useToast";
+import { ApplicantList } from "@/features/application/components/ApplicantList";
+import { ApplyModal } from "@/features/application/components/ApplyModal";
+import { useMyApplications } from "@/features/application/hooks/useApplications";
+import { useApplicationMutations } from "@/features/application/hooks/useApplications";
+import { usePost, usePostMutations } from "@/features/post/hooks/usePosts";
+import { useMyTutorProfile } from "@/features/tutor/hooks/useTutors";
 
-type FormValues = Omit<PostPayload, 'type'>
+export default function PostDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const user = useAppSelector((s) => s.auth.user);
+  const { data: post, isLoading, isError, refetch } = usePost(id);
+  const { remove, publish } = usePostMutations();
+  const { cancel } = useApplicationMutations();
+  const [applyOpen, setApplyOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-// Hạn mặc định: 7 ngày kể từ hôm nay
-const defaultDeadline = (): string => new Date(Date.now() + 7 * 86400_000).toISOString().slice(0, 10)
+  const isTutor = user?.role === "TUTOR";
+  const myApps = useMyApplications(Boolean(user));
+  const myTutor = useMyTutorProfile(isTutor);
 
-export default function PostFormPage() {
-  const { id } = useParams()
-  const isEdit = Boolean(id)
-  const navigate = useNavigate()
-  const toast = useToast()
-  const user = useAppSelector((s) => s.auth.user)
-  const { data: subjects } = useSubjects()
-  const { data: existing, isLoading, isError, refetch } = usePost(id)
-  const { create, update } = usePostMutations()
-  const type: PostPayload['type'] = existing?.type ?? (user?.role === 'TUTOR' ? 'FIND_STUDENT' : 'FIND_TUTOR')
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-8">
+        <Skeleton className="h-10 w-2/3" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+  if (isError || !post) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12">
+        <ErrorState
+          message="Không tìm thấy bài đăng hoặc bài đã bị gỡ."
+          onRetry={() => void refetch()}
+        />
+      </div>
+    );
+  }
 
-  const { register, reset, getValues, setValue, trigger, control, formState: { errors } } = useForm<FormValues>({
-    defaultValues: {
-      educationLevel: 'SECONDARY', teachingMode: 'BOTH', address: { province: '', ward: '' },
-      budgetUnit: 'PER_MONTH', sessionsPerWeek: 2, durationMinutes: 90, deadline: defaultDeadline(),
+  const isAuthor = user?.id === post.author.id;
+  const myApplication = myApps.data?.find(
+    (a) =>
+      a.post.id === post.id &&
+      (a.tutor.id === user?.id || a.student.id === user?.id),
+  );
+  const alreadyApplied = Boolean(
+    myApplication && myApplication.applicationStatus !== "CANCELLED",
+  );
+
+  // Người đủ điều kiện đăng ký: gia sư APPROVED → bài FIND_TUTOR; học viên → bài FIND_STUDENT
+  const roleMatches =
+    post.type === "FIND_TUTOR"
+      ? user?.role === "TUTOR"
+      : user?.role === "STUDENT";
+  const tutorApproved =
+    post.type === "FIND_TUTOR"
+      ? myTutor.data?.verificationStatus === "APPROVED"
+      : true;
+
+  let disabledReason: string | undefined;
+  if (isAuthor) disabledReason = "Bạn không thể đăng ký bài của chính mình";
+  else if (alreadyApplied) disabledReason = "Bạn đã đăng ký bài này rồi";
+  else if (post.postStatus !== "PUBLISHED")
+    disabledReason = "Bài đăng không còn nhận đăng ký";
+  else if (isTutor && post.type === "FIND_TUTOR" && !tutorApproved)
+    disabledReason = "Hồ sơ gia sư của bạn chưa được duyệt";
+
+  const onApply = () => {
+    if (!user) {
+      navigate(ROUTES.LOGIN, { state: { from: ROUTES.POST_DETAIL(post.id) } });
+      return;
+    }
+    setApplyOpen(true);
+  };
+
+  const onDelete = () =>
+    remove.mutate(post.id, {
+      onSuccess: () => {
+        toast.success("Đã xóa bài đăng");
+        navigate(ROUTES.MY_POSTS);
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+
+  const canEdit =
+    isAuthor && post.postStatus !== "CLOSED" && post.postStatus !== "REMOVED";
+
+  const info: { icon: typeof MapPin; label: string; value: string }[] = [
+    {
+      icon: MapPin,
+      label: "Khu vực",
+      value: [post.address?.street, post.address?.ward, post.address?.province]
+        .filter(Boolean)
+        .join(", "),
     },
-  })
-
-  const {
-    provinceOptions, wardOptions, onProvinceChange,
-    isLoadingProvinces, isLoadingWards, wardDisabled, manualEntry,
-  } = useAddressSelect<FormValues>({
-    control,
-    setValue,
-    provinceField: 'address.province',
-    wardField: 'address.ward',
-  })
-
-  // Edit: chỉ reset khi môn học và danh sách tỉnh đã tải xong,
-  // nếu không <select> không có option khớp để hiển thị giá trị đã lưu.
-  const optionsReady = Boolean(subjects) && !isLoadingProvinces
-  useEffect(() => {
-    if (!existing || !optionsReady) return
-    reset({
-      title: existing.title, content: existing.content, subjectId: existing.subject.id, educationLevel: existing.educationLevel,
-      teachingMode: existing.teachingMode, address: { province: existing.address?.province ?? '', ward: existing.address?.ward ?? '', street: existing.address?.street },
-      minBudget: existing.minBudget, maxBudget: existing.maxBudget, budgetUnit: existing.budgetUnit ?? 'PER_MONTH',
-      sessionsPerWeek: existing.sessionsPerWeek, durationMinutes: existing.durationMinutes, deadline: toDateInputValue(existing.deadline),
-    })
-  }, [existing, optionsReady, reset])
-
-  // Phường/xã chỉ tải được sau khi tỉnh đã được set, nên set lại ward đã lưu một lần
-  // khi danh sách phường/xã sẵn sàng.
-  const wardSynced = useRef(false)
-  useEffect(() => {
-    if (!existing || wardSynced.current) return
-    if (isLoadingWards || wardOptions.length <= 1) return
-    wardSynced.current = true
-    setValue('address.ward', existing.address?.ward ?? '')
-  }, [existing, isLoadingWards, wardOptions, setValue])
-
-  if (isEdit && isLoading) return <Skeleton className="mx-auto h-96 max-w-3xl" />
-  if (isEdit && (isError || !existing)) return <ErrorState message="Không tải được bài đăng." onRetry={() => void refetch()} />
-  if (isEdit && existing && existing.author.id !== user?.id && user?.role !== 'ADMIN') {
-    return <ErrorState message="Bạn không có quyền sửa bài này." />
-  }
-
-  const save = (asDraft: boolean) => async () => {
-    if (!(await trigger())) return
-    const payload: PostPayload = { ...getValues(), type }
-    const done = (msg: string) => {
-      toast.success(msg)
-      navigate(ROUTES.MY_POSTS)
-    }
-    if (isEdit && id) {
-      update.mutate({ id, payload }, { onSuccess: () => done('Đã cập nhật bài đăng'), onError: (e) => toast.error(getErrorMessage(e)) })
-    } else {
-      create.mutate({ payload, asDraft }, { onSuccess: () => done(asDraft ? 'Đã lưu nháp' : 'Đã đăng công khai'), onError: (e) => toast.error(getErrorMessage(e)) })
-    }
-  }
-
-  const req = (label: string) => ({ required: `${label} là bắt buộc` })
-  const num = (label: string, min: number, max?: number) => ({
-    ...req(label), valueAsNumber: true as const,
-    min: { value: min, message: `${label} tối thiểu ${min.toLocaleString('vi-VN')}` },
-    ...(max ? { max: { value: max, message: `${label} tối đa ${max.toLocaleString('vi-VN')}` } } : {}),
-  })
-  const busy = create.isPending || update.isPending
+    {
+      icon: Wifi,
+      label: "Hình thức",
+      value: TEACHING_MODE_LABEL[post.teachingMode],
+    },
+    {
+      icon: Clock,
+      label: "Lịch học",
+      value: `${post.sessionsPerWeek} buổi/tuần · ${post.durationMinutes} phút/buổi`,
+    },
+    {
+      icon: CalendarDays,
+      label: "Hạn đăng ký",
+      value: formatDate(post.deadline),
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader
-        title={isEdit ? 'Chỉnh sửa bài đăng' : type === 'FIND_TUTOR' ? 'Đăng bài tìm gia sư' : 'Đăng bài tìm học viên'}
-        description="Điền đầy đủ thông tin để nhận được ứng viên phù hợp. Thông tin liên hệ của bạn được ẩn cho tới khi kết nối."
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <article className="rounded-3xl border border-border bg-surface p-5 sm:p-7">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Badge tone={post.type === "FIND_TUTOR" ? "orange" : "blue"}>
+            {POST_TYPE_LABEL[post.type]}
+          </Badge>
+          <SubjectTag name={post.subject.name} />
+          <Badge tone="gray">
+            {EDUCATION_LEVEL_LABEL[post.educationLevel]}
+          </Badge>
+          <StatusBadge kind="post" status={post.postStatus} />
+        </div>
+        <h1 className="text-2xl font-extrabold leading-snug text-text sm:text-3xl">
+          {post.title}
+        </h1>
+        <p className="mt-3 text-2xl font-extrabold text-primary">
+          {formatBudgetRange(post.minBudget, post.maxBudget)}{" "}
+          <span className="text-sm font-medium text-text-secondary">
+            {BUDGET_UNIT_LABEL[post.budgetUnit ?? "PER_MONTH"].replace(
+              "mỗi ",
+              "/",
+            )}{" "}
+            (dự kiến)
+          </span>
+        </p>
+
+        <dl className="mt-5 grid gap-3 sm:grid-cols-2">
+          {info.map(({ icon: Icon, label, value }) => (
+            <div
+              key={label}
+              className="flex items-start gap-3 rounded-xl bg-surface-hover p-3">
+              <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
+              <div>
+                <dt className="text-xs text-text-secondary">{label}</dt>
+                <dd className="text-sm font-semibold text-text">{value}</dd>
+              </div>
+            </div>
+          ))}
+        </dl>
+
+        <h2 className="mb-2 mt-6 text-lg font-bold text-text">
+          Mô tả chi tiết
+        </h2>
+        <p className="whitespace-pre-line text-text-secondary">
+          {post.content}
+        </p>
+
+        <p className="mt-5 flex items-start gap-2 rounded-xl border border-border p-3 text-xs text-text-secondary">
+          <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+          Học phí thực tế hằng tháng do hai bên tự thỏa thuận ngoài hệ thống
+          TutorLink. Gia sư chỉ trả một khoản phí nhận lớp (tính trên học phí dự
+          kiến tháng đầu) khi được chọn.
+        </p>
+
+        <div className="mt-6 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar
+              name={post.author.fullName}
+              src={post.author.avatarUrl}
+              size="lg"
+            />
+            <div>
+              <p className="text-xs text-text-secondary">Người đăng</p>
+              <p className="font-bold text-text">{post.author.fullName}</p>
+              <p className="text-xs text-text-secondary">
+                {post.applicationCount ?? 0} lượt đăng ký
+              </p>
+            </div>
+          </div>
+          <MaskedContact className="sm:w-72" contact={post.author.contact} />
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {!isAuthor && (
+            <Tooltip text={disabledReason}>
+              <Button
+                size="lg"
+                onClick={onApply}
+                disabled={
+                  Boolean(disabledReason) || (Boolean(user) && !roleMatches)
+                }>
+                Đăng ký nhận lớp
+              </Button>
+            </Tooltip>
+          )}
+          {!isAuthor && user && !roleMatches && !disabledReason && (
+            <p className="self-center text-xs text-text-secondary">
+              {post.type === "FIND_TUTOR"
+                ? "Chỉ gia sư mới đăng ký bài này."
+                : "Chỉ học viên mới đăng ký bài này."}
+            </p>
+          )}
+          {!user && (
+            <p className="self-center text-xs text-text-secondary">
+              <Link className="font-semibold text-primary" to={ROUTES.LOGIN}>
+                Đăng nhập
+              </Link>{" "}
+              để đăng ký nhận lớp.
+            </p>
+          )}
+          {alreadyApplied && myApplication?.applicationStatus === "PENDING" && (
+            <Button
+              variant="ghost"
+              loading={cancel.isPending}
+              onClick={() =>
+                cancel.mutate(myApplication.id, {
+                  onSuccess: () => toast.success("Đã hủy đăng ký"),
+                  onError: (e) => toast.error(getErrorMessage(e)),
+                })
+              }>
+              <XCircle className="size-4" /> Hủy đăng ký
+            </Button>
+          )}
+          {isTutor &&
+            post.type === "FIND_TUTOR" &&
+            myTutor.data &&
+            myTutor.data.verificationStatus !== "APPROVED" && (
+              <Link
+                to={ROUTES.TUTOR_PROFILE}
+                className="self-center text-xs font-semibold text-primary hover:underline">
+                <Wallet className="mr-1 inline size-3.5" /> Xem trạng thái hồ sơ
+                gia sư
+              </Link>
+            )}
+        </div>
+
+        {canEdit && (
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-5">
+            {post.postStatus === "DRAFT" && (
+              <Button
+                loading={publish.isPending}
+                onClick={() =>
+                  publish.mutate(post.id, {
+                    onSuccess: () => toast.success("Đã đăng công khai"),
+                    onError: (e) => toast.error(getErrorMessage(e)),
+                  })
+                }>
+                Đăng công khai
+              </Button>
+            )}
+            <Link to={ROUTES.POST_EDIT(post.id)}>
+              <Button variant="outline">
+                <Pencil className="size-4" /> Sửa bài
+              </Button>
+            </Link>
+            <Button variant="danger" onClick={() => setDeleteOpen(true)}>
+              <Trash2 className="size-4" /> Xóa bài
+            </Button>
+          </div>
+        )}
+      </article>
+
+      {isAuthor && post.postStatus !== "DRAFT" && (
+        <div className="mt-6">
+          <ApplicantList post={post} />
+        </div>
+      )}
+
+      <ApplyModal
+        postId={post.id}
+        open={applyOpen}
+        onClose={() => setApplyOpen(false)}
       />
-      <form onSubmit={(e) => e.preventDefault()} noValidate className="mt-6 flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6">
-        <Input label="Tiêu đề" required placeholder="VD: Cần gia sư Toán 9 ôn thi vào lớp 10" error={errors.title?.message} {...register('title', { ...req('Tiêu đề'), minLength: { value: 10, message: 'Tiêu đề tối thiểu 10 ký tự' }, maxLength: { value: 120, message: 'Tối đa 120 ký tự' } })} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Select label="Môn học" required placeholder="Chọn môn học" options={(subjects ?? []).map((s) => ({ value: s.id, label: s.name }))} error={errors.subjectId?.message} {...register('subjectId', req('Môn học'))} />
-          <Select label="Cấp học" required options={EDUCATION_LEVELS.map((l) => ({ value: l, label: EDUCATION_LEVEL_LABEL[l] }))} {...register('educationLevel')} />
-          <Select label="Hình thức" required options={TEACHING_MODES.map((m) => ({ value: m, label: TEACHING_MODE_LABEL[m] }))} {...register('teachingMode')} />
-          <Input label="Hạn nhận đăng ký" type="date" required error={errors.deadline?.message} {...register('deadline', req('Hạn nhận đăng ký'))} />
-
-          {/* Tỉnh / Phường-Xã: API lỗi thì cho nhập tay để không chặn đăng bài */}
-          {manualEntry ? (
-            <>
-              <Input label="Tỉnh / Thành phố" required error={errors.address?.province?.message} {...register('address.province', req('Tỉnh / Thành phố'))} />
-              <Input label="Phường / Xã (không bắt buộc)" {...register('address.ward')} />
-            </>
-          ) : (
-            <>
-              <Select
-                label="Tỉnh / Thành phố"
-                required
-                options={provinceOptions}
-                disabled={isLoadingProvinces}
-                error={errors.address?.province?.message}
-                {...register('address.province', { ...req('Tỉnh / Thành phố'), onChange: onProvinceChange })}
-              />
-              <Select
-                label="Phường / Xã (không bắt buộc)"
-                options={wardOptions}
-                disabled={wardDisabled}
-                {...register('address.ward')}
-              />
-            </>
-          )}
-        </div>
-        <Input label="Địa chỉ chi tiết (không bắt buộc)" hint="Chỉ nên ghi khu vực chung, không ghi số nhà/SĐT." {...register('address.street')} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Học phí dự kiến tối thiểu (VNĐ/tháng)" type="number" required inputMode="numeric" error={errors.minBudget?.message} {...register('minBudget', num('Học phí tối thiểu', 100_000))} />
-          <Input
-            label="Học phí dự kiến tối đa (VNĐ/tháng)" type="number" required inputMode="numeric" error={errors.maxBudget?.message}
-            {...register('maxBudget', { ...num('Học phí tối đa', 100_000), validate: (v) => v >= Number(getValues('minBudget')) || 'Phải lớn hơn hoặc bằng mức tối thiểu' })}
-          />
-          <Input label="Số buổi / tuần" type="number" required error={errors.sessionsPerWeek?.message} {...register('sessionsPerWeek', num('Số buổi', 1, 7))} />
-          <Input label="Thời lượng mỗi buổi (phút)" type="number" required error={errors.durationMinutes?.message} {...register('durationMinutes', num('Thời lượng', 30, 240))} />
-        </div>
-        <Textarea label="Yêu cầu / mô tả chi tiết" required rows={6} placeholder="Trình độ hiện tại, mục tiêu, yêu cầu với gia sư..." error={errors.content?.message} {...register('content', { ...req('Mô tả'), minLength: { value: 20, message: 'Mô tả tối thiểu 20 ký tự' } })} />
-        <p className="text-xs text-text-secondary">Học phí thực tế hằng tháng do hai bên tự thỏa thuận ngoài hệ thống; mức trên chỉ dùng để tính phí nhận lớp.</p>
-
-        <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-4">
-          <Button variant="ghost" onClick={() => navigate(-1)}>Hủy</Button>
-          {isEdit ? (
-            <Button loading={busy} onClick={() => void save(false)()}>Lưu thay đổi</Button>
-          ) : (
-            <>
-              <Button variant="outline" loading={busy} onClick={() => void save(true)()}>Lưu nháp</Button>
-              <Button loading={busy} onClick={() => void save(false)()}>Đăng công khai</Button>
-            </>
-          )}
-        </div>
-      </form>
+      <ConfirmDialog
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Xóa bài đăng?"
+        danger
+        confirmText="Xóa bài"
+        loading={remove.isPending}
+        onConfirm={onDelete}
+        description="Bài đăng sẽ bị xóa vĩnh viễn. Thao tác này chỉ thực hiện được khi bài chưa ghép cặp."
+      />
     </div>
-  )
+  );
 }
