@@ -26,8 +26,8 @@ export interface PostResponse {
   educationLevel: EducationLevel;
   teachingMode: TeachingMode;
   address: Address | null;
-  minBudget: number | null;
-  maxBudget: number | null;
+  minBudget: number;
+  maxBudget: number;
   budgetUnit?: BudgetUnit;
   sessionsPerWeek: number;
   durationMinutes: number;

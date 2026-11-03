@@ -160,7 +160,12 @@ export const TRANSACTION_STATUS_META: Record<
     },
     tone: "gray",
   },
-  // REFUNDED:  { get label() { return t('wallet.transactionStatus.REFUNDED') },  tone: 'orange' },
+  REFUNDED: {
+    get label() {
+      return t("wallet.transactionStatus.REFUNDED");
+    },
+    tone: "orange",
+  },
 };
 
 export const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
@@ -283,6 +288,5 @@ export const EDUCATION_LEVELS: EducationLevel[] = [
   "UNIVERSITY",
 ]; //other
 export const TEACHING_MODES: TeachingMode[] = ["ONLINE", "OFFLINE", "BOTH"];
-
 
 export const PAYMENT_WINDOW_HOURS = 24;
