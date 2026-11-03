@@ -9,7 +9,7 @@ export const env = {
     auth: false, // false = API thật
     user: true, // true = Mock
     tutor: true,
-    subject: true,
+    subject: false,
     student: true,
     notify: true,
     booking: true,
@@ -18,7 +18,7 @@ export const env = {
     application: true,
     chat: true,
     favorite: true,
-    post: true,
+    post: false,
     review: true,
     wallet: true,
   },

@@ -1,13 +1,15 @@
 export interface SubjectResponse {
-  id: string
-  name: string
-  description?: string
-  usageCount?: number
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  usageCount?: number;
 }
 
 export interface SubjectPayload {
-  name: string
-  description?: string
+  name: string;
+  description?: string;
+  category?: string;
 }
 
-export type SubjectSummaryResponse = Pick<SubjectResponse, 'id' | 'name'>
+export type SubjectSummaryResponse = Pick<SubjectResponse, "id" | "name">;
