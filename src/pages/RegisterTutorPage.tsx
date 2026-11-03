@@ -14,6 +14,7 @@ import {
   type CommonRegisterValues,
 } from "@/features/auth/components/CommonRegisterFields";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
+import { CertificateUpload } from "@/features/auth/components/CertificateUpload";
 
 interface TutorFormValues extends CommonRegisterValues {
   experienceYears: number;

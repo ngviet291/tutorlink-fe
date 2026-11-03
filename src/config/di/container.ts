@@ -17,6 +17,7 @@ export const publicHttp = createPublicClient(env.apiBaseUrl);
 export const privateHttp = createPrivateClient(env.apiBaseUrl, tokenStorage);
 
 const publicHttpClient = new AxiosHttpClient(publicHttp);
+const privateHttpClient = new AxiosHttpClient(privateHttp);
 
 const gateway: AuthGateway = new HttpAuthGateway(publicHttpClient);
 const subjectGateway = new HttpSubjectGateway(privateHttpClient); // client có gắn token, không phải client PUBLIC

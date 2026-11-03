@@ -1,9 +1,7 @@
-import { http } from "@/config/axiosClient";
-import { mockConfig } from "@/config/env";
-import { delay } from "@/mocks/session";
-import { subjects } from "@/mocks/db";
 import type { CursorResponse } from "@/shared/types/api.types";
-import type { SubjectResponse } from "../types/subject.types";
+import type { SubjectPageParams, SubjectResponse } from "../types/subject.types";
+import type { SubjectGateway } from "../api/subject.gateway";
+import type { SubjectRequest } from "../types/subject.dto";
 
 const ALL_PAGE_SIZE = 50;
 const MAX_PAGES = 100; // chặn vòng lặp vô hạn nếu BE trả cursor sai

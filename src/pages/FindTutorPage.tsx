@@ -1,17 +1,21 @@
-import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Search } from 'lucide-react'
-import { FilterSidebar, emptyFilter, type FilterValues } from '@/shared/components/ui/FilterSidebar'
-import { Input } from '@/shared/components/ui/Input'
-import { Button } from '@/shared/components/ui/Button'
-import { CardGridSkeleton } from '@/shared/components/ui/Skeleton'
-import { EmptyState, ErrorState } from '@/shared/components/ui/EmptyState'
-import { TutorCard } from '@/features/tutor/components/TutorCard'
-import { useTutors } from '@/features/tutor/hooks/useTutors'
-import { useDebounce } from '@/shared/hooks/useDebounce'
-import { useSubjects } from '@/features/subject/hooks/useSubjects'
-import type { TutorFilter } from '@/features/tutor/types/tutor.types'
-import { useSearchTracking } from '@/features/tracking/hooks'
+import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Search } from "lucide-react";
+import {
+  FilterSidebar,
+  emptyFilter,
+  type FilterValues,
+} from "@/shared/components/ui/FilterSidebar";
+import { Input } from "@/shared/components/ui/Input";
+import { Button } from "@/shared/components/ui/Button";
+import { CardGridSkeleton } from "@/shared/components/ui/Skeleton";
+import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
+import { TutorCard } from "@/features/tutor/components/TutorCard";
+import { useTutors } from "@/features/tutor/hooks/useTutors";
+import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useSubjects } from "@/features/subject/hooks/useSubjects";
+import type { TutorFilter } from "@/features/tutor/types/tutor.types";
+import { useSearchTracking } from "@/features/tracking/hooks";
 
 const RATE_MAX = 500_000;
 
@@ -41,23 +45,44 @@ export default function FindTutorPage() {
     [subjectName, debounced, filter],
   );
 
-  const { data, isLoading, isFetching, isError, refetch, isFetchingNextPage, hasNextPage, fetchNextPage } = useTutors(query)
-  const items = data?.pages.flatMap((p) => p.items) ?? []
-  const total = data?.pages[0]?.items.length !== undefined
-    ? data!.pages.reduce((s, p) => s + p.items.length, 0)
-    : 0
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useTutors(query);
+  const items = data?.pages.flatMap((p) => p.content) ?? [];
+  const total =
+    data?.pages[0]?.content.length !== undefined
+      ? data!.pages.reduce((s, p) => s + p.content.length, 0)
+      : 0;
 
   const onFilter = (v: FilterValues) => setFilter(v);
 
-    const hasSearch = Boolean(debounced || filter.subjectId || filter.province || filter.min > 0 || filter.max < RATE_MAX)
-    useSearchTracking({
-      active: hasSearch,
-      ready: !isFetching && !isError,
-      key: JSON.stringify(query),
-      query: debounced,
-      filters: { subject: subjectName, province: query.province, minRate: query.minRate, maxRate: query.maxRate },
-      resultCount: items.length,
-    })
+  const hasSearch = Boolean(
+    debounced ||
+    filter.subjectId ||
+    filter.province ||
+    filter.min > 0 ||
+    filter.max < RATE_MAX,
+  );
+  useSearchTracking({
+    active: hasSearch,
+    ready: !isFetching && !isError,
+    key: JSON.stringify(query),
+    query: debounced,
+    filters: {
+      subject: subjectName,
+      province: query.province,
+      minRate: query.minRate,
+      maxRate: query.maxRate,
+    },
+    resultCount: items.length,
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -105,8 +130,7 @@ export default function FindTutorPage() {
                     <Button
                       variant="outline"
                       loading={isFetchingNextPage}
-                      onClick={() => void fetchNextPage()}
-                    >
+                      onClick={() => void fetchNextPage()}>
                       Xem thêm
                     </Button>
                   </div>

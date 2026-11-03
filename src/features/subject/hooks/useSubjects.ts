@@ -22,12 +22,7 @@ export function useSubjects() {
     gcTime: SUBJECT_GC_TIME,
   });
 }
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { http } from "@/config/axiosClient";
-import { mockConfig } from "@/config/env";
-import { delay } from "@/mocks/session";
-import { subjects, nextId } from "@/mocks/db";
-import type { SubjectResponse } from "../types/subject.types";
+
 
 /** Danh sách phân trang kiểu cursor (cho trang admin, infinite scroll). */
 export function useSubjectsInfinite(limit = 10) {
