@@ -116,6 +116,7 @@ export function FilterSidebar({
         <label className="mb-1 block text-xs font-semibold text-text-secondary">
           Hình thức dạy
         </label>
+
         <select
           className={fieldClass}
           value={value.teachingMode}

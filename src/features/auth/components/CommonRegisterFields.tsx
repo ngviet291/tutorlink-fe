@@ -24,7 +24,7 @@ export const COMMON_DEFAULTS: CommonRegisterValues = {
   confirmPassword: "Admin@123",
   phone: "0338687106",
   gender: "MALE",
-  dateOfBirth: "10/07/2005",
+  dateOfBirth: "2005-10-07",
   street: "Tân Hiệp",
   ward: "Xã Tân Thới",
   province: "Tỉnh Đồng Tháp",
