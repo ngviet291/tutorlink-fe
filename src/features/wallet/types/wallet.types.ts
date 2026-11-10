@@ -16,7 +16,8 @@ export interface TransactionResponse {
 }
 
 export interface EnrollmentFeeQuote {
-  monthlyTuition: number
+  applicationId: string
+  baseAmount: number
   feeRate: number
   feeAmount: number
 }

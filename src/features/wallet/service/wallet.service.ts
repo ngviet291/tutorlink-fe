@@ -26,6 +26,8 @@ interface BeTransaction {
   transactionDate: string;
   tutorId?: string;
   applicationId?: string;
+  providerOrderId?: string;
+  providerTransId?: string;
   paymentLink?: string;
   qrCodeUrl?: string;
   deeplink?: string;
@@ -40,6 +42,11 @@ export function fromBeTransaction(t: BeTransaction): TransactionResponse {
     createdAt: t.transactionDate,
     tutorId: t.tutorId,
     applicationId: t.applicationId,
+    providerOrderId: t.providerOrderId,
+    providerTransId: t.providerTransId,
+    paymentLink: t.paymentLink,
+    qrCodeUrl: t.qrCodeUrl,
+    deeplink: t.deeplink,
   };
 }
 
@@ -172,8 +179,12 @@ export const walletService = {
       if (!a) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
       return quoteFor(a);
     }
-    return http
-      .get<EnrollmentFeeQuote>(`/v1/applications/${applicationId}/fee-quote`)
+    const quote = await http
+      .get<{ applicationId: string; baseAmount: number; feeRate: number; feeAmount: number }>(
+        `/v1/payments/applications/${applicationId}/fee-quote`,
+      )
       .then((res) => res.data);
+
+    return quote;
   },
 };

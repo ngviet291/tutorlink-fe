@@ -4,7 +4,6 @@ export type ChatbotRole = "user" | "assistant";
 export interface ChatbotPost {
   id: string;
   title: string;
-  type: string;
   subjectName: string;
   location?: string | null;
   minBudget?: number | null;
@@ -30,7 +29,6 @@ export interface ChatbotConversation {
 }
 
 export interface ChatbotRequest {
-  //undefined là guest, string là userId của thành viên đã đăng nhập
   conversationId?: string;
   message: string;
   location?: { ward?: string; province?: string };

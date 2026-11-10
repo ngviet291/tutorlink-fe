@@ -431,8 +431,7 @@ export const adminService = {
       ];
       const statuses = ["DRAFT", "PUBLISHED", "CLOSED", "REMOVED"] as const;
       const paid = applications.filter(
-        (a) =>
-          a.applicationStatus === "PAID" || a.applicationStatus === "FINISHED",
+        (a) => a.applicationStatus === "FINISHED",
       );
       const byTutor = new Map<string, number>();
       for (const a of paid) {

@@ -44,6 +44,6 @@ export const userService = {
       passwords[me.id] = payload.newPassword;
       return;
     }
-    await http.put<void>("/v1/auth/reset-password", payload);
+    await http.put<void>("/v1/auth/change-password", payload);
   },
 };

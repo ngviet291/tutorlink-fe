@@ -92,13 +92,7 @@ export const APPLICATION_STATUS_META: Record<
     },
     tone: "blue",
   },
-  // CONFIRMED: { get label() { return t('application.status.CONFIRMED') }, tone: 'blue' },
-  PAID: {
-    get label() {
-      return t("application.status.PAID");
-    },
-    tone: "blue",
-  },
+
   FINISHED: {
     get label() {
       return t("application.status.FINISHED");
@@ -198,6 +192,18 @@ export const USER_STATUS_META: Record<
     },
     tone: "red",
   },
+  INACTIVE: {
+    get label() {
+      return t("admin.userStatus.INACTIVE");
+    },
+    tone: "gray",
+  },
+  PENDING_VERIFICATION: {
+    get label() {
+      return t("admin.userStatus.PENDING_VERIFICATION");
+    },
+    tone: "yellow",
+  },
 };
 
 export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
@@ -213,11 +219,21 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
   get CHAT() {
     return t("chat.open");
   },
-  // get TRANSACTION() { return t('wallet.title') },
-  // get MESSAGE()     { return t('chat.open') },
-  // get REVIEW()      { return 'Đánh giá' },
-  // get POST()        { return 'Bài đăng' },
-  // get MATCHING()    { return t('ai.top5Title') },
+  get TRANSACTION() {
+    return t("wallet.title");
+  },
+  get MESSAGE() {
+    return t("chat.open");
+  },
+  get REVIEW() {
+    return "Đánh giá";
+  },
+  get POST() {
+    return "Bài đăng";
+  },
+  get MATCHING() {
+    return t("ai.top5Title");
+  },
 };
 
 export const POST_TYPE_LABEL: Record<PostType, string> = {
@@ -254,12 +270,15 @@ export const EDUCATION_LEVEL_LABEL: Record<EducationLevel, string> = {
   get UNIVERSITY() {
     return t("common.educationLevel.UNIVERSITY");
   },
-  // get OTHER()       { return t('common.educationLevel.OTHER') },
+  get OTHER() {
+    return t("common.educationLevel.OTHER");
+  },
 };
 
 export const BUDGET_UNIT_LABEL: Record<BudgetUnit, string> = {
   PER_SESSION: "mỗi buổi",
   PER_MONTH: "mỗi tháng",
+  PER_HOUR: "mỗi giờ",
 };
 
 export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
@@ -272,13 +291,13 @@ export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
 export const ACCOUNT_STATUS_META = USER_STATUS_META;
 
 export const DAY_LABEL: Record<DayOfWeek, string> = {
-  MON: "Thứ 2",
-  TUE: "Thứ 3",
-  WED: "Thứ 4",
-  THU: "Thứ 5",
-  FRI: "Thứ 6",
-  SAT: "Thứ 7",
-  SUN: "Chủ nhật",
+  MONDAY: "Thứ 2",
+  TUESDAY: "Thứ 3",
+  WEDNESDAY: "Thứ 4",
+  THURSDAY: "Thứ 5",
+  FRIDAY: "Thứ 6",
+  SATURDAY: "Thứ 7",
+  SUNDAY: "Chủ nhật",
 };
 
 export const EDUCATION_LEVELS: EducationLevel[] = [

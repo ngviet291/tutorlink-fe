@@ -1,4 +1,7 @@
 import { http } from "@/config/axiosClient";
+import type { CursorResponse } from "@/shared/types/api.types";
+import type { ReviewComplaintResponse, ReviewResponse as ReviewDto } from "../types/review.dto";
+import type { BaseUserResponse } from "@/features/user/types/user.dto";
 import { mockConfig } from "@/config/env";
 import { ApiError } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
@@ -35,9 +38,28 @@ export const reviewService = {
           (a, b) => +new Date(b.createdAt ?? 0) - +new Date(a.createdAt ?? 0),
         );
     }
-    return http
-      .get<ReviewResponse[]>(`/v1/tutors/${tutorId}/reviews`)
-      .then((res) => res.data); // TODO: nối API
+    const page = await http
+      .get<CursorResponse<ReviewDto>>("/v1/reviews", {
+        params: { tutorId, limit: 100 },
+      })
+      .then((res) => res.data);
+
+    return Promise.all(
+      page.content.map(async (r) => {
+        const student = await http
+          .get<BaseUserResponse>(`/v1/users/${r.studentId}/public-profile`)
+          .then((res) => res.data);
+        return {
+          id: r.id,
+          tutorId: r.tutorId,
+          rating: r.rating,
+          comment: r.comment ?? "",
+          student: { id: student.id, fullName: student.fullName, avatarUrl: student.avatarUrl },
+          createdAt: r.createdAt,
+          complaintStatus: "NONE" as const,
+        };
+      }),
+    );
   },
 
   /** Học viên đánh giá gia sư sau khi lớp kết nối (đã thanh toán). Mỗi lớp 1 đánh giá. */
@@ -89,14 +111,16 @@ export const reviewService = {
   async hasReviewed(applicationId: string): Promise<boolean> {
     if (USE_MOCK)
       return reviews.some((r) => r.id.startsWith(`r-${applicationId}-`));
-    return false; // TODO: nối API
+    return http
+      .get<boolean>("/v1/reviews/exists", { params: { applicationId } })
+      .then((res) => res.data);
   },
 
   /** Gia sư khiếu nại một đánh giá để Admin xem xét. */
   async submitComplaint(
     reviewId: string,
     reason: string,
-  ): Promise<ReviewResponse> {
+  ): Promise<ReviewComplaintResponse> {
     if (USE_MOCK) {
       await delay();
       const me = requireUser();
@@ -112,10 +136,16 @@ export const reviewService = {
         );
       r.complaintStatus = "OPEN";
       r.complaintReason = reason;
-      return { ...r };
+      return {
+        id: `cp-${r.id}`,
+        reason,
+        status: "PENDING" as const,
+        reviewId: r.id,
+        tutorId: r.tutorId,
+      };
     }
     return http
-      .post<ReviewResponse>(`/v1/reviews/${reviewId}/complaint`, { reason })
-      .then((res) => res.data); // TODO: nối API
+      .post<ReviewComplaintResponse>(`/v1/reviews/${reviewId}/complaints`, { reason })
+      .then((res) => res.data);
   },
 };

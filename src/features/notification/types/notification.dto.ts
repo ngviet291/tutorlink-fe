@@ -9,7 +9,6 @@ export interface NotificationResponse {
   title: string
   content: string
   notificationType: NotificationType
-  /** BE field `isRead` (boolean) → Jackson/Lombok serialize thành `read`. */
-  read: boolean
+  isRead: boolean
   createdAt: string
 }

@@ -2,7 +2,10 @@
 // Quy ước: Instant/LocalDate/UUID → string, BigDecimal/Integer/long/double → number, `?` = BE có thể không trả / request không bắt buộc.
 
 import type {
+  DayOfWeek,
+  EducationLevel,
   Gender,
+  TeachingMode,
   UserStatus,
   VerificationStatus,
 } from "@/shared/types/common.types";
@@ -13,7 +16,16 @@ export interface AddressRequest {
   ward?: string;
   province: string;
 }
-
+export interface AvailableSlotRequest {
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string;
+}
+export interface AvailableSlotResponse {
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string;
+}
 /** BE: user/dto/request/ApproveTutorRequest.java */
 export interface ApproveTutorRequest {
   approved: boolean;
@@ -76,4 +88,22 @@ export interface TutorResponse extends BaseUserResponse {
   averageRating?: number;
   verificationStatus: VerificationStatus;
   verificationNote?: string;
+  bio?: string;
+  hourlyRate?: number;
+  teachingLevels?: EducationLevel[];
+  teachingMode?: TeachingMode;
+  teachingAreas?: string[];
+  availableSlots?: AvailableSlotResponse[];
+}
+
+export interface UpdateTutorProfileRequest {
+  bio?: string;
+  experienceYears?: number; 
+  education?: string;
+  hourlyRate?: number; 
+  teachingLevels?: EducationLevel[];
+  teachingMode?: TeachingMode;
+  teachingAreas?: string[];
+  availableSlots?: AvailableSlotRequest[];
+  subjectIds?: string[];
 }

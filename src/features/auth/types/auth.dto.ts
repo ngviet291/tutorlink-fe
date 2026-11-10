@@ -61,7 +61,10 @@ export interface RegisterTutorRequest {
   subjectIds: string[];
   certificates?: File[];
 }
-
+export interface RegisterTutorMultipart {
+  data: RegisterTutorRequest;
+  certificates?: File[];
+}
 /** BE: auth/dto/request/ResetPasswordRequest.java */
 export interface ResetPasswordRequest {
   token: string;
@@ -86,4 +89,8 @@ export interface IntrospectResponse {
   exp: number;
   iat: number;
   sub?: string;
+}
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }

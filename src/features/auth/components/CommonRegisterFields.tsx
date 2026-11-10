@@ -10,7 +10,7 @@ export interface CommonRegisterValues {
   password: string;
   confirmPassword: string;
   phone: string;
-  gender: "MALE" | "FEMALE" | "OTHER";
+  gender: "MALE" | "FEMALE";
   dateOfBirth: string;
   street: string;
   ward: string;

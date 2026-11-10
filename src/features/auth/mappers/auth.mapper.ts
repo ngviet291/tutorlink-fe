@@ -24,7 +24,7 @@ export function toAuthUser(dto: BaseUserResponse): AuthUser {
     email: dto.email,
     phone: dto.phone,
     avatarUrl: dto.avatarUrl,
-    gender: dto.gender ?? "OTHER",
+    gender: dto.gender,
     dateOfBirth: dto.dateOfBirth ?? "",
     address: {
       street: dto.address?.street,

@@ -264,7 +264,7 @@ function tutor(
     bio: undefined,
     education: undefined,
     verificationNote: undefined,
-    address: user ? { province: user.address.province } : undefined,
+    address: user?.address ? { province: user.address.province } : undefined,
     ...p,
   };
 }

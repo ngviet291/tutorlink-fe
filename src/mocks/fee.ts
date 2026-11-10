@@ -2,7 +2,8 @@ import type { ApplicationResponse } from '@/features/application/types/applicati
 import { feeRates } from './db'
 
 export interface EnrollmentFeeQuote {
-  monthlyTuition: number
+  applicationId: string
+  baseAmount: number
   feeRate: number
   feeAmount: number
 }
@@ -17,9 +18,9 @@ export function currentFeeRate(): number {
 }
 
 export function quoteFor(app: ApplicationResponse): EnrollmentFeeQuote {
-  const monthlyTuition = Math.round((app.post.minBudget + app.post.maxBudget) / 2 / 1000) * 1000
+  const baseAmount = Math.round(((app.post.minBudget ?? 0) + (app.post.maxBudget ?? 0)) / 2 / 1000) * 1000
   const feeRate = currentFeeRate()
-  return { monthlyTuition, feeRate, feeAmount: Math.round((monthlyTuition * feeRate) / 1000) * 1000 }
+  return { applicationId: app.id, baseAmount, feeRate, feeAmount: Math.round((baseAmount * feeRate) / 1000) * 1000 }
 }
 
 /** Gia sư là bên trả phí. */

@@ -1,35 +1,61 @@
-import type { ApplicationStatus } from '@/shared/types/common.types'
-import type { PostResponse } from '@/features/post/types/post.types'
-import type { TutorResponse } from '@/features/tutor/types/tutor.types'
-import type { StudentResponse } from '@/features/user/types/user.types'
+import type { ApplicationStatus } from "@/shared/types/common.types";
+import type { PostResponse } from "@/features/post/types/post.types";
+import type {
+  BaseUserResponse,
+  StudentResponse,
+} from "@/features/user/types/user.types";
+import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 
+/**
+ * UI model. Không phải DTO của BE.
+ * DTO thật của BE nằm ở application.dto.ts và chỉ chứa postId/studentId/tutorId.
+ * Service sẽ map DTO -> model này để các component không phải biết cấu trúc API.
+ */
 export interface ApplicationResponse {
-  id: string
-  post: PostResponse
-  tutor: TutorResponse
-  student: StudentResponse
-  applicationStatus: ApplicationStatus
-  message?: string
-  /** Mức phí/học phí gia sư đề xuất (VND) */
-  proposedFee?: number
-  appliedAt: string
-  /** true khi applicationStatus === 'PAID' — tiện cho logic UI */
-  paid?: boolean
-  /** Gia sư được chọn nhưng chưa thanh toán phí */
-  awaitingPayment?: boolean
-  /** Do AI/rule-based gợi ý (Top 5) */
-  aiRank?: number
-  aiScore?: number
-  aiReason?: string
+  id: string;
+  post: PostResponse;
+  tutor: TutorResponse;
+  student: StudentResponse;
+  applicationStatus: ApplicationStatus | string;
+  message?: string;
+  proposedFee?: number;
+  appliedAt: string;
+  processedByAdminId?: string;
+  transactionId?: string;
+  paid?: boolean;
+  awaitingPayment?: boolean;
+  aiRank?: number;
+  aiScore?: number;
+  aiReason?: string;
 }
 
+/** Dữ liệu applicant BE trả trực tiếp từ GET /v1/posts/{postId}/applications. */
+export interface PostApplicationItem {
+  applicationId: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  avatarUrl?: string;
+  status: string;
+  appliedAt: string;
+}
+
+export type AiRankedApplication = ApplicationResponse & {
+  aiRank: number;
+  aiScore?: number;
+  aiReason?: string;
+};
+
 export interface AiSuggestionResponse {
-  items: ApplicationResponse[]
-  source: 'AI' | 'RULE_BASED'
+  items: AiRankedApplication[];
+  source?: "AI" | "RULE_BASED";
 }
 
 export interface ApplyPayload {
-  postId: string
-  message?: string
-  proposedFee: number
+  postId: string;
+  message?: string;
+  proposedFee: number;
 }
+
+/** Minimal user được lấy từ public-profile để ghép Application DTO. */
+export type ApplicationUser = BaseUserResponse;

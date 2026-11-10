@@ -1,12 +1,23 @@
 import { http } from "@/config/axiosClient";
 import { mockConfig } from "@/config/env";
-import { ApiError } from "@/shared/types/api.types";
+import { ApiError, type CursorResponse } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type {
-  AiSuggestionResponse,
   ApplicationResponse,
+  AiSuggestionResponse,
   ApplyPayload,
+  PostApplicationItem,
+  AiRankedApplication,
 } from "../types/application.types";
+import type {
+  ApplicationResponse as ApplicationDto,
+  RankedApplicationsResponse,
+  ScoredApplicationResponse,
+} from "../types/application.dto";
+import type { BaseUserResponse } from "@/features/user/types/user.dto";
+import type { PostResponse } from "@/features/post/types/post.types";
+import type { TutorResponse } from "@/features/tutor/types/tutor.types";
+import type { StudentResponse } from "@/features/user/types/user.types";
 import {
   applications,
   nextId,
@@ -46,6 +57,108 @@ function findApp(id: string): ApplicationResponse {
   const a = applications.find((x) => x.id === id);
   if (!a) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
   return a;
+}
+
+/**
+ * BE ApplicationResponse chỉ có ID liên kết.
+ * FE UI cũ cần object post/tutor/student nên service ghép dữ liệu tại đây.
+ */
+async function getPublicUser(id: string): Promise<BaseUserResponse> {
+  return http
+    .get<BaseUserResponse>(`/v1/users/${id}/public-profile`)
+    .then((res) => res.data);
+}
+
+function asStudent(user: BaseUserResponse): StudentResponse {
+  return {
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone,
+    avatarUrl: user.avatarUrl,
+    gender: user.gender,
+    dateOfBirth: user.dateOfBirth,
+    address: user.address,
+    userStatus: user.userStatus,
+    role: user.role as StudentResponse["role"],
+    grade: undefined,
+    learningGoal: undefined,
+  };
+}
+
+function asTutor(user: BaseUserResponse): TutorResponse {
+  return {
+    id: user.id,
+    fullName: user.fullName,
+    avatarUrl: user.avatarUrl,
+    experienceYears: 0,
+    hourlyRate: 0,
+    averageRating: 0,
+    verificationStatus: "PENDING",
+    address: user.address,
+  };
+}
+
+async function enrichApplication(
+  dto: ApplicationDto,
+): Promise<ApplicationResponse> {
+  const [post, student, tutor] = await Promise.all([
+    http.get<PostResponse>(`/v1/posts/${dto.postId}`).then((res) => res.data),
+    getPublicUser(dto.studentId),
+    getPublicUser(dto.tutorId),
+  ]);
+
+  return {
+    id: dto.id,
+    post,
+    student: asStudent(student),
+    tutor: asTutor(tutor),
+    applicationStatus: dto.applicationStatus,
+    message: dto.message,
+    proposedFee: dto.proposedFee,
+    appliedAt: dto.appliedAt,
+    processedByAdminId: dto.processedByAdminId,
+    transactionId: dto.transactionId,
+  };
+}
+
+async function enrichApplications(
+  items: ApplicationDto[],
+): Promise<ApplicationResponse[]> {
+  return Promise.all(items.map(enrichApplication));
+}
+
+async function enrichPostApplicants(
+  postId: string,
+  items: PostApplicationItem[],
+): Promise<ApplicationResponse[]> {
+  const post = await http
+    .get<PostResponse>(`/v1/posts/${postId}`)
+    .then((res) => res.data);
+
+  const postOwner = await getPublicUser(post.author.id);
+
+  return Promise.all(
+    items.map(async (item) => {
+      const applicant = await getPublicUser(item.userId);
+      const isTutorApplicant = post.type === "FIND_TUTOR";
+
+      return {
+        id: item.applicationId,
+        post,
+        tutor: isTutorApplicant ? asTutor(applicant) : asTutor(postOwner),
+        student: isTutorApplicant ? asStudent(postOwner) : asStudent(applicant),
+        applicationStatus: item.status,
+        appliedAt: item.appliedAt,
+      };
+    }),
+  );
+}
+
+function flattenRanked(data: RankedApplicationsResponse): ApplicationDto[] {
+  return [...(data.top ?? []), ...(data.others ?? [])]
+    .map((item: ScoredApplicationResponse) => item.application)
+    .filter((item): item is ApplicationDto => Boolean(item));
 }
 
 export const applicationService = {
@@ -99,9 +212,11 @@ export const applicationService = {
       });
       return created;
     }
-    return http
-      .post<ApplicationResponse>("/v1/applications", payload)
+
+    const dto = await http
+      .post<ApplicationDto>("/v1/applications", payload)
       .then((res) => res.data);
+    return enrichApplication(dto);
   },
 
   async getMyApplications(): Promise<ApplicationResponse[]> {
@@ -112,9 +227,15 @@ export const applicationService = {
         .filter((a) => a.tutor.id === me.id || a.student.id === me.id)
         .sort((a, b) => +new Date(b.appliedAt) - +new Date(a.appliedAt));
     }
-    return http
-      .get<ApplicationResponse[]>("/v1/applications/me")
+
+    // BE: GET /v1/applications/mine?cursor=&limit=
+    const page = await http
+      .get<CursorResponse<ApplicationDto>>("/v1/applications/mine", {
+        params: { limit: 100 },
+      })
       .then((res) => res.data);
+
+    return enrichApplications(page.content);
   },
 
   async getConnections(): Promise<ApplicationResponse[]> {
@@ -128,9 +249,12 @@ export const applicationService = {
           (a.tutor.id === me.id || a.student.id === me.id),
       );
     }
-    return http
-      .get<ApplicationResponse[]>("/v1/applications/me?status=PAID")
-      .then((res) => res.data);
+
+    const myApplications = await this.getMyApplications();
+    return myApplications.filter(
+      (a) =>
+        a.applicationStatus === "PAID" || a.applicationStatus === "FINISHED",
+    );
   },
 
   async getApplicationsByPost(postId: string): Promise<ApplicationResponse[]> {
@@ -148,9 +272,15 @@ export const applicationService = {
         )
         .sort((a, b) => +new Date(a.appliedAt) - +new Date(b.appliedAt));
     }
-    return http
-      .get<ApplicationResponse[]>(`/v1/posts/${postId}/applications`)
+
+    // BE trả PostApplicationResponse, không phải ApplicationResponse.
+    const page = await http
+      .get<
+        CursorResponse<PostApplicationItem>
+      >(`/v1/posts/${postId}/applications`, { params: { limit: 100 } })
       .then((res) => res.data);
+
+    return enrichPostApplicants(postId, page.content);
   },
 
   async getAiTop5(postId: string): Promise<AiSuggestionResponse> {
@@ -165,9 +295,39 @@ export const applicationService = {
       const all = applications.filter((a) => a.post.id === postId);
       return { items: rankApplications(all), source: "AI" };
     }
-    return http
-      .get<AiSuggestionResponse>(`/v1/posts/${postId}/applications/ai-top5`)
+
+    // BE: GET /v1/applications/post/{postId}/ranked
+    const ranked = await http
+      .get<RankedApplicationsResponse>(`/v1/applications/post/${postId}/ranked`)
       .then((res) => res.data);
+
+    const scored = [...(ranked.top ?? []), ...(ranked.others ?? [])];
+
+    const items: AiRankedApplication[] = (
+      await Promise.all(
+        scored.map(async (item, index) => {
+          if (!item.application) {
+            return null;
+          }
+
+          const app = await enrichApplication(item.application);
+
+          const result: AiRankedApplication = {
+            ...app,
+            aiRank: index + 1,
+            aiScore: item.score,
+            aiReason: item.warnings?.join(", "),
+          };
+
+          return result;
+        }),
+      )
+    ).filter((item): item is AiRankedApplication => item !== null);
+
+    return {
+      items,
+      source: "AI",
+    };
   },
 
   async selectApplicant(id: string): Promise<ApplicationResponse> {
@@ -196,9 +356,10 @@ export const applicationService = {
       });
       return a;
     }
-    return http
-      .post<ApplicationResponse>(`/v1/applications/${id}/select`)
+    const dto = await http
+      .post<ApplicationDto>(`/v1/applications/${id}/select`)
       .then((res) => res.data);
+    return enrichApplication(dto);
   },
 
   async confirmAndPayFee(id: string): Promise<ApplicationResponse> {
@@ -248,12 +409,14 @@ export const applicationService = {
       }
       return a;
     }
-    return http
-      .post<ApplicationResponse>(`/v1/payments/applications/${id}/pay`)
+    await http.post(`/v1/payments/applications/${id}/pay`);
+
+    const updated = await http
+      .get<ApplicationDto>(`/v1/applications/${id}`)
       .then((res) => res.data);
+    return enrichApplication(updated);
   },
 
-  /** Chủ bài đăng xác nhận gia sư đã được chọn: ACCEPTED → CONFIRMED. */
   async confirmApplication(id: string): Promise<ApplicationResponse> {
     if (USE_MOCK) {
       await delay();
@@ -275,12 +438,12 @@ export const applicationService = {
       });
       return a;
     }
-    return http
-      .post<ApplicationResponse>(`/v1/applications/${id}/confirm`)
+    const dto = await http
+      .post<ApplicationDto>(`/v1/applications/${id}/confirm`)
       .then((res) => res.data);
+    return enrichApplication(dto);
   },
 
-  /** Một trong hai bên đánh dấu lớp đã hoàn thành: CONFIRMED/PAID → FINISHED. */
   async finishApplication(id: string): Promise<ApplicationResponse> {
     if (USE_MOCK) {
       await delay();
@@ -303,9 +466,10 @@ export const applicationService = {
       });
       return a;
     }
-    return http
-      .post<ApplicationResponse>(`/v1/applications/${id}/finish`)
+    const dto = await http
+      .post<ApplicationDto>(`/v1/applications/${id}/finish`)
       .then((res) => res.data);
+    return enrichApplication(dto);
   },
 
   async declineOffer(id: string): Promise<ApplicationResponse> {
@@ -339,9 +503,10 @@ export const applicationService = {
       });
       return a;
     }
-    return http
-      .post<ApplicationResponse>(`/v1/applications/${id}/decline`)
+    const dto = await http
+      .post<ApplicationDto>(`/v1/applications/${id}/cancel`)
       .then((res) => res.data);
+    return enrichApplication(dto);
   },
 
   async cancelApplication(id: string): Promise<ApplicationResponse> {
@@ -355,8 +520,9 @@ export const applicationService = {
       a.applicationStatus = "CANCELLED";
       return a;
     }
-    return http
-      .post<ApplicationResponse>(`/v1/applications/${id}/cancel`)
+    const dto = await http
+      .post<ApplicationDto>(`/v1/applications/${id}/cancel`)
       .then((res) => res.data);
+    return enrichApplication(dto);
   },
 };

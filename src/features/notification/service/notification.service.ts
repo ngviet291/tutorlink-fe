@@ -1,10 +1,11 @@
 import { http } from "@/config/axiosClient";
-import { env } from "@/config/env";
+import { mockConfig } from "@/config/env";
+import type { CursorResponse } from "@/shared/types/api.types";
 import type { NotificationResponse } from "../types/notification.types";
 import { notifications } from "@/mocks/db";
 import { delay, requireUser } from "@/mocks/session";
 
-const USE_MOCK = true;
+const USE_MOCK = mockConfig.notify;
 
 export const notificationService = {
   async getMyNotifications(): Promise<NotificationResponse[]> {
@@ -15,9 +16,12 @@ export const notificationService = {
         (a, b) => +new Date(b.createdAt) - +new Date(a.createdAt),
       );
     }
-    return http
-      .get<NotificationResponse[]>("/v1/notifications/me")
+    const page = await http
+      .get<CursorResponse<NotificationResponse>>("/v1/notifications", {
+        params: { limit: 100 },
+      })
       .then((res) => res.data);
+    return page.content;
   },
 
   async markRead(id: string): Promise<void> {

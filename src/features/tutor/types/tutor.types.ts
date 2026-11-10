@@ -35,7 +35,6 @@ export interface TutorResponse {
   createdAt?: string
   certificates?: Certificate[]
   educationLevels?: EducationLevel[]
-  schedule?: ScheduleSlot[]
 }
 
 export interface TutorFilter {

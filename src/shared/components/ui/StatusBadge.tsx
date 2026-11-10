@@ -16,25 +16,34 @@ import type {
 import { Badge } from './Badge'
 
 type StatusBadgeProps =
-  | { kind: 'post'; status: PostStatus; className?: string }
-  | { kind: 'application'; status: ApplicationStatus; className?: string }
-  | { kind: 'verification'; status: VerificationStatus; className?: string }
-  | { kind: 'transaction'; status: TransactionStatus; className?: string }
-  | { kind: 'user'; status: UserStatus; className?: string }
+  | { kind: 'post'; status: PostStatus | string; className?: string }
+  | { kind: 'application'; status: ApplicationStatus | string; className?: string }
+  | { kind: 'verification'; status: VerificationStatus | string; className?: string }
+  | { kind: 'transaction'; status: TransactionStatus | string; className?: string }
+  | { kind: 'user'; status: UserStatus | string; className?: string }
 
 function resolve(props: StatusBadgeProps): { label: string; tone: BadgeTone } {
+  let meta: { label: string; tone: BadgeTone } | undefined
+
   switch (props.kind) {
     case 'post':
-      return POST_STATUS_META[props.status]
+      meta = POST_STATUS_META[props.status as PostStatus]
+      break
     case 'application':
-      return APPLICATION_STATUS_META[props.status]
+      meta = APPLICATION_STATUS_META[props.status as ApplicationStatus]
+      break
     case 'verification':
-      return VERIFICATION_STATUS_META[props.status]
+      meta = VERIFICATION_STATUS_META[props.status as VerificationStatus]
+      break
     case 'transaction':
-      return TRANSACTION_STATUS_META[props.status]
+      meta = TRANSACTION_STATUS_META[props.status as TransactionStatus]
+      break
     case 'user':
-      return USER_STATUS_META[props.status]
+      meta = USER_STATUS_META[props.status as UserStatus]
+      break
   }
+
+  return meta ?? { label: props.status, tone: 'gray' }
 }
 
 export function StatusBadge(props: StatusBadgeProps) {

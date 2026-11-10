@@ -6,9 +6,9 @@ export interface BaseUserResponse {
   email: string
   phone: string
   avatarUrl?: string
-  gender: Gender
-  dateOfBirth: string
-  address: Address
+  gender?: Gender
+  dateOfBirth?: string
+  address?: Address
   userStatus: UserStatus
   role: Role
   createdAt?: string
