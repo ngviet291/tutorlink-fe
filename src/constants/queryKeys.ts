@@ -36,8 +36,12 @@ export const queryKeys = {
     all: ['subjects'] as const,
   },
   chat: {
-    room: (applicationId: string) => ['chat', 'room', applicationId] as const,
-    inbox: ['chat', 'inbox'] as const,
+    all: ['chat'] as const,
+    channels: ['chat', 'channels'] as const,
+    channel: (channelId: string) => ['chat', 'channel', channelId] as const,
+    withPartner: (partnerId: string) => ['chat', 'with', partnerId] as const,
+    messages: (channelId: string) => ['chat', 'messages', channelId] as const,
+    unread: ['chat', 'unread'] as const,
   },
   reviews: {
     all: ['reviews'] as const,

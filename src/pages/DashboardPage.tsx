@@ -86,7 +86,7 @@ function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-2">
-        <Link to={ROUTES.CHAT(a.id)}>
+        <Link to={ROUTES.CHAT_WITH(partner.id)}>
           <Button size="sm" variant="secondary">
             Mở chat
           </Button>

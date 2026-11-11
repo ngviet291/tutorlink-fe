@@ -24,7 +24,8 @@ export const ROUTES = {
   TUTOR_PROFILE: "/profile/tutor",
   PROFILE: "/profile",
   WALLET: "/wallet",
-  CHAT: (applicationId = ":applicationId") => `/chat/${applicationId}`,
+  CHAT: (channelId = ":channelId") => `/chat/${channelId}`,
+  CHAT_WITH: (partnerId = ":partnerId") => `/chat/with/${partnerId}`,
   CHAT_INBOX: "/chat",
   NOTIFICATIONS: "/notifications",
 

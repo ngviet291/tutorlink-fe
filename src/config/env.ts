@@ -16,7 +16,6 @@ export const env = {
     admin: true, // posts/transactions/fee/stats/complaints — chưa nối
     adminUser: false,
     application: true,
-    chat: true,
     favorite: false, 
     post: false,
     review: true,
@@ -26,6 +25,10 @@ export const env = {
   },
 
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+
+  /** WebSocket STOMP/SockJS. Mặc định `${apiBaseUrl}/ws` (dùng http/https, không phải ws://). */
+  wsUrl:
+    import.meta.env.VITE_WS_URL ?? `${import.meta.env.VITE_API_BASE_URL}/ws`,
 
   chatbotApiUrl: import.meta.env.VITE_CHATBOT_API_URL ?? "",
   chatbotApiKey: import.meta.env.VITE_CHATBOT_API_KEY ?? "",
@@ -45,7 +48,6 @@ export const mockConfig = {
   student: env.features.student,
   booking: env.features.booking,
   chatbot: env.features.chatbot,
-  chat: env.features.chat,
   favorite: env.features.favorite,
   post: env.features.post,
   review: env.features.review,

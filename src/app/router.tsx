@@ -107,6 +107,10 @@ export const router = createBrowserRouter([
             element: page(() => import("@/pages/ChatInboxPage")),
           },
           {
+            path: ROUTES.CHAT_WITH(),
+            element: page(() => import("@/pages/ChatWithPartnerPage")),
+          },
+          {
             path: ROUTES.CHAT(),
             element: page(() => import("@/pages/ChatPage")),
           },

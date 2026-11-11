@@ -11,6 +11,9 @@ import { ErrorBoundary } from './shared/components/ErrorBoundary'
 import { ToastContainer } from './shared/components/ui/Toast'
 import { AuthInitializer } from './features/auth/components/AuthInitializer'
 import { initTracking } from './features/tracking/tracker'
+import { ChatRealtimeBinding } from './features/chat/realtime/ChatRealtimeBinding'
+import { RealtimeBridge } from './shared/realtime/RealtimeBridge'
+import { realtimeClient, realtimeRouter } from './config/di/container'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +38,8 @@ createRoot(document.getElementById('root')!).render(
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <AuthInitializer>
+            <ChatRealtimeBinding client={realtimeClient} router={realtimeRouter} />
+            <RealtimeBridge client={realtimeClient} router={realtimeRouter} />
             <RouterProvider router={router} />
           </AuthInitializer>
           <ToastContainer />
