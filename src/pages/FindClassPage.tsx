@@ -13,6 +13,7 @@ import { Segmented } from "@/shared/components/ui/Tabs";
 import { PostCard } from "@/features/post/components/PostCard";
 import { usePosts } from "@/features/post/hooks/usePosts";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
+import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import type { PostType } from "@/shared/types/common.types";
 import type { PostFilter } from "@/features/post/types/post.types";
@@ -21,7 +22,18 @@ import { useSearchTracking } from "@/features/tracking/hooks";
 const BUDGET_MAX = 10_000_000;
 
 export default function FindClassPage() {
-  const [type, setType] = useState<PostType>("FIND_TUTOR");
+  // Học viên → ưu tiên bài "Gia sư tìm học viên"; gia sư → ưu tiên "Lớp cần gia sư".
+  // Dùng `picked` để vẫn đúng khi thông tin đăng nhập tải xong sau lần render đầu.
+  const role = useAppSelector((s) => s.auth.user?.role);
+  const defaultType: PostType =
+    role === "STUDENT" ? "FIND_STUDENT" : "FIND_TUTOR";
+  const [picked, setPicked] = useState<PostType | null>(null);
+  const type = picked ?? defaultType;
+  const typeItems: { value: PostType; label: string }[] = [
+    { value: "FIND_TUTOR", label: "Lớp cần gia sư" },
+    { value: "FIND_STUDENT", label: "Gia sư tìm học viên" },
+  ];
+  if (defaultType === "FIND_STUDENT") typeItems.reverse();
   const [filter, setFilter] = useState<FilterValues>(emptyFilter(BUDGET_MAX));
   const [keyword, setKeyword] = useState("");
   const debounced = useDebounce(keyword);
@@ -97,16 +109,7 @@ export default function FindClassPage() {
       </p>
 
       <div className="mt-5">
-        <Segmented
-          value={type}
-          onChange={(v) => {
-            setType(v);
-          }}
-          items={[
-            { value: "FIND_TUTOR", label: "Lớp cần gia sư" },
-            { value: "FIND_STUDENT", label: "Gia sư tìm học viên" },
-          ]}
-        />
+        <Segmented value={type} onChange={setPicked} items={typeItems} />
       </div>
 
       <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-start">

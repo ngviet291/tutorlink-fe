@@ -37,6 +37,10 @@ export const router = createBrowserRouter([
         element: page(() => import("@/pages/TutorDetailPage")),
       },
       {
+        path: ROUTES.STUDENT_DETAIL(),
+        element: page(() => import("@/pages/StudentDetailPage")),
+      },
+      {
         path: ROUTES.POST_DETAIL(),
         element: page(() => import("@/pages/PostDetailPage")),
       },
@@ -88,11 +92,11 @@ export const router = createBrowserRouter([
           },
           {
             path: ROUTES.POST_CREATE,
-            element: page(() => import("@/pages/PostFormPage")),
+            element: page(() => import("@/pages/PostCreatePage")),
           },
           {
             path: ROUTES.POST_EDIT(),
-            element: page(() => import("@/pages/PostFormPage")),
+            element: page(() => import("@/pages/PostEditPage")),
           },
           {
             path: ROUTES.MY_POSTS,

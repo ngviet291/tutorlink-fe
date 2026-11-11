@@ -4,18 +4,20 @@ export const env = {
   useMock: flag !== undefined ? flag === "true" : import.meta.env.DEV,
 
   features: {
-    auth: false, // false = API thật
-    user: false, // true = Mock
-    tutor: true,
+    auth: false,
+    user: false, 
+    tutor: false, 
+    tutorProfile: false, 
     subject: false,
     student: true,
     notify: true,
     booking: true,
     chatbot: true,
-    admin: true,
+    admin: true, // posts/transactions/fee/stats/complaints — chưa nối
+    adminUser: false,
     application: true,
     chat: true,
-    favorite: true,
+    favorite: false, 
     post: false,
     review: true,
     wallet: true,
@@ -33,10 +35,12 @@ export const env = {
 export const mockConfig = {
   application: env.features.application,
   admin: env.features.admin,
+  adminUser: env.features.adminUser,
   subject: env.features.subject,
   auth: env.features.auth,
   user: env.features.user,
   tutor: env.features.tutor,
+  tutorProfile: env.features.tutorProfile,
   notify: env.features.notify,
   student: env.features.student,
   booking: env.features.booking,

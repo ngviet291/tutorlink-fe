@@ -47,5 +47,6 @@ export const queryKeys = {
   favorites: {
     all: ['favorites'] as const,
     mine: ['favorites', 'mine'] as const,
+    ids: ['favorites', 'ids'] as const,
   },
 }

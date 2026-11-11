@@ -52,6 +52,8 @@ export interface PostFilter {
   educationLevel?: EducationLevel | ""; // BE nhận single value
   minBudget?: number;
   maxBudget?: number;
+  /** Chỉ lấy bài của một người đăng (BE: GET /v1/posts?authorId=) */
+  authorId?: string;
   cursor?: string;
   limit?: number;
 }

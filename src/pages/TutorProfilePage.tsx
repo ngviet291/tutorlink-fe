@@ -46,7 +46,8 @@ function StatusBanner({ tutor }: { tutor: TutorResponse }) {
   return (
     <div
       role="status"
-      className={`flex items-start gap-3 rounded-2xl p-4 ${map.cls}`}>
+      className={`flex items-start gap-3 rounded-2xl p-4 ${map.cls}`}
+    >
       <map.Icon className="mt-0.5 size-5 shrink-0" />
       <div>
         <p className="font-bold">{map.title}</p>
@@ -105,7 +106,9 @@ export default function TutorProfilePage() {
       education: data.education ?? "",
       hourlyRate: data.hourlyRate || 100000,
       bio: data.bio ?? "",
-      address: { province: data.address?.province ?? "" },
+      address: {
+        province: data.teachingAreas?.[0] ?? data.address?.province ?? "",
+      },
       teachingMode: data.teachingMode ?? "BOTH",
       certificates: (data.certificates ?? []).map((c) => ({
         name: c.name,
@@ -141,7 +144,8 @@ export default function TutorProfilePage() {
       <form
         onSubmit={(e) => void submit(e)}
         noValidate
-        className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6">
+        className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6"
+      >
         <Select
           label="Môn dạy"
           required
@@ -224,7 +228,8 @@ export default function TutorProfilePage() {
           {fields.map((f, i) => (
             <div
               key={f.id}
-              className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_6rem_auto]">
+              className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_6rem_auto]"
+            >
               <Input
                 aria-label="Tên chứng chỉ"
                 placeholder="Tên chứng chỉ"
@@ -255,7 +260,8 @@ export default function TutorProfilePage() {
               <Button
                 variant="ghost"
                 aria-label="Xóa chứng chỉ"
-                onClick={() => remove(i)}>
+                onClick={() => remove(i)}
+              >
                 <Trash2 className="size-4 text-danger" />
               </Button>
             </div>
@@ -266,7 +272,8 @@ export default function TutorProfilePage() {
             className="w-fit"
             onClick={() =>
               append({ name: "", issuer: "", year: new Date().getFullYear() })
-            }>
+            }
+          >
             <Plus className="size-4" /> Thêm chứng chỉ
           </Button>
         </fieldset>

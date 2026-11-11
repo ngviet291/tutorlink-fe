@@ -102,7 +102,7 @@ export default function FindTutorPage() {
         <div className="min-w-0 flex-1">
           <Input
             aria-label="Tìm kiếm gia sư"
-            placeholder="Tìm theo tên, môn học, giới thiệu..."
+            placeholder="Tìm theo môn học..."
             leftIcon={<Search className="size-4" />}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}

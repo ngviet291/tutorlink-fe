@@ -49,6 +49,8 @@ function withCount(post: PostResponse): PostResponse {
 }
 
 function matches(post: PostResponse, filter: PostFilter): boolean {
+  if (filter.authorId && post.author.id !== filter.authorId) return false;
+
   if (filter.type && post.type !== filter.type) return false;
 
   if (
@@ -172,6 +174,8 @@ export const postService = {
 
   /** GET /v1/posts/:id - Chi tiết bài đăng */
   async getPostById(id: string): Promise<PostResponse> {
+    // id rỗng sẽ thành GET /v1/posts/ (BE báo "No static resource") → chặn từ FE
+    if (!id) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
     if (USE_MOCK) {
       await delay(250);
 

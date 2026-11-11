@@ -18,6 +18,8 @@ import type { PostPayload, PostResponse } from "../types/post.types";
 import type { PostType } from "@/shared/types/common.types";
 
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
+import { useAppSelector } from "@/shared/hooks/useAppStore";
+import { POST_TYPE_LABEL } from "@/constants/enums";
 
 interface PostFormProps {
   defaultValues?: Partial<PostResponse>;
@@ -33,6 +35,16 @@ export function PostForm({
   const { t } = useTranslation();
   const { data: subjects = [] } = useSubjects();
 
+  // Loại bài do vai trò quyết định, không cho tự chọn:
+  // học viên đăng "Tìm gia sư" (FIND_TUTOR), gia sư đăng "Tìm học viên" (FIND_STUDENT).
+  const role = useAppSelector((s) => s.auth.user?.role);
+  const postType: PostType =
+    role === "TUTOR"
+      ? "FIND_STUDENT"
+      : role === "STUDENT"
+        ? "FIND_TUTOR"
+        : (defaultValues?.type ?? "FIND_TUTOR");
+
   const {
     register,
     handleSubmit,
@@ -41,7 +53,7 @@ export function PostForm({
     formState: { errors },
   } = useForm<PostPayload>({
     defaultValues: {
-      type: defaultValues?.type ?? "FIND_TUTOR",
+      type: postType,
       title: defaultValues?.title ?? "",
       content: defaultValues?.content ?? "",
       subjectId: defaultValues?.subject?.id ?? "",
@@ -73,55 +85,21 @@ export function PostForm({
   // Submit bài đăng dưới dạng nháp hoặc đăng công khai.
   const submitAs = (asDraft: boolean) => {
     return handleSubmit(async (data) => {
-      await onSubmit(data, asDraft);
+      await onSubmit({ ...data, type: postType }, asDraft);
     })();
   };
 
-  const postTypeOptions: { value: PostType; label: string }[] = [
-    {
-      value: "FIND_TUTOR",
-      label: t("post.type.FIND_TUTOR"),
-    },
-    {
-      value: "FIND_STUDENT",
-      label: t("post.type.FIND_STUDENT"),
-    },
-  ];
-
   return (
     <form className="space-y-5">
-      {/* Post type */}
-      <div>
-        <label className="mb-1 block text-sm font-medium text-gray-700">
-          {t("post.title")}
-        </label>
-
-        <div className="flex gap-3">
-          <Controller
-            name="type"
-            control={control}
-            render={({ field }) => (
-              <>
-                {postTypeOptions.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className="flex cursor-pointer items-center gap-2"
-                  >
-                    <input
-                      type="radio"
-                      value={opt.value}
-                      checked={field.value === opt.value}
-                      onChange={() => field.onChange(opt.value)}
-                      className="accent-blue-600"
-                    />
-
-                    <span className="text-sm">{opt.label}</span>
-                  </label>
-                ))}
-              </>
-            )}
-          />
-        </div>
+      {/* Loại bài đăng: cố định theo vai trò */}
+      <div className="rounded-xl border border-border bg-primary-light px-4 py-3 text-sm text-text">
+        <span className="text-text-secondary">Loại bài đăng: </span>
+        <strong>{POST_TYPE_LABEL[postType]}</strong>
+        <p className="mt-0.5 text-xs text-text-secondary">
+          {postType === "FIND_TUTOR"
+            ? "Bạn là học viên: bài đăng này dùng để tìm gia sư."
+            : "Bạn là gia sư: bài đăng này dùng để tìm học viên."}
+        </p>
       </div>
 
       {/* Title */}

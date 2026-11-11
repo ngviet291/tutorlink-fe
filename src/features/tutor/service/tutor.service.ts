@@ -14,9 +14,16 @@ import {
   tutors,
 } from "@/mocks/db";
 import { delay, cursorPaginate, requireUser } from "@/mocks/session";
-import { http } from "@/config/axiosClient";
+import { http, publicHttp } from "@/config/axiosClient";
+import {
+  toTutor,
+  toUpdateTutorProfileRequest,
+} from "@/features/user/mapper/user.mapper";
+import type { TutorResponse as TutorResponseDto } from "@/features/user/types/user.dto";
 
 const USE_MOCK = mockConfig.tutor;
+/** Hồ sơ của chính gia sư (getMyProfile / saveMyProfile) có cờ riêng để nối API trước. */
+const USE_MOCK_PROFILE = mockConfig.tutorProfile;
 
 export const tutorService = {
   /** Chỉ hồ sơ APPROVED được hiển thị công khai. */
@@ -60,9 +67,16 @@ export const tutorService = {
         params.limit ?? 10,
       );
     }
-    return http
-      .get<CursorResponse<TutorResponse>>("/v1/users/tutors/search", { params })
-      .then((res) => res.data);
+    // Endpoint public: dùng publicHttp để token hỏng/hết hạn không làm khách bị đăng xuất
+    return publicHttp
+      .get<CursorResponse<TutorResponseDto>>("/v1/users/tutors/search", {
+        params,
+      })
+      .then((res) => ({
+        content: (res.data.content ?? []).map(toTutor),
+        hasNext: res.data.hasNext ?? false,
+        nextCursor: res.data.nextCursor,
+      }));
   },
 
   async getTutorById(id: string): Promise<TutorResponse> {
@@ -81,13 +95,14 @@ export const tutorService = {
       }
       return t;
     }
-    return http
-      .get<TutorResponse>(`/v1/users/${id}/public-profile`)
-      .then((res) => res.data);
+    return publicHttp
+      .get<TutorResponseDto>(`/v1/users/${id}/public-profile`)
+      .then((res) => toTutor(res.data));
   },
 
+  /** GET /v1/users/me — với tài khoản TUTOR, BE trả về TutorResponse. */
   async getMyProfile(): Promise<TutorResponse> {
-    if (USE_MOCK) {
+    if (USE_MOCK_PROFILE) {
       await delay(250);
       const me = requireUser();
       const t = tutors.find((x) => x.id === me.id);
@@ -95,12 +110,13 @@ export const tutorService = {
       return t;
     }
     return http
-      .get<TutorResponse>("/v1/users/me/tutor-profile")
-      .then((res) => res.data);
+      .get<TutorResponseDto>("/v1/users/me")
+      .then((res) => toTutor(res.data));
   },
 
+  /** PUT /v1/users/me/tutor-profile — BE nhận `subjectIds`, `teachingAreas`... (xem mapper). */
   async saveMyProfile(payload: TutorProfilePayload): Promise<TutorResponse> {
-    if (USE_MOCK) {
+    if (USE_MOCK_PROFILE) {
       await delay();
       const me = requireUser();
       const t = tutors.find((x) => x.id === me.id);
@@ -131,7 +147,10 @@ export const tutorService = {
       return t;
     }
     return http
-      .put<TutorResponse>("/v1/users/me/tutor-profile", payload)
-      .then((res) => res.data);
+      .put<TutorResponseDto>(
+        "/v1/users/me/tutor-profile",
+        toUpdateTutorProfileRequest(payload),
+      )
+      .then((res) => toTutor(res.data));
   },
 };

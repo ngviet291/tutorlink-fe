@@ -1,8 +1,21 @@
 import { http } from "@/config/axiosClient";
 import { mockConfig } from "@/config/env";
-import { ApiError, type PageResponse } from "@/shared/types/api.types";
+import {
+  ApiError,
+  type CursorResponse,
+  type PageResponse,
+} from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
-import type { AccountStatus } from "@/shared/types/common.types";
+import type { AccountStatus, Role } from "@/shared/types/common.types";
+import type { VerificationStatus } from "@/shared/types/common.types";
+import {
+  toBaseUser,
+  toTutor,
+} from "@/features/user/mapper/user.mapper";
+import type {
+  BaseUserResponse as BaseUserDto,
+  TutorResponse as TutorResponseDto,
+} from "@/features/user/types/user.dto";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 import type { PostResponse } from "@/features/post/types/post.types";
 import type { AdminPostFilter } from "@/features/post/types/post.types";
@@ -33,12 +46,29 @@ import {
   users,
   wallets,
 } from "@/mocks/db";
-import { delay, paginate, requireUser } from "@/mocks/session";
+import {
+  cursorPaginate,
+  delay,
+  paginate,
+  requireUser,
+} from "@/mocks/session";
 import { fromBeTransaction } from "@/features/wallet/service/wallet.service";
 import type { RevenueStatistics } from "@/features/wallet/types/wallet.types";
 import { recomputeRating } from "@/features/review/service/review.service";
 
 const USE_MOCK = mockConfig.admin;
+/** Quản lý người dùng + duyệt gia sư (/v1/users...) có cờ riêng. */
+const USE_MOCK_USER = mockConfig.adminUser;
+
+export interface AdminUserFilter {
+  role?: Role;
+  status?: AccountStatus;
+  verificationStatus?: VerificationStatus;
+  cursor?: string;
+  limit?: number;
+}
+
+const ROLE_PARAM = (r?: Role) => r; // BE RoleName: STUDENT | TUTOR | ADMIN
 
 function requireAdmin(): void {
   const me = requireUser();
@@ -47,22 +77,39 @@ function requireAdmin(): void {
 }
 
 export const adminService = {
+  /** Gia sư chờ duyệt = GET /v1/users?role=TUTOR&verificationStatus=PENDING (duyệt hết các trang). */
   async getPendingTutors(): Promise<TutorResponse[]> {
-    if (USE_MOCK) {
+    if (USE_MOCK_USER) {
       await delay();
       requireAdmin();
       return tutors.filter((t) => t.verificationStatus === "PENDING");
     }
-    return http
-      .get<TutorResponse[]>("/v1/admin/tutors/pending")
-      .then((res) => res.data); // TODO: nối API
+    const all: TutorResponse[] = [];
+    let cursor: string | undefined;
+    for (let i = 0; i < 50; i++) {
+      const page = await http
+        .get<CursorResponse<TutorResponseDto>>("/v1/users", {
+          params: {
+            role: "TUTOR",
+            verificationStatus: "PENDING",
+            cursor,
+            limit: 50,
+          },
+        })
+        .then((res) => res.data);
+      all.push(...(page.content ?? []).map(toTutor));
+      if (!page.hasNext || !page.nextCursor) break;
+      cursor = page.nextCursor;
+    }
+    return all;
   },
 
+  /** PATCH /v1/users/{id}/approve { approved, reason } */
   async reviewTutor(
     tutorId: string,
     payload: ProfileReviewPayload,
   ): Promise<TutorResponse> {
-    if (USE_MOCK) {
+    if (USE_MOCK_USER) {
       await delay();
       requireAdmin();
       const t = tutors.find((x) => x.id === tutorId);
@@ -89,37 +136,75 @@ export const adminService = {
       return t;
     }
     return http
-      .put<TutorResponse>(`/v1/admin/tutors/${tutorId}/review`, payload)
-      .then((res) => res.data); // TODO: nối API
+      .patch<TutorResponseDto>(`/v1/users/${tutorId}/approve`, {
+        approved: payload.decision === "APPROVED",
+        reason: payload.note || undefined,
+      })
+      .then((res) => toTutor(res.data));
   },
 
+  /** GET /v1/users?role&status&verificationStatus&cursor&limit (cursor, không phải page). */
   async getUsers(
-    params: { keyword?: string; page?: number; pageSize?: number } = {},
-  ): Promise<PageResponse<BaseUserResponse>> {
-    if (USE_MOCK) {
+    params: AdminUserFilter = {},
+  ): Promise<CursorResponse<BaseUserResponse>> {
+    if (USE_MOCK_USER) {
       await delay();
       requireAdmin();
-      const k = params.keyword?.toLowerCase();
-      const list = users.filter(
-        (u) =>
-          !k || `${u.fullName} ${u.email} ${u.phone}`.toLowerCase().includes(k),
-      );
-      return paginate(
-        list.map((u) => ({ ...u })),
-        params.page,
-        params.pageSize ?? 10,
+      const list = users
+        .filter((u) => !params.role || u.role === params.role)
+        .filter((u) => !params.status || u.userStatus === params.status)
+        .filter(
+          (u) =>
+            !params.verificationStatus ||
+            tutors.find((t) => t.id === u.id)?.verificationStatus ===
+              params.verificationStatus,
+        )
+        .map((u) => ({ ...u }));
+      return cursorPaginate(
+        list,
+        params.cursor,
+        (u) => u.id,
+        params.limit ?? 10,
       );
     }
-    return http
-      .get<PageResponse<BaseUserResponse>>("/v1/admin/users")
-      .then((res) => res.data); // TODO: nối API
+    const page = await http
+      .get<CursorResponse<BaseUserDto>>("/v1/users", {
+        params: {
+          role: ROLE_PARAM(params.role),
+          status: params.status,
+          verificationStatus: params.verificationStatus,
+          cursor: params.cursor,
+          limit: params.limit ?? 10,
+        },
+      })
+      .then((res) => res.data);
+    return {
+      content: (page.content ?? []).map(toBaseUser),
+      hasNext: page.hasNext ?? false,
+      nextCursor: page.nextCursor,
+    };
   },
 
+  /** GET /v1/users/{id} — ADMIN. */
+  async getUserById(id: string): Promise<BaseUserResponse> {
+    if (USE_MOCK_USER) {
+      await delay(200);
+      requireAdmin();
+      const u = users.find((x) => x.id === id);
+      if (!u) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
+      return { ...u };
+    }
+    return http
+      .get<BaseUserDto>(`/v1/users/${id}`)
+      .then((res) => toBaseUser(res.data));
+  },
+
+  /** PATCH /v1/users/{id}/status { userStatus } */
   async setUserStatus(
     userId: string,
     status: AccountStatus,
   ): Promise<BaseUserResponse> {
-    if (USE_MOCK) {
+    if (USE_MOCK_USER) {
       await delay();
       requireAdmin();
       const u = users.find((x) => x.id === userId);
@@ -130,10 +215,8 @@ export const adminService = {
       return { ...u };
     }
     return http
-      .put<BaseUserResponse>(`/v1/admin/users/${userId}/status`, {
-        status,
-      })
-      .then((res) => res.data); // TODO: nối API
+      .patch<BaseUserDto>(`/v1/users/${userId}/status`, { userStatus: status })
+      .then((res) => toBaseUser(res.data));
   },
 
   async getPosts(

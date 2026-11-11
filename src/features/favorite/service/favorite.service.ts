@@ -1,12 +1,35 @@
 import { http } from "@/config/axiosClient";
 import { mockConfig } from "@/config/env";
+import { toTutor } from "@/features/user/mapper/user.mapper";
+import type { TutorResponse as TutorResponseDto } from "@/features/user/types/user.dto";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 import { favorites, tutors } from "@/mocks/db";
 import { delay, requireUser } from "@/mocks/session";
+import type { FavoriteResponse } from "../types/favorite.dto";
 
 const USE_MOCK = mockConfig.favorite;
 
+/** GET /v1/favorites → chỉ trả [{ tutorId }]. */
+async function fetchFavoriteIds(): Promise<string[]> {
+  const res = await http.get<FavoriteResponse[]>("/v1/favorites");
+  return (res.data ?? []).map((f) => f.tutorId);
+}
+
 export const favoriteService = {
+  /** Chỉ lấy danh sách id gia sư đã yêu thích (nhẹ, dùng để tô trái tim). */
+  async getFavoriteIds(): Promise<string[]> {
+    if (USE_MOCK) {
+      await delay(100);
+      return [...(favorites[requireUser().id] ?? [])];
+    }
+    return fetchFavoriteIds();
+  },
+
+  /**
+   * Danh sách gia sư yêu thích đầy đủ. BE chỉ trả tutorId nên FE gọi thêm
+   * GET /v1/users/{id}/public-profile cho từng id; hồ sơ không còn công khai
+   * (404/400) bị bỏ qua thay vì làm hỏng cả trang.
+   */
   async getFavorites(): Promise<TutorResponse[]> {
     if (USE_MOCK) {
       await delay(250);
@@ -18,10 +41,21 @@ export const favoriteService = {
         )
         .map((t) => ({ ...t, contact: undefined }));
     }
-    return http.get<TutorResponse[]>("/v1/favorites").then((res) => res.data); // TODO: nối API
+    const ids = await fetchFavoriteIds();
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        http.get<TutorResponseDto>(`/v1/users/${id}/public-profile`),
+      ),
+    );
+    return results.flatMap((r) =>
+      r.status === "fulfilled" ? [toTutor(r.value.data)] : [],
+    );
   },
 
-  /** Trả về trạng thái sau khi bật/tắt. */
+  /**
+   * BE không có toggle: POST /v1/favorites/{tutorId} để thêm,
+   * DELETE /v1/favorites/{tutorId} để bỏ. Hỏi BE trạng thái hiện tại để không lệch cache.
+   */
   async toggleFavorite(tutorId: string): Promise<{ favorited: boolean }> {
     if (USE_MOCK) {
       await delay(150);
@@ -33,8 +67,12 @@ export const favoriteService = {
         : [...list, tutorId];
       return { favorited: !has };
     }
-    return http
-      .post<{ favorited: boolean }>(`/v1/favorites/${tutorId}`)
-      .then((res) => res.data); // TODO: nối API
+    const has = (await fetchFavoriteIds()).includes(tutorId);
+    if (has) {
+      await http.delete(`/v1/favorites/${tutorId}`);
+      return { favorited: false };
+    }
+    await http.post<FavoriteResponse>(`/v1/favorites/${tutorId}`);
+    return { favorited: true };
   },
 };

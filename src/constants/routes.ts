@@ -5,6 +5,7 @@ export const ROUTES = {
   TUTOR_CORNER: "/tutor-corner",
   STUDENT_CORNER: "/student-corner",
   TUTOR_DETAIL: (id = ":id") => `/tutor/${id}`,
+  STUDENT_DETAIL: (id = ":id") => `/student/${id}`,
   POST_DETAIL: (id = ":id") => `/post/${id}`,
   LOGIN: "/login",
   REGISTER: "/register",
