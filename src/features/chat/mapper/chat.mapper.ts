@@ -13,6 +13,7 @@ import type {
   MessageReadReceipt,
   MessageStatus,
 } from "../types/chat.types";
+import type { MediaType } from "@/shared/types/common.types";
 
 // const toMedia = (m: MediaResponse): ChatMedia => ({
 //   id: m.id,
@@ -40,7 +41,18 @@ export function toChatMessage(
   };
 }
 
-export function toChatThread(dto: ChatChannelResponse): ChatThread {
+// chat.mapper.ts
+export function toChatThread(
+  dto: ChatChannelResponse,
+  myId?: string,
+): ChatThread {
+  const prefix = myId && dto.lastMessageSenderId === myId ? "Bạn: " : "";
+  const lastMessage =
+    dto.lastMessageContent ??
+    (dto.lastMessageMediaType
+      ? mediaPreview(dto.lastMessageMediaType)
+      : undefined);
+
   return {
     channelId: dto.id,
     partner: {
@@ -49,9 +61,18 @@ export function toChatThread(dto: ChatChannelResponse): ChatThread {
       avatarUrl: dto.partner.avatarUrl,
     },
     lastMessageAt: dto.lastMessageAt,
-    unreadCount: 0,
+    lastMessage: lastMessage ? prefix + lastMessage : undefined,
+    unreadCount: dto.unreadCount ?? 0,
   };
 }
+
+const mediaPreview = (t: MediaType): string =>
+  ({
+    IMAGE: "📷 Hình ảnh",
+    VIDEO: "🎬 Video",
+    AUDIO: "🎵 Âm thanh",
+    FILE: "📎 Tệp đính kèm",
+  })[t];
 
 export function toMessagePage(
   res: CursorResponse<MessageResponse>,

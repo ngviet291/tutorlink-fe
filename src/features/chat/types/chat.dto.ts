@@ -22,11 +22,15 @@ export interface SendMessageRequest {
 }
 
 /** BE: chat/dto/response/ChatChannelResponse.java */
+// chat.dto.ts
 export interface ChatChannelResponse {
   id: string;
   lastMessageAt?: string;
-  /** người còn lại so với user hiện tại */
   partner: ParticipantResponse;
+  lastMessageContent?: string;
+  lastMessageMediaType?: MediaType;
+  lastMessageSenderId?: string;
+  unreadCount?: number;
 }
 
 /** BE: chat/dto/response/MediaResponse.java */

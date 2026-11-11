@@ -225,7 +225,7 @@ export function mergeThreads(
           Date.parse(old.lastMessageAt) >= Date.parse(t.lastMessageAt)));
     return {
       ...t,
-      unreadCount: old.unreadCount,
+      unreadCount: t.unreadCount, // BE là nguồn đúng
       ...(keepPreview
         ? { lastMessage: old.lastMessage, lastMessageAt: old.lastMessageAt }
         : {}),
