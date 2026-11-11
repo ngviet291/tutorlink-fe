@@ -1,12 +1,18 @@
 import axios from "axios";
 
 export class ApiError extends Error {
-  public status?: number;
+  status?: number | string;
+  fieldErrors?: Record<string, string>;
 
-  constructor(message: string, status?: number) {
+  constructor(
+    message: string,
+    status?: number | string,
+    fieldErrors?: Record<string, string>,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.fieldErrors = fieldErrors;
   }
 }
 
@@ -26,13 +32,23 @@ export function toApiError(error: unknown): ApiError {
       error.message ??
       "Unknown API error";
 
-    return new ApiError(message, error.response?.status);
+    const raw = data?.errors;
+    const fieldErrors =
+      raw && typeof raw === "object"
+        ? (raw as Record<string, string>)
+        : undefined;
+
+    return new ApiError(message, status, fieldErrors);
   }
 
   return new ApiError(error instanceof Error ? error.message : "Unknown error");
 }
 
 export function getErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    const details = error.fieldErrors ? Object.values(error.fieldErrors) : [];
+    if (details.length > 0) return details.join("\n");
+  }
   if (error instanceof Error) {
     return error.message;
   }

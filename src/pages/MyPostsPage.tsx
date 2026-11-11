@@ -47,8 +47,8 @@ export default function MyPostsPage() {
           { value: "ALL", label: "Tất cả" },
           { value: "DRAFT", label: "Bản nháp" },
           { value: "PUBLISHED", label: "Đang tuyển" },
-          { value: "CLOSED", label: "Đã đủ" },
-          { value: "REMOVED", label: "Đã gỡ" },
+          { value: "CLOSED", label: "Đã đóng" },
+          // { value: "REMOVED", label: "Đã gỡ" },
         ]}
       />
       {isLoading ? (
@@ -76,8 +76,7 @@ export default function MyPostsPage() {
               <Button
                 variant="secondary"
                 onClick={() => void fetchNextPage()}
-                loading={isFetchingNextPage}
-              >
+                loading={isFetchingNextPage}>
                 Xem thêm
               </Button>
             </div>

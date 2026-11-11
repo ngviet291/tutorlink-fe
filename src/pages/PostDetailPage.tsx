@@ -37,7 +37,10 @@ import { ApplicantList } from "@/features/application/components/ApplicantList";
 import { ApplyModal } from "@/features/application/components/ApplyModal";
 import { useMyApplications } from "@/features/application/hooks/useApplications";
 import { useApplicationMutations } from "@/features/application/hooks/useApplications";
-import { usePost, usePostMutations } from "@/features/post/hooks/usePosts";
+import {
+  usePostDetail,
+  usePostMutations,
+} from "@/features/post/hooks/usePosts";
 import { useMyTutorProfile } from "@/features/tutor/hooks/useTutors";
 
 export default function PostDetailPage() {
@@ -45,7 +48,14 @@ export default function PostDetailPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const user = useAppSelector((s) => s.auth.user);
-  const { data: post, isLoading, isError, refetch } = usePost(id);
+  const [deleting, setDeleting] = useState(false);
+
+  const {
+    data: post,
+    isLoading,
+    isError,
+    refetch,
+  } = usePostDetail(id, Boolean(user));
   const { remove, publish } = usePostMutations();
   const { cancel } = useApplicationMutations();
   const [applyOpen, setApplyOpen] = useState(false);
@@ -111,14 +121,19 @@ export default function PostDetailPage() {
     setApplyOpen(true);
   };
 
-  const onDelete = () =>
+  const onDelete = () => {
+    setDeleting(true);
     remove.mutate(post.id, {
       onSuccess: () => {
         toast.success("Đã xóa bài đăng");
         navigate(ROUTES.MY_POSTS);
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (e) => {
+        setDeleting(false);
+        toast.error(getErrorMessage(e));
+      },
     });
+  };
 
   const canEdit =
     isAuthor && post.status !== "CLOSED" && post.status !== "REMOVED";
@@ -147,6 +162,15 @@ export default function PostDetailPage() {
       value: formatDate(post.deadline),
     },
   ];
+
+  if (deleting) {
+    return (
+      <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-8">
+        <Skeleton className="h-10 w-2/3" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
@@ -179,8 +203,7 @@ export default function PostDetailPage() {
           {info.map(({ icon: Icon, label, value }) => (
             <div
               key={label}
-              className="flex items-start gap-3 rounded-xl bg-surface-hover p-3"
-            >
+              className="flex items-start gap-3 rounded-xl bg-surface-hover p-3">
               <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
               <div>
                 <dt className="text-xs text-text-secondary">{label}</dt>
@@ -211,8 +234,7 @@ export default function PostDetailPage() {
                 ? ROUTES.TUTOR_DETAIL(post.author.id)
                 : ROUTES.STUDENT_DETAIL(post.author.id)
             }
-            className="flex items-center gap-3 rounded-xl hover:opacity-80"
-          >
+            className="flex items-center gap-3 rounded-xl hover:opacity-80">
             <Avatar
               name={post.author.fullName}
               src={post.author.avatarUrl}
@@ -237,8 +259,7 @@ export default function PostDetailPage() {
                 onClick={onApply}
                 disabled={
                   Boolean(disabledReason) || (Boolean(user) && !roleMatches)
-                }
-              >
+                }>
                 Đăng ký nhận lớp
               </Button>
             </Tooltip>
@@ -267,8 +288,7 @@ export default function PostDetailPage() {
                   onSuccess: () => toast.success("Đã hủy đăng ký"),
                   onError: (e) => toast.error(getErrorMessage(e)),
                 })
-              }
-            >
+              }>
               <XCircle className="size-4" /> Hủy đăng ký
             </Button>
           )}
@@ -278,8 +298,7 @@ export default function PostDetailPage() {
             myTutor.data.verificationStatus !== "APPROVED" && (
               <Link
                 to={ROUTES.TUTOR_PROFILE}
-                className="self-center text-xs font-semibold text-primary hover:underline"
-              >
+                className="self-center text-xs font-semibold text-primary hover:underline">
                 <Wallet className="mr-1 inline size-3.5" /> Xem trạng thái hồ sơ
                 gia sư
               </Link>
@@ -296,8 +315,7 @@ export default function PostDetailPage() {
                     onSuccess: () => toast.success("Đã đăng công khai"),
                     onError: (e) => toast.error(getErrorMessage(e)),
                   })
-                }
-              >
+                }>
                 Đăng công khai
               </Button>
             )}

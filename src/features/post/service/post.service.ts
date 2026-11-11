@@ -1,391 +1,100 @@
-import { http } from "@/config/axiosClient";
-import { mockConfig } from "@/config/env";
-import { ApiError, type CursorResponse } from "@/shared/types/api.types";
-import { ERROR_MESSAGES } from "@/constants/errorMessage";
+import type { CursorResponse } from "@/shared/types/api.types";
+import type { PostGateway } from "../api/post.gateway";
+import {
+  toCreatePostRequest,
+  toPost,
+  toUpdatePostRequest,
+} from "../mapper/post.mapper";
 import type {
+  AdminPostFilter,
+  MyPostFilter,
+  PostApplication,
   PostFilter,
   PostPayload,
   PostResponse,
+  PostStatistic,
 } from "../types/post.types";
 
-import {
-  applications,
-  nextId,
-  notifications,
-  posts,
-  recountSubjectUsage,
-  subjects,
-  users,
-} from "@/mocks/db";
+/** Map content sang model UI, giữ nguyên hasNext và nextCursor. */
+const mapPage = <D, M>(
+  res: CursorResponse<D>,
+  fn: (d: D) => M,
+): CursorResponse<M> => ({ ...res, content: res.content.map(fn) });
 
-import { delay, cursorPaginate, requireUser } from "@/mocks/session";
+export class PostService {
+  private readonly gateway: PostGateway;
 
-const USE_MOCK = mockConfig.post;
-
-// ─── Mock helpers ────────────────────────────────────────────────────────────
-
-function canSee(
-  post: PostResponse,
-  viewerId: string | null,
-  isAdmin: boolean,
-): boolean {
-  if (isAdmin) return true;
-
-  if (post.status === "PUBLISHED" || post.status === "CLOSED") {
-    return true;
+  constructor(gateway: PostGateway) {
+    this.gateway = gateway;
   }
 
-  return post.author.id === viewerId;
-}
-
-function withCount(post: PostResponse): PostResponse {
-  const applicationCount = applications.filter(
-    (application) =>
-      application.post.id === post.id &&
-      application.applicationStatus !== "CANCELLED",
-  ).length;
-
-  return { ...post, applicationCount };
-}
-
-function matches(post: PostResponse, filter: PostFilter): boolean {
-  if (filter.authorId && post.author.id !== filter.authorId) return false;
-
-  if (filter.type && post.type !== filter.type) return false;
-
-  if (
-    filter.subjectName &&
-    !post.subject.name.toLowerCase().includes(filter.subjectName.toLowerCase())
-  ) {
-    return false;
+  async getPosts(filter: PostFilter): Promise<CursorResponse<PostResponse>> {
+    return mapPage(await this.gateway.list(filter), toPost);
   }
 
-  if (filter.province && post.address?.province !== filter.province) {
-    return false;
-  }
-
-  if (
-    filter.teachingMode &&
-    post.teachingMode !== filter.teachingMode &&
-    post.teachingMode !== "BOTH"
-  ) {
-    return false;
-  }
-
-  if (filter.educationLevel && post.educationLevel !== filter.educationLevel) {
-    return false;
-  }
-
-  if (
-    filter.minBudget !== undefined &&
-    (post.maxBudget ?? Infinity) < filter.minBudget
-  ) {
-    return false;
-  }
-
-  if (
-    filter.maxBudget !== undefined &&
-    (post.minBudget ?? 0) > filter.maxBudget
-  ) {
-    return false;
-  }
-
-  if (filter.keyword) {
-    const keyword = filter.keyword.toLowerCase();
-    const searchableText =
-      `${post.title} ${post.content} ${post.subject.name}`.toLowerCase();
-
-    if (!searchableText.includes(keyword)) return false;
-  }
-
-  return true;
-}
-
-function toPost(
-  payload: PostPayload,
-  id: string,
-  status: PostResponse["status"],
-): PostResponse {
-  const me = requireUser();
-  const subject = subjects.find((item) => item.id === payload.subjectId);
-
-  if (!subject) {
-    throw new ApiError("Invalid subject", "INVALID_SUBJECT", 400);
-  }
-
-  return {
-    id,
-    title: payload.title,
-    content: payload.content,
-    type: payload.type,
-    status,
-    author: {
-      id: me.id,
-      fullName: me.fullName,
-      avatarUrl: me.avatarUrl,
-      role: me.role,
-    },
-    subject: {
-      id: subject.id,
-      name: subject.name,
-    },
-    educationLevel: payload.educationLevel,
-    teachingMode: payload.teachingMode,
-    address: payload.address,
-    minBudget: payload.minBudget,
-    maxBudget: payload.maxBudget,
-    budgetUnit: payload.budgetUnit,
-    sessionsPerWeek: payload.sessionsPerWeek,
-    durationMinutes: payload.durationMinutes,
-    deadline: new Date(payload.deadline).toISOString(),
-    createdAt: new Date().toISOString(),
-  };
-}
-
-// ─── API service ─────────────────────────────────────────────────────────────
-
-export const postService = {
-  /** GET /v1/posts - Danh sách bài đăng công khai */
-  async getPosts(
-    params: PostFilter = {},
+  async getMyPosts(
+    filter: MyPostFilter,
   ): Promise<CursorResponse<PostResponse>> {
-    if (USE_MOCK) {
-      await delay();
+    return mapPage(await this.gateway.listMine(filter), toPost);
+  }
 
-      const all = posts
-        .filter((post) => post.status === "PUBLISHED")
-        .filter((post) => matches(post, params))
-        .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+  async getAdminPosts(
+    filter: AdminPostFilter,
+  ): Promise<CursorResponse<PostResponse>> {
+    return mapPage(await this.gateway.listAdmin(filter), toPost);
+  }
 
-      return cursorPaginate(
-        all,
-        params.cursor,
-        (post) => post.id,
-        params.limit ?? 10,
-      );
-    }
+  async getPostById(postId: string): Promise<PostResponse> {
+    return toPost(await this.gateway.getById(postId));
+  }
 
-    const response = await http.get<CursorResponse<PostResponse>>("/v1/posts", {
-      params,
-    });
+  async getPostByIdForMe(postId: string): Promise<PostResponse> {
+    return toPost(await this.gateway.getByIdForMe(postId));
+  }
 
-    return response.data;
-  },
+  async getPostApplications(
+    postId: string,
+    cursor?: string,
+    limit?: number,
+  ): Promise<CursorResponse<PostApplication>> {
+    return this.gateway.listApplications(postId, cursor, limit);
+  }
 
-  /** GET /v1/posts/:id - Chi tiết bài đăng */
-  async getPostById(id: string): Promise<PostResponse> {
-    // id rỗng sẽ thành GET /v1/posts/ (BE báo "No static resource") → chặn từ FE
-    if (!id) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-    if (USE_MOCK) {
-      await delay(250);
-
-      const post = posts.find((item) => item.id === id);
-
-      let viewerId: string | null = null;
-      let isAdmin = false;
-
-      try {
-        const me = requireUser();
-        viewerId = me.id;
-        isAdmin = me.role === "ADMIN";
-      } catch {
-        // Người dùng chưa đăng nhập
-      }
-
-      if (!post || !canSee(post, viewerId, isAdmin)) {
-        throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      }
-
-      return withCount(post);
-    }
-
-    const response = await http.get<PostResponse>(`/v1/posts/${id}`);
-
-    return response.data;
-  },
-
-  /** POST /v1/posts - Tạo bài đăng */
   async createPost(
     payload: PostPayload,
-    asDraft = true,
+    asDraft = false,
   ): Promise<PostResponse> {
-    if (USE_MOCK) {
-      await delay();
-
-      const post = toPost(
-        payload,
-        nextId("p"),
-        asDraft ? "DRAFT" : "PUBLISHED",
-      );
-
-      posts.unshift(post);
-      recountSubjectUsage();
-
-      return withCount(post);
-    }
-
-    const response = await http.post<PostResponse>("/v1/posts", {
-      ...payload,
-      status: asDraft ? "DRAFT" : "PUBLISHED",
-    });
-
-    return response.data;
-  },
-
-  /** PUT /v1/posts/:id - Cập nhật bài đăng */
-  async updatePost(id: string, payload: PostPayload): Promise<PostResponse> {
-    if (USE_MOCK) {
-      await delay();
-
-      const index = posts.findIndex((post) => post.id === id);
-      const oldPost = posts[index];
-
-      if (!oldPost) {
-        throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      }
-
-      if (oldPost.status === "CLOSED") {
-        throw new ApiError("Post is closed", "POST_CLOSED", 409);
-      }
-
-      const updated = {
-        ...toPost(payload, id, oldPost.status),
-        createdAt: oldPost.createdAt,
-      };
-
-      posts[index] = updated;
-      recountSubjectUsage();
-
-      return withCount(updated);
-    }
-
-    const response = await http.put<PostResponse>(`/v1/posts/${id}`, payload);
-
-    return response.data;
-  },
-
-  /** DELETE /v1/posts/:id - Xóa bài đăng */
-  async deletePost(id: string): Promise<void> {
-    if (USE_MOCK) {
-      await delay();
-
-      const index = posts.findIndex((post) => post.id === id);
-      const post = posts[index];
-
-      if (!post) {
-        throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      }
-
-      if (post.status === "CLOSED") {
-        throw new ApiError("Post is closed", "POST_CLOSED", 409);
-      }
-
-      posts.splice(index, 1);
-      recountSubjectUsage();
-
-      return;
-    }
-
-    await http.delete(`/v1/posts/${id}`);
-  },
-
-  /** GET /v1/posts/me - Danh sách bài đăng của người dùng hiện tại */
-  async getMyPosts(
-    params: PostFilter = {},
-  ): Promise<CursorResponse<PostResponse>> {
-    if (USE_MOCK) {
-      await delay();
-
-      const me = requireUser();
-
-      const all = posts
-        .filter((post) => post.author.id === me.id)
-        .filter((post) => matches(post, params))
-        .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-
-      return cursorPaginate(
-        all.map(withCount),
-        params.cursor,
-        (post) => post.id,
-        params.limit ?? 10,
-      );
-    }
-
-    const response = await http.get<CursorResponse<PostResponse>>(
-      "/v1/posts/me",
-      { params },
+    return toPost(
+      await this.gateway.create(toCreatePostRequest(payload, asDraft)),
     );
+  }
 
-    console.log("[MY POSTS DATA]", response.data);
+  async updatePost(
+    postId: string,
+    payload: PostPayload,
+  ): Promise<PostResponse> {
+    return toPost(
+      await this.gateway.update(postId, toUpdatePostRequest(payload)),
+    );
+  }
 
-    return response.data;
-  },
+  async publishPost(postId: string): Promise<PostResponse> {
+    return toPost(await this.gateway.publish(postId));
+  }
 
-  /** PATCH /v1/posts/:id/publish - Đăng bài */
-  async publishPost(id: string): Promise<PostResponse> {
-    if (USE_MOCK) {
-      await delay();
+  closePost(postId: string): Promise<void> {
+    return this.gateway.close(postId);
+  }
 
-      const post = posts.find((item) => item.id === id);
+  deletePost(postId: string): Promise<void> {
+    return this.gateway.delete(postId);
+  }
 
-      if (!post) {
-        throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      }
+  removePostByAdmin(postId: string, reason?: string): Promise<void> {
+    return this.gateway.removeByAdmin(postId, reason);
+  }
 
-      post.status = "PUBLISHED";
-
-      const owner = users.find((user) => user.id === post.author.id);
-
-      if (owner) {
-        notifications[owner.id] = [
-          {
-            id: nextId("n"),
-            notificationType: "SYSTEM",
-            title: "Bài đăng đã được đăng công khai",
-            content: post.title,
-            isRead: false,
-            createdAt: new Date().toISOString(),
-          },
-          ...(notifications[owner.id] ?? []),
-        ];
-      }
-
-      return withCount(post);
-    }
-
-    const response = await http.patch<PostResponse>(`/v1/posts/${id}/publish`);
-
-    return response.data;
-  },
-
-  /** PATCH /v1/posts/:id/close - Đóng bài đăng */
-  async closePost(id: string): Promise<void> {
-    if (USE_MOCK) {
-      await delay();
-
-      const me = requireUser();
-      const post = posts.find((item) => item.id === id);
-
-      if (!post) {
-        throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      }
-
-      if (post.author.id !== me.id) {
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      }
-
-      if (post.status !== "PUBLISHED") {
-        throw new ApiError(
-          "Chỉ đóng được bài đang đăng.",
-          "INVALID_STATE",
-          409,
-        );
-      }
-
-      post.status = "CLOSED";
-      return;
-    }
-
-    await http.patch(`/v1/posts/${id}/close`);
-  },
-};
+  getStatistics(): Promise<PostStatistic[]> {
+    return this.gateway.statisticsByStatus();
+  }
+}

@@ -5,9 +5,9 @@ export const env = {
 
   features: {
     auth: false,
-    user: false, 
-    tutor: false, 
-    tutorProfile: false, 
+    user: false,
+    tutor: false,
+    tutorProfile: false,
     subject: false,
     student: true,
     notify: true,
@@ -16,8 +16,7 @@ export const env = {
     admin: true, // posts/transactions/fee/stats/complaints — chưa nối
     adminUser: false,
     application: true,
-    favorite: false, 
-    post: false,
+    favorite: false,
     review: true,
     wallet: true,
 
@@ -49,7 +48,6 @@ export const mockConfig = {
   booking: env.features.booking,
   chatbot: env.features.chatbot,
   favorite: env.features.favorite,
-  post: env.features.post,
   review: env.features.review,
   wallet: env.features.wallet,
   tracking: env.features.tracking,

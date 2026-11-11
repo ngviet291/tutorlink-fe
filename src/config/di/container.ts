@@ -15,12 +15,17 @@ import { createTokenRefresher } from "../http/tokenRefresher";
 import type { IRealtimeClient } from "../realtime/IRealtimeClient";
 import { StompRealtimeClient } from "../realtime/StompRealtimeClient";
 import { RealtimeEventRouter } from "../realtime/RealtimeEventRouter";
+import { HttpPostGateway } from "@/features/post/api/http.post.gateway";
+import { PostService } from "@/features/post/service/post.service";
 
 // Toàn bộ bean được quản lí ở đây
 export const tokenStorage = new SecureTokenStorage();
 
 export const publicHttp = createPublicClient(env.apiBaseUrl);
-export const tokenRefresher = createTokenRefresher(env.apiBaseUrl, tokenStorage);
+export const tokenRefresher = createTokenRefresher(
+  env.apiBaseUrl,
+  tokenStorage,
+);
 export const privateHttp = createPrivateClient(
   env.apiBaseUrl,
   tokenStorage,
@@ -40,7 +45,12 @@ const privateHttpClient = new AxiosHttpClient(privateHttp);
 const gateway: AuthGateway = new HttpAuthGateway(publicHttpClient);
 const subjectGateway = new HttpSubjectGateway(privateHttpClient); // client có gắn token, không phải client PUBLIC
 
+const postGateway = new HttpPostGateway(privateHttpClient); // client có gắn token, không phải client PUBLIC
+export const postService = new PostService(postGateway);
+
 export const subjectService = new SubjectService(subjectGateway);
 export const addressGateway = new HttpAddressGateway(privateHttpClient);
 export const authService = new AuthService(gateway, tokenStorage);
-export const chatService = new ChatService(new HttpChatGateway(privateHttpClient));
+export const chatService = new ChatService(
+  new HttpChatGateway(privateHttpClient),
+);
