@@ -89,6 +89,10 @@ export class HttpPostGateway implements PostGateway {
     await this.http.patch<void>(`${BASE}/${postId}/remove`, body);
   }
 
+  async getByIdForAdmin(postId: string) {
+    return this.http.get<PostResponse>(`${BASE}/${postId}/admin`);
+  }
+
   statisticsByStatus() {
     return this.http.get<PostStatisticsByStatus[]>(
       `${BASE}/statistics/posts-by-status`,

@@ -44,6 +44,9 @@ export class PostService {
     return mapPage(await this.gateway.listAdmin(filter), toPost);
   }
 
+  async getPostByIdForAdmin(postId: string): Promise<PostResponse> {
+    return toPost(await this.gateway.getByIdForAdmin(postId));
+  }
   async getPostById(postId: string): Promise<PostResponse> {
     return toPost(await this.gateway.getById(postId));
   }

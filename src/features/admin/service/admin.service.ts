@@ -8,10 +8,7 @@ import {
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type { AccountStatus, Role } from "@/shared/types/common.types";
 import type { VerificationStatus } from "@/shared/types/common.types";
-import {
-  toBaseUser,
-  toTutor,
-} from "@/features/user/mapper/user.mapper";
+import { toBaseUser, toTutor } from "@/features/user/mapper/user.mapper";
 import type {
   BaseUserResponse as BaseUserDto,
   TutorResponse as TutorResponseDto,
@@ -46,12 +43,7 @@ import {
   users,
   wallets,
 } from "@/mocks/db";
-import {
-  cursorPaginate,
-  delay,
-  paginate,
-  requireUser,
-} from "@/mocks/session";
+import { cursorPaginate, delay, paginate, requireUser } from "@/mocks/session";
 import { fromBeTransaction } from "@/features/wallet/service/wallet.service";
 import type { RevenueStatistics } from "@/features/wallet/types/wallet.types";
 import { recomputeRating } from "@/features/review/service/review.service";
@@ -217,31 +209,6 @@ export const adminService = {
     return http
       .patch<BaseUserDto>(`/v1/users/${userId}/status`, { userStatus: status })
       .then((res) => toBaseUser(res.data));
-  },
-
-  async getPosts(
-    params: AdminPostFilter = {},
-  ): Promise<PageResponse<PostResponse>> {
-    if (USE_MOCK) {
-      await delay();
-      requireAdmin();
-      const list = posts
-        .filter((p) => !params.status || p.status === params.status)
-        .filter(
-          (p) =>
-            !params.keyword ||
-            p.title.toLowerCase().includes(params.keyword.toLowerCase()),
-        )
-        .map((p) => ({
-          ...p,
-          applicationCount: applications.filter((a) => a.post.id === p.id)
-            .length,
-        }));
-      return paginate(list, params.page, params.pageSize ?? 10);
-    }
-    return http
-      .get<PageResponse<PostResponse>>("/v1/admin/posts")
-      .then((res) => res.data); // TODO: nối API
   },
 
   /** Gỡ bài vi phạm → REMOVED. */

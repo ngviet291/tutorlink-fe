@@ -8,7 +8,10 @@ import type {
 } from "@/shared/types/common.types";
 import type { AuthorResponse } from "@/features/user/types/user.types";
 import type { SubjectSummaryResponse } from "@/features/subject/types/subject.types";
-import type { PostApplicationResponse, PostStatisticsByStatus } from "./post.dto";
+import type {
+  PostApplicationResponse,
+  PostStatisticsByStatus,
+} from "./post.dto";
 
 /**
  * Response của BE (PostResponse.java).
@@ -92,4 +95,6 @@ export interface MyPostFilter extends Omit<
 export type PostApplication = PostApplicationResponse;
 export type PostStatistic = PostStatisticsByStatus;
 /** GET /v1/posts/admin: không có authorId, phân trang theo cursor. */
-export type AdminPostFilter = Omit<PostFilter, "authorId" | "province">;
+export type AdminPostFilter = Omit<PostFilter, "authorId" | "province"> & {
+  status?: PostStatus | "";
+};

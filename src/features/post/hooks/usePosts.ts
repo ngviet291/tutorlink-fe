@@ -49,16 +49,24 @@ export function usePosts(params: Omit<PostFilter, "cursor"> = {}) {
  * Chi tiết bài cho trang xem:
  * - Chưa đăng nhập: dùng endpoint công khai.
  * - Đã đăng nhập: thử /me trước (chủ bài xem được cả nháp); /me lỗi thì dùng endpoint công khai.
+ * 
  */
-export function usePostDetail(id: string | undefined, isLoggedIn: boolean) {
-  const me = usePostForMe(isLoggedIn ? id : undefined);
-  const needPublic = !isLoggedIn || me.isError;
+
+export function usePostDetail(
+  id: string | undefined,
+  isLoggedIn: boolean,
+  isAdmin = false,
+) {
+  const admin = usePostForAdmin(isAdmin ? id : undefined);
+  const me = usePostForMe(isLoggedIn && !isAdmin ? id : undefined);
+  const needPublic = !isLoggedIn || (!isAdmin && me.isError);
   const pub = usePost(needPublic ? id : undefined);
 
+  if (isAdmin) return admin;
   if (!isLoggedIn) return pub;
   if (me.data) return me;
   if (me.isError) return pub;
-  return me; // /me đang tải
+  return me;
 }
 
 /** Chi tiết một bài đăng. */
@@ -197,4 +205,14 @@ export function usePostMutations() {
     createPost: create,
     updatePost: update,
   };
+}
+
+/** Chi tiết bài cho ADMIN, mọi trạng thái (GET /v1/posts/{id}/admin). */
+export function usePostForAdmin(id: string | undefined) {
+  return useQuery({
+    queryKey: [...queryKeys.posts.all, "detail-admin", id ?? ""],
+    queryFn: () => postService.getPostByIdForAdmin(id ?? ""),
+    enabled: Boolean(id),
+    retry: false,
+  });
 }

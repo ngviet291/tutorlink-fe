@@ -50,21 +50,21 @@ export default function PostDetailPage() {
   const user = useAppSelector((s) => s.auth.user);
   const [deleting, setDeleting] = useState(false);
 
+  const { remove, publish } = usePostMutations();
+  const { cancel } = useApplicationMutations();
+  const [applyOpen, setApplyOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const isAdmin = user?.role === "ADMIN";
+  const isTutor = user?.role === "TUTOR";
+  const myApps = useMyApplications(Boolean(user));
+  const myTutor = useMyTutorProfile(isTutor);
+
   const {
     data: post,
     isLoading,
     isError,
     refetch,
-  } = usePostDetail(id, Boolean(user));
-  const { remove, publish } = usePostMutations();
-  const { cancel } = useApplicationMutations();
-  const [applyOpen, setApplyOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-
-  const isTutor = user?.role === "TUTOR";
-  const myApps = useMyApplications(Boolean(user));
-  const myTutor = useMyTutorProfile(isTutor);
-
+  } = usePostDetail(id, Boolean(user), isAdmin);
   if (isLoading) {
     return (
       <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-8">
@@ -252,7 +252,7 @@ export default function PostDetailPage() {
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {!isAuthor && (
+          {isAuthor && !isAdmin && (
             <Tooltip text={disabledReason}>
               <Button
                 size="lg"
@@ -264,7 +264,7 @@ export default function PostDetailPage() {
               </Button>
             </Tooltip>
           )}
-          {!isAuthor && user && !roleMatches && !disabledReason && (
+          {!isAuthor && !isAdmin && user && !roleMatches && !disabledReason && (
             <p className="self-center text-xs text-text-secondary">
               {post.type === "FIND_TUTOR"
                 ? "Chỉ gia sư mới đăng ký bài này."

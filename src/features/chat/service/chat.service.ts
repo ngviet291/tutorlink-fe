@@ -32,7 +32,7 @@ export class ChatService {
     let cursor: string | undefined;
     for (let i = 0; i < MAX_CHANNEL_PAGES; i += 1) {
       const page = await this.gateway.listChannels(cursor, CHANNEL_PAGE_SIZE);
-      threads.push(...page.content.map(toChatThread));
+      threads.push(...page.content.map((dto) => toChatThread(dto, dto.id)));
       if (!page.hasNext || !page.nextCursor) break;
       cursor = page.nextCursor;
     }

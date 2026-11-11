@@ -30,4 +30,5 @@ export interface PostGateway {
   delete(postId: string): Promise<void>;
   removeByAdmin(postId: string, reason?: string): Promise<void>;
   statisticsByStatus(): Promise<PostStatisticsByStatus[]>;
+  getByIdForAdmin(postId: string): Promise<PostResponse>;
 }

@@ -7,7 +7,6 @@ import { Spinner } from "@/shared/components/ui/Spinner";
 import { ErrorState } from "@/shared/components/ui/EmptyState";
 import { ROUTES } from "@/constants/routes";
 import {
-  usePost,
   usePostDetail,
   usePostMutations,
 } from "@/features/post/hooks/usePosts";
