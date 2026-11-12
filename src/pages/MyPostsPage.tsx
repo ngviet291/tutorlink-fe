@@ -9,6 +9,7 @@ import { CardGridSkeleton } from "@/shared/components/ui/Skeleton";
 import { Tabs } from "@/shared/components/ui/Tabs";
 import { PostCard } from "@/features/post/components/PostCard";
 import { useMyPosts } from "@/features/post/hooks/usePosts";
+import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import type { PostStatus } from "@/shared/types/common.types";
 
 type Filter = PostStatus | "ALL";
@@ -26,6 +27,11 @@ export default function MyPostsPage() {
   const [tab, setTab] = useState<Filter>("ALL");
   const allPosts = data?.pages.flatMap((p) => p.content) ?? [];
   const list = allPosts.filter((p) => tab === "ALL" || p.status === tab);
+
+  const sentinelRef = useInfiniteScroll(
+    () => void fetchNextPage(),
+    !!hasNextPage && !isFetchingNextPage,
+  );
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5">
@@ -48,14 +54,13 @@ export default function MyPostsPage() {
           { value: "DRAFT", label: "Bản nháp" },
           { value: "PUBLISHED", label: "Đang tuyển" },
           { value: "CLOSED", label: "Đã đóng" },
-          // { value: "REMOVED", label: "Đã gỡ" },
         ]}
       />
       {isLoading ? (
         <CardGridSkeleton count={3} />
       ) : isError ? (
         <ErrorState onRetry={() => void refetch()} />
-      ) : list.length === 0 ? (
+      ) : list.length === 0 && !hasNextPage ? (
         <EmptyState
           title="Chưa có bài đăng"
           action={
@@ -71,16 +76,11 @@ export default function MyPostsPage() {
               <PostCard key={p.id} post={p} />
             ))}
           </div>
-          {hasNextPage && (
-            <div className="flex justify-center pt-2">
-              <Button
-                variant="secondary"
-                onClick={() => void fetchNextPage()}
-                loading={isFetchingNextPage}>
-                Xem thêm
-              </Button>
-            </div>
-          )}
+
+          {/* Sentinel: chạm vào viewport thì tải trang kế tiếp */}
+          {hasNextPage && <div ref={sentinelRef} className="h-1" />}
+
+          {isFetchingNextPage && <CardGridSkeleton count={3} />}
         </>
       )}
     </div>

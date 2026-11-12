@@ -9,6 +9,7 @@ import {
   Trash2,
   Wallet,
   Wifi,
+  Lock,
   XCircle,
 } from "lucide-react";
 import {
@@ -50,7 +51,8 @@ export default function PostDetailPage() {
   const user = useAppSelector((s) => s.auth.user);
   const [deleting, setDeleting] = useState(false);
 
-  const { remove, publish } = usePostMutations();
+  const { remove, publish, close } = usePostMutations();
+  const [closeOpen, setCloseOpen] = useState(false);
   const { cancel } = useApplicationMutations();
   const [applyOpen, setApplyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -121,6 +123,15 @@ export default function PostDetailPage() {
     setApplyOpen(true);
   };
 
+  const onClosePost = () => {
+    close.mutate(post.id, {
+      onSuccess: () => {
+        setCloseOpen(false);
+        toast.success("Đã đóng bài đăng");
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  };
   const onDelete = () => {
     setDeleting(true);
     remove.mutate(post.id, {
@@ -252,7 +263,7 @@ export default function PostDetailPage() {
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          {isAuthor && !isAdmin && (
+          {!isAuthor && !isAdmin && (
             <Tooltip text={disabledReason}>
               <Button
                 size="lg"
@@ -319,6 +330,11 @@ export default function PostDetailPage() {
                 Đăng công khai
               </Button>
             )}
+            {post.status === "PUBLISHED" && (
+              <Button variant="outline" onClick={() => setCloseOpen(true)}>
+                <Lock className="size-4" /> Đóng bài
+              </Button>
+            )}
             <Link to={ROUTES.POST_EDIT(post.id)}>
               <Button variant="outline">
                 <Pencil className="size-4" /> Sửa bài
@@ -341,6 +357,16 @@ export default function PostDetailPage() {
         postId={post.id}
         open={applyOpen}
         onClose={() => setApplyOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={closeOpen}
+        onClose={() => setCloseOpen(false)}
+        title="Đóng bài đăng?"
+        confirmText="Đóng bài"
+        loading={close.isPending}
+        onConfirm={onClosePost}
+        description="Bài đăng sẽ ngừng nhận đăng ký mới. Các đăng ký hiện có vẫn được giữ lại."
       />
       <ConfirmDialog
         open={deleteOpen}
