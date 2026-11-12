@@ -16,12 +16,13 @@ import { formatBudgetRange } from "@/shared/utils/currency";
 import { formatDate } from "@/shared/utils/date";
 import type { PostResponse } from "../types/post.types";
 
-export function PostCard({ post }: { post: PostResponse }) {
+export function PostCard({ post, mine = false }: { post: PostResponse;mine?: boolean; }) {
   const { t } = useTranslation();
 
   return (
     <Link
       to={ROUTES.POST_DETAIL(post.id)}
+      state={mine}
       className="group flex h-full flex-col gap-3 rounded-2xl border border-border bg-surface p-4 transition-shadow hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-2">
@@ -55,7 +56,9 @@ export function PostCard({ post }: { post: PostResponse }) {
         <div className="flex items-center gap-1.5">
           <MapPin className="size-3.5 shrink-0" />
           <span className="truncate">
-            {post.address?.province ?? t("common.notSpecified")}
+            {[post.address?.ward, post.address?.province]
+              .filter(Boolean)
+              .join(", ") || t("common.notSpecified")}
           </span>
         </div>
         <div className="flex items-center gap-1.5">

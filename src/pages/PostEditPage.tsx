@@ -15,14 +15,20 @@ export default function PostEditPage() {
   const navigate = useNavigate()
   const toast = useToast()
   const { id = '' } = useParams<{ id: string }>()
-  const { data: post, isLoading, isError } = usePost(id)
+  const { data: post, isLoading, isError } = usePost(id, { mine: true })
   const { updatePost } = usePostMutations()
 
-  const handleSubmit = async (payload: PostPayload) => {
+  // Lưu nháp: cập nhật + chuyển về DRAFT (kể cả bài đang tuyển → gỡ khỏi công khai).
+  // Đăng bài: cập nhật + chuyển sang PUBLISHED.
+  const handleSubmit = async (payload: PostPayload, asDraft = false) => {
     try {
-      await updatePost.mutateAsync({ id, payload })
-      toast.success(t('post.publishSuccess'))
-      navigate(ROUTES.POST_DETAIL(id))
+      await updatePost.mutateAsync({
+        id,
+        payload,
+        status: asDraft ? 'DRAFT' : 'PUBLISHED',
+      })
+      toast.success(asDraft ? t('post.draftSaved') : t('post.publishSuccess'))
+      navigate(asDraft ? ROUTES.MY_POSTS : ROUTES.POST_DETAIL(id))
     } catch (err) {
       toast.error(getErrorMessage(err))
     }

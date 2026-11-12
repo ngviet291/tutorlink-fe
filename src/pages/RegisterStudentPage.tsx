@@ -19,17 +19,27 @@ interface StudentFormValues extends CommonRegisterValues {
   learningGoal: string;
 }
 
-const GRADES = Array.from({ length: 12 }, (_, i) => ({
-  value: String(i + 1),
-  label: `Lớp ${i + 1}`,
-}));
+const GRADE_OPTIONS = [
+  ...Array.from({ length: 12 }, (_, i) => ({
+    value: String(i + 1),
+    label: `Lớp ${i + 1}`,
+  })),
+  { value: "UNIVERSITY", label: "Đại học" },
+  { value: "OTHER", label: "Khác" },
+];
 
 export default function RegisterStudentPage() {
   const navigate = useNavigate();
   const registerMutation = useRegister("STUDENT");
+
   const methods = useForm<StudentFormValues>({
-    defaultValues: { ...COMMON_DEFAULTS, grade: "12", learningGoal: "" },
+    defaultValues: {
+      ...COMMON_DEFAULTS,
+      grade: "12",
+      learningGoal: "",
+    },
   });
+
   const {
     register,
     handleSubmit,
@@ -43,7 +53,9 @@ export default function RegisterStudentPage() {
         grade: v.grade,
         learningGoal: v.learningGoal,
       },
-      { onSuccess: () => navigate(ROUTES.DASHBOARD, { replace: true }) },
+      {
+        onSuccess: () => navigate(ROUTES.DASHBOARD, { replace: true }),
+      },
     );
   });
 
@@ -53,16 +65,20 @@ export default function RegisterStudentPage() {
         <form
           onSubmit={(e) => void onSubmit(e)}
           className="flex flex-col gap-4"
-          noValidate>
+          noValidate
+        >
           <CommonRegisterFields />
 
           <Select
             label="Lớp"
             required
-            options={GRADES}
+            options={GRADE_OPTIONS}
             error={errors.grade?.message}
-            {...register("grade", { required: "Chọn lớp" })}
+            {...register("grade", {
+              required: "Chọn lớp",
+            })}
           />
+
           <Input
             label="Mục tiêu học tập"
             required
@@ -76,15 +92,18 @@ export default function RegisterStudentPage() {
           {registerMutation.isError && (
             <p
               role="alert"
-              className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300">
+              className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300"
+            >
               {getErrorMessage(registerMutation.error)}
             </p>
           )}
+
           <Button
             type="submit"
             size="lg"
             fullWidth
-            loading={registerMutation.isPending}>
+            loading={registerMutation.isPending}
+          >
             Đăng ký học viên
           </Button>
         </form>

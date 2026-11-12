@@ -1,4 +1,5 @@
 import { http } from "@/config/axiosClient";
+import { tokenStorage } from "@/config/di/container";
 import { mockConfig } from "@/config/env";
 import { ApiError, type CursorResponse } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
@@ -101,6 +102,47 @@ function matches(post: PostResponse, filter: PostFilter): boolean {
   return true;
 }
 
+/**
+ * Form dùng <input type="date"> ("YYYY-MM-DD") nhưng BE nhận `Instant` (ISO-8601).
+ * Gửi cuối ngày theo giờ Việt Nam (UTC+7) để hạn chót không bị lùi một ngày.
+ */
+function toApiPayload(payload: PostPayload) {
+  const d = payload.deadline;
+  const deadline = /^\d{4}-\d{2}-\d{2}$/.test(d)
+    ? new Date(`${d}T23:59:59+07:00`).toISOString()
+    : d;
+  // BE validate AddressRequest (street, ward, province đều bắt buộc) nếu có gửi `address`:
+  // dạy ONLINE hoặc địa chỉ chưa đủ thì bỏ hẳn field thay vì gửi object rỗng.
+  const a = payload.address;
+  const fullAddress = Boolean(
+    a?.street?.trim() && a?.ward?.trim() && a?.province?.trim(),
+  );
+  return {
+    ...payload,
+    deadline,
+    address: payload.teachingMode !== "ONLINE" && fullAddress ? a : undefined,
+  };
+}
+
+/** PostResponse → PostPayload (dùng khi chỉ muốn đổi trạng thái bài, vd chuyển về nháp). */
+export function toPostPayload(post: PostResponse): PostPayload {
+  return {
+    type: post.type,
+    title: post.title,
+    content: post.content,
+    subjectId: post.subject.id,
+    educationLevel: post.educationLevel,
+    teachingMode: post.teachingMode,
+    address: post.address ?? {},
+    minBudget: post.minBudget,
+    maxBudget: post.maxBudget,
+    budgetUnit: post.budgetUnit,
+    sessionsPerWeek: post.sessionsPerWeek,
+    durationMinutes: post.durationMinutes,
+    deadline: post.deadline,
+  };
+}
+
 function toPost(
   payload: PostPayload,
   id: string,
@@ -173,8 +215,7 @@ export const postService = {
   },
 
   /** GET /v1/posts/:id - Chi tiết bài đăng */
-  async getPostById(id: string): Promise<PostResponse> {
-    // id rỗng sẽ thành GET /v1/posts/ (BE báo "No static resource") → chặn từ FE
+  async getPostById(id: string, mine = false): Promise<PostResponse> {
     if (!id) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
     if (USE_MOCK) {
       await delay(250);
@@ -189,7 +230,6 @@ export const postService = {
         viewerId = me.id;
         isAdmin = me.role === "ADMIN";
       } catch {
-        // Người dùng chưa đăng nhập
       }
 
       if (!post || !canSee(post, viewerId, isAdmin)) {
@@ -199,9 +239,22 @@ export const postService = {
       return withCount(post);
     }
 
-    const response = await http.get<PostResponse>(`/v1/posts/${id}`);
-
-    return response.data;
+    if (mine) {
+      const own = await http.get<PostResponse>(`/v1/posts/${id}/me`);
+      return own.data;
+    }
+    try {
+      const response = await http.get<PostResponse>(`/v1/posts/${id}`);
+      return response.data;
+    } catch (err) {
+      const status =
+        (err as { status?: number })?.status ??
+        (err as { response?: { status?: number } })?.response?.status;
+      const loggedIn = Boolean(await tokenStorage.getAccessToken());
+      if (status !== 404 || !loggedIn) throw err;
+      const mine = await http.get<PostResponse>(`/v1/posts/${id}/me`);
+      return mine.data;
+    }
   },
 
   /** POST /v1/posts - Tạo bài đăng */
@@ -225,15 +278,19 @@ export const postService = {
     }
 
     const response = await http.post<PostResponse>("/v1/posts", {
-      ...payload,
+      ...toApiPayload(payload),
       status: asDraft ? "DRAFT" : "PUBLISHED",
     });
 
     return response.data;
   },
 
-  /** PUT /v1/posts/:id - Cập nhật bài đăng */
-  async updatePost(id: string, payload: PostPayload): Promise<PostResponse> {
+  /** PUT /v1/posts/:id - Cập nhật bài đăng. `status` DRAFT = lưu nháp (gỡ khỏi công khai), PUBLISHED = đăng công khai. */
+  async updatePost(
+    id: string,
+    payload: PostPayload,
+    status: "DRAFT" | "PUBLISHED" = "PUBLISHED",
+  ): Promise<PostResponse> {
     if (USE_MOCK) {
       await delay();
 
@@ -249,7 +306,7 @@ export const postService = {
       }
 
       const updated = {
-        ...toPost(payload, id, oldPost.status),
+        ...toPost(payload, id, status),
         createdAt: oldPost.createdAt,
       };
 
@@ -259,7 +316,10 @@ export const postService = {
       return withCount(updated);
     }
 
-    const response = await http.put<PostResponse>(`/v1/posts/${id}`, payload);
+    const response = await http.put<PostResponse>(`/v1/posts/${id}`, {
+      ...toApiPayload(payload),
+      status,
+    });
 
     return response.data;
   },

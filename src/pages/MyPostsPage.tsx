@@ -48,7 +48,6 @@ export default function MyPostsPage() {
           { value: "DRAFT", label: "Bản nháp" },
           { value: "PUBLISHED", label: "Đang tuyển" },
           { value: "CLOSED", label: "Đã đủ" },
-          { value: "REMOVED", label: "Đã gỡ" },
         ]}
       />
       {isLoading ? (
@@ -68,7 +67,7 @@ export default function MyPostsPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {list.map((p) => (
-              <PostCard key={p.id} post={p} />
+              <PostCard key={p.id} post={p} mine />
             ))}
           </div>
           {hasNextPage && (

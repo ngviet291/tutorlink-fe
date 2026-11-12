@@ -32,7 +32,7 @@ export default function MyApplicationsPage() {
           {data.map((a) => (
             <li key={a.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <Link to={ROUTES.POST_DETAIL(a.post.id)} className="block truncate font-bold text-text hover:text-primary">{a.post.title}</Link>
+                <Link to={ROUTES.POST_DETAIL(a.post.id)} state={{mine:true}} className="block truncate font-bold text-text hover:text-primary">{a.post.title}</Link>
                 <p className="mt-0.5 text-xs text-text-secondary">Đăng ký ngày {formatDate(a.appliedAt)}</p>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">

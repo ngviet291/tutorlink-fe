@@ -133,7 +133,7 @@ export default function ProfilePage() {
                   {...info.register("address.province")}
                 />
                 <Input
-                  label="Phường / Xã (không bắt buộc)"
+                  label="Phường / Xã"
                   {...info.register("address.ward")}
                 />
               </>
@@ -148,7 +148,7 @@ export default function ProfilePage() {
                   })}
                 />
                 <Select
-                  label="Phường / Xã (không bắt buộc)"
+                  label="Phường / Xã"
                   options={wardOptions}
                   disabled={wardDisabled}
                   {...info.register("address.ward")}

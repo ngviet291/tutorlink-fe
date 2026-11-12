@@ -1,4 +1,4 @@
-import { useForm, Controller } from "react-hook-form";
+import { useForm, useWatch, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -74,13 +74,24 @@ export function PostForm({
 
   // Tỉnh/thành lấy từ API (BE cache).
   // Form này chỉ có tỉnh nên không truyền wardField.
-  const { provinceOptions, isLoadingProvinces, manualEntry } = useAddressSelect(
-    {
-      control,
-      setValue,
-      provinceField: "address.province",
-    },
-  );
+  const {
+    provinceOptions,
+    wardOptions,
+    onProvinceChange,
+    wardDisabled,
+    isLoadingProvinces,
+    manualEntry,
+  } = useAddressSelect({
+    control,
+    setValue,
+    provinceField: "address.province",
+    wardField: "address.ward",
+  });
+
+  // BE: địa chỉ (đường + phường/xã + tỉnh) bắt buộc đủ khi dạy OFFLINE/BOTH.
+  const teachingMode = useWatch({ control, name: "teachingMode" });
+  const needAddress = teachingMode !== "ONLINE";
+  const today = new Date().toISOString().slice(0, 10);
 
   // Submit bài đăng dưới dạng nháp hoặc đăng công khai.
   const submitAs = (asDraft: boolean) => {
@@ -238,39 +249,81 @@ export function PostForm({
         label={t("post.deadline")}
         type="date"
         error={errors.deadline?.message}
+        min={today}
         {...register("deadline", {
           required: t("validation.required"),
+          validate: (v) => v >= today || "Hạn chót phải từ hôm nay trở đi",
         })}
       />
 
-      {/* Province */}
-      {manualEntry ? (
-        // API địa chỉ lỗi: cho nhập tay để không chặn đăng bài.
-        <Input label={t("common.province")} {...register("address.province")} />
-      ) : (
-        <Controller
-          name="address.province"
-          control={control}
-          render={({ field }) => (
-            <Select
-              label={t("common.province")}
-              value={field.value ?? ""}
-              onChange={field.onChange}
-              disabled={isLoadingProvinces}
-            >
-              <option value="">{t("common.selectProvince")}</option>
-
-              {/* Bỏ lựa chọn rỗng của hook vì đã có nhãn i18n ở trên */}
-              {provinceOptions
-                .filter((option) => option.value !== "")
-                .map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-            </Select>
+      {/* Địa chỉ: tỉnh → phường/xã → số nhà, tên đường */}
+      {needAddress && (
+        <div className="space-y-4">
+          {manualEntry ? (
+            // API địa chỉ lỗi: cho nhập tay để không chặn đăng bài.
+            <>
+              <Input
+                label={t("common.province")}
+                error={errors.address?.province?.message}
+                {...register("address.province", {
+                  required: t("validation.required"),
+                })}
+              />
+              <Input
+                label="Phường / Xã"
+                error={errors.address?.ward?.message}
+                {...register("address.ward", {
+                  required: t("validation.required"),
+                })}
+              />
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <Controller
+                name="address.province"
+                control={control}
+                rules={{ required: t("validation.required") }}
+                render={({ field }) => (
+                  <Select
+                    label={t("common.province")}
+                    error={errors.address?.province?.message}
+                    value={field.value ?? ""}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      onProvinceChange();
+                    }}
+                    disabled={isLoadingProvinces}
+                  >
+                    <option value="">{t("common.selectProvince")}</option>
+                    {provinceOptions
+                      .filter((option) => option.value !== "")
+                      .map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                  </Select>
+                )}
+              />
+              <Select
+                label="Phường / Xã"
+                disabled={wardDisabled}
+                options={wardOptions}
+                error={errors.address?.ward?.message}
+                {...register("address.ward", {
+                  required: t("validation.required"),
+                })}
+              />
+            </div>
           )}
-        />
+          <Input
+            label="Số nhà, tên đường"
+            error={errors.address?.street?.message}
+            {...register("address.street", {
+              required: t("validation.required"),
+            })}
+          />
+        </div>
       )}
 
       {/* Actions */}

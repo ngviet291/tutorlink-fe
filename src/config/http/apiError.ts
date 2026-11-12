@@ -19,7 +19,17 @@ export function toApiError(error: unknown): ApiError {
 
     const data = error.response?.data;
 
+    const fieldErrors =
+      data?.errors && typeof data.errors === "object"
+        ? Object.entries(data.errors as Record<string, unknown>)
+            .map(([k, v]) => `${k}: ${String(v)}`)
+            .join("; ")
+        : "";
+
     const message =
+      (fieldErrors
+        ? `${data?.message ?? "Validation failed"} (${fieldErrors})`
+        : undefined) ??
       data?.message ??
       data?.detail ??
       data?.error ??

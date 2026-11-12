@@ -5,8 +5,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
-import { postService } from "../service/post.service";
-import type { PostFilter, PostPayload } from "../types/post.types";
+import { postService, toPostPayload } from "../service/post.service";
+import type {
+  PostFilter,
+  PostPayload,
+  PostResponse,
+} from "../types/post.types";
 
 /** Danh sách bài đăng công khai (cursor-based). */
 export function usePosts(params: Omit<PostFilter, "cursor"> = {}) {
@@ -42,10 +46,13 @@ export function usePosts(params: Omit<PostFilter, "cursor"> = {}) {
 }
 
 /** Chi tiết một bài đăng. */
-export function usePost(id: string | undefined) {
+export function usePost(id: string | undefined, opts: { mine?: boolean } = {}) {
   return useQuery({
-    queryKey: queryKeys.posts.detail(id ?? ""),
-    queryFn: () => postService.getPostById(id ?? ""),
+    queryKey: [
+      ...queryKeys.posts.detail(id ?? ""),
+      opts.mine ? "mine" : "public",
+    ],
+    queryFn: () => postService.getPostById(id ?? "", opts.mine),
     enabled: Boolean(id),
     retry: false,
   });
@@ -100,8 +107,11 @@ export function usePostMutations() {
   });
 
   const update = useMutation({
-    mutationFn: (v: { id: string; payload: PostPayload }) =>
-      postService.updatePost(v.id, v.payload),
+    mutationFn: (v: {
+      id: string;
+      payload: PostPayload;
+      status?: "DRAFT" | "PUBLISHED";
+    }) => postService.updatePost(v.id, v.payload, v.status),
     onSuccess: invalidate,
   });
 
@@ -114,18 +124,23 @@ export function usePostMutations() {
     mutationFn: (id: string) => postService.publishPost(id),
     onSuccess: invalidate,
   });
+  const unpublish = useMutation({
+    mutationFn: (post: PostResponse) =>
+      postService.updatePost(post.id, toPostPayload(post), "DRAFT"),
+    onSuccess: invalidate,
+  });
 
   const close = useMutation({
     mutationFn: (id: string) => postService.closePost(id),
     onSuccess: invalidate,
   });
 
-  // Alias để các page cũ không cần đổi tên gọi
   return {
     create,
     update,
     remove,
     publish,
+    unpublish,
     close,
     createPost: create,
     updatePost: update,
