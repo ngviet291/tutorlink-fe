@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/shared/utils/cn'
 import { useAppSelector } from '@/shared/hooks/useAppStore'
-import { useUnreadChatCount } from '@/features/chat/hooks/useChat'
+import { useUnreadCount } from '@/features/chat/hooks/useChat'
 import { ROUTES } from '@/constants/routes'
 import { getNavGroups } from './navItems'
 
 export function Sidebar() {
   const role = useAppSelector((s) => s.auth.user?.role)
-  const unread = useUnreadChatCount(Boolean(role)).data ?? 0
+  const unread = useUnreadCount(Boolean(role)).data ?? 0
   if (!role) return null
   const groups = getNavGroups(role)
 

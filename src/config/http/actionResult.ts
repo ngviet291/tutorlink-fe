@@ -4,7 +4,7 @@ import { ApiError, getErrorMessage } from "./apiError";
 export type ActionResult<T = undefined> =
   | { ok: true; data: T }
   /** `status` là mã HTTP của BE (nếu lỗi đến từ BE), để hook đổi thông báo theo mã. */
-  | { ok: false; message: string; status?: number };
+  | { ok: false; message: string; status?: number | string };
 
 /** Bắt lỗi MỘT lần ở hook và đổi thành thông điệp cho người dùng (README mục 6.4). */
 export async function runAction<T>(

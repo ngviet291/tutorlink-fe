@@ -262,7 +262,7 @@ export function ChatbotWidget() {
         <section
           role="dialog"
           aria-label="Trợ lý TutorLink"
-          className="relative flex h-[28rem] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
+          className="relative flex h-112 w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
         >
           <header className="flex items-center gap-2 border-b border-border bg-primary px-4 py-3 text-white">
             {historyOpen ? (

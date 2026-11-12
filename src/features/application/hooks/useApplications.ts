@@ -1,13 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/constants/queryKeys'
-import { applicationService } from '../service/application.service'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/constants/queryKeys";
+import type { AiSuggestionResponse } from "../types/application.types";
+import { applicationService } from "@/config/di/container";
+import type { PostResponse } from "@/features/post/types/post.types";
 
 export function useMyApplications(enabled = true) {
   return useQuery({
     queryKey: queryKeys.applications.mine,
     queryFn: applicationService.getMyApplications,
     enabled,
-  })
+  });
 }
 
 export function useConnections(enabled = true) {
@@ -15,7 +17,7 @@ export function useConnections(enabled = true) {
     queryKey: queryKeys.applications.connections,
     queryFn: applicationService.getConnections,
     enabled,
-  })
+  });
 }
 
 export function useApplicationsByPost(postId: string, enabled = true) {
@@ -23,25 +25,26 @@ export function useApplicationsByPost(postId: string, enabled = true) {
     queryKey: queryKeys.applications.byPost(postId),
     queryFn: () => applicationService.getApplicationsByPost(postId),
     enabled: enabled && Boolean(postId),
-  })
+  });
 }
 
 export function useAiTop5(postId: string, enabled = true) {
   return useQuery({
     queryKey: queryKeys.applications.aiTop5(postId),
-    queryFn: () => applicationService.getAiTop5(postId),
+    queryFn: (): Promise<AiSuggestionResponse> =>
+      applicationService.getAiTop5(postId),
     enabled: enabled && Boolean(postId),
     retry: false,
-  })
+  });
 }
 
 export function useApplicationMutations() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   const invalidate = () => {
-    void qc.invalidateQueries({ queryKey: queryKeys.applications.all })
-    void qc.invalidateQueries({ queryKey: queryKeys.posts.all })
-    void qc.invalidateQueries({ queryKey: queryKeys.wallet.all })
-  }
+    void qc.invalidateQueries({ queryKey: queryKeys.applications.all });
+    void qc.invalidateQueries({ queryKey: queryKeys.posts.all });
+    void qc.invalidateQueries({ queryKey: queryKeys.wallet.all });
+  };
 
   return {
     apply: useMutation({
@@ -72,5 +75,16 @@ export function useApplicationMutations() {
       mutationFn: (id: string) => applicationService.cancelApplication(id),
       onSuccess: invalidate,
     }),
-  }
+  };
+}
+
+export function useMyApplicationsForPost(
+  post: PostResponse | undefined,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: [...queryKeys.applications.mine, "post", post?.id ?? ""],
+    queryFn: () => applicationService.getMyApplicationsForPost(post!),
+    enabled: enabled && Boolean(post),
+  });
 }

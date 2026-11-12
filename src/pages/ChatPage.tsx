@@ -3,28 +3,30 @@ import { ArrowLeft } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import { ErrorState } from '@/shared/components/ui/EmptyState'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
+import { getErrorMessage } from '@/shared/utils/errors'
 import { ChatWindow } from '@/features/chat/components/ChatWindow'
-import { ContactUnlockBox } from '@/features/chat/components/ContactUnlockBox'
-import { useChatRoom } from '@/features/chat/hooks/useChat'
+import { useChannel } from '@/features/chat/hooks/useChat'
 
 export default function ChatPage() {
-  const { applicationId } = useParams()
-  const { data, isLoading, isError, error, refetch } = useChatRoom(applicationId)
+  const { channelId } = useParams()
+  const { data, isLoading, isError, error, refetch } = useChannel(channelId)
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <Link to={ROUTES.DASHBOARD} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-text-secondary hover:text-primary">
-        <ArrowLeft className="size-4" /> Quay lại tổng quan
+    <div className="mx-auto max-w-3xl">
+      <Link to={ROUTES.CHAT_INBOX} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-text-secondary hover:text-primary">
+        <ArrowLeft className="size-4" /> Tất cả tin nhắn
       </Link>
       {isLoading ? (
         <Skeleton className="h-96 w-full" />
       ) : isError || !data ? (
-        <ErrorState message={error instanceof Error ? error.message : 'Không thể mở phòng chat.'} onRetry={() => void refetch()} />
-      ) : data.unlocked ? (
-        <ChatWindow room={data} />
+        <ErrorState message={getErrorMessage(error)} onRetry={() => void refetch()} />
       ) : (
-        <ContactUnlockBox partnerName={data.partnerName} />
+        // key: đổi kênh thì dựng lại cửa sổ, tránh giữ state cũ
+        <ChatWindow key={data.channelId} channel={data} />
       )}
+      <p className="mt-3 rounded-2xl bg-primary-light p-4 text-xs text-text-secondary">
+        Học phí thực tế hằng tháng do hai bên tự thỏa thuận ngoài hệ thống TutorLink.
+      </p>
     </div>
   )
 }

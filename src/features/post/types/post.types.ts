@@ -8,6 +8,10 @@ import type {
 } from "@/shared/types/common.types";
 import type { AuthorResponse } from "@/features/user/types/user.types";
 import type { SubjectSummaryResponse } from "@/features/subject/types/subject.types";
+import type {
+  PostApplicationResponse,
+  PostStatisticsByStatus,
+} from "./post.dto";
 
 /**
  * Response của BE (PostResponse.java).
@@ -37,12 +41,12 @@ export interface PostResponse {
   applicationCount?: number;
   matchedApplicationId?: string;
 }
-export interface AdminPostFilter {
-  status?: PostStatus;
-  keyword?: string;
-  page?: number;
-  pageSize?: number;
-}
+// export interface AdminPostFilter {
+//   status?: PostStatus;
+//   keyword?: string;
+//   page?: number;
+//   pageSize?: number;
+// }
 export interface PostFilter {
   keyword?: string;
   type?: PostType;
@@ -73,3 +77,24 @@ export interface PostPayload {
   durationMinutes: number;
   deadline: string;
 }
+
+export interface PostPage<T = PostResponse> {
+  content: T[];
+  hasNext: boolean;
+  nextCursor?: string;
+}
+
+/** GET /v1/posts/me: không có authorId, thêm postStatus. */
+export interface MyPostFilter extends Omit<
+  PostFilter,
+  "authorId" | "province"
+> {
+  postStatus?: PostStatus;
+}
+
+export type PostApplication = PostApplicationResponse;
+export type PostStatistic = PostStatisticsByStatus;
+/** GET /v1/posts/admin: không có authorId, phân trang theo cursor. */
+export type AdminPostFilter = Omit<PostFilter, "authorId" | "province"> & {
+  status?: PostStatus | "";
+};

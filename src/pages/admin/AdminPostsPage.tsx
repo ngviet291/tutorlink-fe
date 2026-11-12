@@ -1,14 +1,15 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { Ban, Users } from "lucide-react";
-import { POST_STATUS_META, POST_TYPE_LABEL } from "@/constants/enums";
-import { ROUTES } from "@/constants/routes";
-import { Badge } from "@/shared/components/ui/Badge";
+import { POST_STATUS_META } from "@/constants/enums";
 import { Button } from "@/shared/components/ui/Button";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
+import {
+  FilterSidebar,
+  emptyFilter,
+  type FilterValues,
+} from "@/shared/components/ui/FilterSidebar";
 import { Modal } from "@/shared/components/ui/Modal";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
-import { Pagination } from "@/shared/components/ui/Pagination";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { Select } from "@/shared/components/ui/Select";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
@@ -21,8 +22,12 @@ import {
   useAdminPosts,
 } from "@/features/admin/hooks/useAdmin";
 import { useApplicationsByPost } from "@/features/application/hooks/useApplications";
+import { PostCard } from "@/features/post/components/PostCard";
 import type { PostResponse } from "@/features/post/types/post.types";
+import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { PostStatus } from "@/shared/types/common.types";
+
+const RANGE_MAX = 1_000_000;
 
 function ApplicationsModal({
   post,
@@ -35,6 +40,7 @@ function ApplicationsModal({
     post?.id ?? "",
     Boolean(post),
   );
+
   return (
     <Modal
       open={Boolean(post)}
@@ -61,6 +67,7 @@ function ApplicationsModal({
                   {formatDate(a.appliedAt)}
                 </p>
               </div>
+
               <StatusBadge kind="application" status={a.applicationStatus} />
             </li>
           ))}
@@ -72,15 +79,79 @@ function ApplicationsModal({
 
 export default function AdminPostsPage() {
   const toast = useToast();
+  const subjects = useSubjects();
+
   const [status, setStatus] = useState<PostStatus | "">("");
-  const [page, setPage] = useState(1);
-  const { data, isLoading, isError, refetch } = useAdminPosts({
-    status: status || undefined,
-    page,
+  const [filter, setFilter] = useState<FilterValues>(emptyFilter(RANGE_MAX));
+
+  // FilterSidebar giữ subjectId nhưng BE nhận subjectName
+  const subjectName = subjects.data?.find(
+    (s) => s.id === filter.subjectId,
+  )?.name;
+
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useAdminPosts({
+    status,
+    subjectName,
+    teachingMode: filter.teachingMode || undefined,
+
+    // BE nhận một educationLevel.
+    // Nếu chọn nhiều thì lọc thêm phía FE.
+    educationLevel:
+      filter.educationLevels.length === 1
+        ? filter.educationLevels[0]
+        : undefined,
+
+    minBudget: filter.min > 0 ? filter.min : undefined,
+
+    maxBudget: filter.max < RANGE_MAX ? filter.max : undefined,
   });
+
+  const posts = (data?.pages.flatMap((page) => page.content) ?? []).filter(
+    (post) =>
+      filter.educationLevels.length <= 1 ||
+      filter.educationLevels.includes(post.educationLevel),
+  );
+
+  // Infinite scroll
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = sentinelRef.current;
+
+    if (!element || !hasNextPage) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingNextPage) {
+          void fetchNextPage();
+        }
+      },
+      {
+        rootMargin: "300px",
+      },
+    );
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, posts.length]);
+
   const { removePost } = useAdminMutations();
+
   const [target, setTarget] = useState<PostResponse | null>(null);
+
   const [viewing, setViewing] = useState<PostResponse | null>(null);
+
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState("");
 
@@ -89,100 +160,118 @@ export default function AdminPostsPage() {
     setReason("");
     setReasonError("");
   };
+
   const confirm = () => {
-    if (!target) return;
+    if (!target) {
+      return;
+    }
+
     if (reason.trim().length < 5) {
       setReasonError("Vui lòng nhập lý do (tối thiểu 5 ký tự)");
       return;
     }
+
     removePost.mutate(
-      { id: target.id, reason: reason.trim() },
+      {
+        id: target.id,
+        reason: reason.trim(),
+      },
       {
         onSuccess: () => {
           toast.success("Đã gỡ bài vi phạm");
           close();
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => {
+          toast.error(getErrorMessage(e));
+        },
       },
     );
   };
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-5">
+    <div className="mx-auto flex max-w-6xl flex-col gap-5">
       <PageHeader title="Quản lý bài đăng & lượt đăng ký" />
-      <div className="w-56">
-        <Select
-          aria-label="Lọc theo trạng thái"
-          placeholder="Tất cả trạng thái"
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value as PostStatus | "");
-            setPage(1);
-          }}
-          options={(Object.keys(POST_STATUS_META) as PostStatus[]).map((s) => ({
-            value: s,
-            label: POST_STATUS_META[s].label,
-          }))}
-        />
+
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+        {/* FILTER */}
+        <div className="flex w-full flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:w-64 lg:shrink-0 lg:self-start lg:overflow-y-auto">
+          <Select
+            aria-label="Lọc theo trạng thái"
+            placeholder="Tất cả trạng thái"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as PostStatus | "")}
+            options={(Object.keys(POST_STATUS_META) as PostStatus[]).map(
+              (s) => ({
+                value: s,
+                label: POST_STATUS_META[s].label,
+              }),
+            )}
+          />
+
+          <FilterSidebar
+            value={filter}
+            onChange={setFilter}
+            rangeLabel="Ngân sách"
+            rangeMax={RANGE_MAX}
+            hideProvince
+          />
+        </div>
+
+        {/* POSTS */}
+        <div className="min-w-0 flex-1">
+          {isLoading ? (
+            <ListSkeleton />
+          ) : isError ? (
+            <ErrorState onRetry={() => void refetch()} />
+          ) : !posts.length ? (
+            <EmptyState title="Không có bài đăng" />
+          ) : (
+            <>
+              <ul className="grid gap-4 sm:grid-cols-2">
+                {posts.map((post) => (
+                  <li key={post.id} className="flex flex-col gap-2">
+                    <div className="flex-1">
+                      <PostCard post={post} />
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setViewing(post)}
+                      >
+                        <Users className="size-4" />
+                        Lượt đăng ký ({post.applicationCount ?? 0})
+                      </Button>
+
+                      {post.status !== "REMOVED" &&
+                        post.status !== "CLOSED" && (
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => setTarget(post)}
+                          >
+                            <Ban className="size-4" />
+                            Gỡ bài
+                          </Button>
+                        )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <div ref={sentinelRef} className="h-8" />
+
+              {isFetchingNextPage && <ListSkeleton rows={2} />}
+            </>
+          )}
+        </div>
       </div>
 
-      {isLoading ? (
-        <ListSkeleton />
-      ) : isError ? (
-        <ErrorState onRetry={() => void refetch()} />
-      ) : !data?.items.length ? (
-        <EmptyState title="Không có bài đăng" />
-      ) : (
-        <>
-          <ul className="flex flex-col gap-3">
-            {data.items.map((p) => (
-              <li
-                key={p.id}
-                className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center"
-              >
-                <div className="min-w-0 flex-1">
-                  <Link
-                    to={ROUTES.POST_DETAIL(p.id)}
-                    className="block truncate font-bold text-text hover:text-primary"
-                  >
-                    {p.title}
-                  </Link>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-text-secondary">
-                    <Badge tone="gray">{POST_TYPE_LABEL[p.type]}</Badge>{" "}
-                    {p.author.fullName} · {formatDate(p.createdAt)}
-                  </p>
-                </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  <StatusBadge kind="post" status={p.status} />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewing(p)}
-                  >
-                    <Users className="size-4" /> {p.applicationCount ?? 0}
-                  </Button>
-                  {p.status !== "REMOVED" && p.status !== "CLOSED" && (
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setTarget(p)}
-                    >
-                      <Ban className="size-4" /> Gỡ bài
-                    </Button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-          <Pagination
-            page={data.page}
-            totalPages={data.totalPages}
-            onChange={setPage}
-          />
-        </>
-      )}
-
+      {/* APPLICATIONS */}
       <ApplicationsModal post={viewing} onClose={() => setViewing(null)} />
+
+      {/* REMOVE POST */}
       <Modal
         open={Boolean(target)}
         onClose={close}
@@ -193,6 +282,7 @@ export default function AdminPostsPage() {
             <Button variant="ghost" onClick={close}>
               Hủy
             </Button>
+
             <Button
               variant="danger"
               loading={removePost.isPending}
@@ -207,6 +297,7 @@ export default function AdminPostsPage() {
           Bài “{target?.title}” sẽ chuyển sang trạng thái Đã gỡ và người đăng
           được thông báo.
         </p>
+
         <Textarea
           label="Lý do gỡ"
           required

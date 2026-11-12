@@ -1,7 +1,3 @@
-import { http } from "@/config/axiosClient";
-import { mockConfig } from "@/config/env";
-import { ApiError, type CursorResponse } from "@/shared/types/api.types";
-import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type {
   ApplicationResponse,
   AiSuggestionResponse,
@@ -11,62 +7,24 @@ import type {
 } from "../types/application.types";
 import type {
   ApplicationResponse as ApplicationDto,
-  RankedApplicationsResponse,
   ScoredApplicationResponse,
+  UserSummary,
 } from "../types/application.dto";
 import type { BaseUserResponse } from "@/features/user/types/user.dto";
 import type { PostResponse } from "@/features/post/types/post.types";
+import type { ApplicationGateway } from "../api/application.gateway";
+import type { PostService } from "@/features/post/service/post.service";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 import type { StudentResponse } from "@/features/user/types/user.types";
-import {
-  applications,
-  nextId,
-  notifications,
-  posts,
-  transactions,
-  tutors,
-  users,
-  wallets,
-} from "@/mocks/db";
-import { delay, requireUser, aiShouldFail } from "@/mocks/session";
-import { rankApplications } from "@/mocks/ai";
-import { payerTutorId, quoteFor } from "@/mocks/fee";
+import { describeWarnings } from "../util/matchwarning";
 
-const USE_MOCK = mockConfig.application;
-
-function notify(
-  userId: string,
-  n: {
-    notificationType: "APPLICATION" | "PAYMENT" | "SYSTEM";
-    title: string;
-    content: string;
-  },
-): void {
-  notifications[userId] = [
-    {
-      id: nextId("n"),
-      isRead: false,
-      createdAt: new Date().toISOString(),
-      ...n,
-    },
-    ...(notifications[userId] ?? []),
-  ];
-}
-
-function findApp(id: string): ApplicationResponse {
-  const a = applications.find((x) => x.id === id);
-  if (!a) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-  return a;
-}
-
-/**
- * BE ApplicationResponse chỉ có ID liên kết.
- * FE UI cũ cần object post/tutor/student nên service ghép dữ liệu tại đây.
- */
-async function getPublicUser(id: string): Promise<BaseUserResponse> {
-  return http
-    .get<BaseUserResponse>(`/v1/users/${id}/public-profile`)
-    .then((res) => res.data);
+/** BE chỉ trả id/fullName/avatarUrl; các field còn lại của public-profile để trống. */
+function fromSummary(u: UserSummary): BaseUserResponse {
+  return {
+    id: u.id,
+    fullName: u.fullName,
+    avatarUrl: u.avatarUrl,
+  } as BaseUserResponse;
 }
 
 function asStudent(user: BaseUserResponse): StudentResponse {
@@ -99,430 +57,211 @@ function asTutor(user: BaseUserResponse): TutorResponse {
   };
 }
 
-async function enrichApplication(
-  dto: ApplicationDto,
-): Promise<ApplicationResponse> {
-  const [post, student, tutor] = await Promise.all([
-    http.get<PostResponse>(`/v1/posts/${dto.postId}`).then((res) => res.data),
-    getPublicUser(dto.studentId),
-    getPublicUser(dto.tutorId),
-  ]);
+export class ApplicationService {
+  private readonly gateway: ApplicationGateway;
+  private readonly postService: PostService;
 
-  return {
-    id: dto.id,
-    post,
-    student: asStudent(student),
-    tutor: asTutor(tutor),
-    applicationStatus: dto.applicationStatus,
-    message: dto.message,
-    proposedFee: dto.proposedFee,
-    appliedAt: dto.appliedAt,
-    processedByAdminId: dto.processedByAdminId,
-    transactionId: dto.transactionId,
+  /** Cache public-profile dùng chung giữa các lần gọi (mine, by-post, ranked). */
+  private readonly userCache = new Map<
+    string,
+    { at: number; promise: Promise<BaseUserResponse> }
+  >();
+  private static readonly USER_TTL_MS = 5 * 60 * 1000;
+
+  private loadUser(id: string): Promise<BaseUserResponse> {
+    const hit = this.userCache.get(id);
+    if (hit && Date.now() - hit.at < ApplicationService.USER_TTL_MS) {
+      return hit.promise;
+    }
+    const promise = this.gateway.getPublicUser(id);
+    this.userCache.set(id, { at: Date.now(), promise });
+    // Lỗi thì bỏ khỏi cache để lần sau gọi lại.
+    promise.catch(() => this.userCache.delete(id));
+    return promise;
+  }
+
+  constructor(gateway: ApplicationGateway, postService: PostService) {
+    this.gateway = gateway;
+    this.postService = postService;
+  }
+
+  /**
+   * BE ApplicationResponse chỉ có ID liên kết; UI cần object post/tutor/student nên ghép tại đây.
+   * Đơn có bài không đọc được (đã gỡ/xóa/không công khai) bị bỏ qua, không làm hỏng cả danh sách.
+   */
+  private async enrichMany(
+    items: ApplicationDto[],
+    knownPost?: PostResponse,
+  ): Promise<ApplicationResponse[]> {
+    const postCache = new Map<string, Promise<PostResponse | null>>();
+    if (knownPost) postCache.set(knownPost.id, Promise.resolve(knownPost));
+
+    const loadPost = (id: string) => {
+      if (!postCache.has(id)) {
+        postCache.set(
+          id,
+          this.postService
+            .getPostById(id)
+            .catch(() => this.postService.getPostByIdForMe(id))
+            .catch(() => null),
+        );
+      }
+      return postCache.get(id)!;
+    };
+    const result = await Promise.all(
+      items.map(async (dto): Promise<ApplicationResponse | null> => {
+        const post = await loadPost(dto.postId);
+        if (!post) return null;
+        return this.build(dto, post);
+      }),
+    );
+    return result.filter((r): r is ApplicationResponse => r !== null);
+  }
+
+  private build(dto: ApplicationDto, post: PostResponse): ApplicationResponse {
+    return {
+      id: dto.id,
+      post,
+      student: asStudent(fromSummary(dto.student)),
+      tutor: asTutor(fromSummary(dto.tutor)),
+      applicationStatus: dto.applicationStatus,
+      message: dto.message,
+      proposedFee: dto.proposedFee,
+      appliedAt: dto.appliedAt,
+      processedByAdminId: dto.processedByAdminId,
+      transactionId: dto.transactionId,
+    };
+  }
+
+  /**
+   * Dùng sau thao tác (select/confirm/finish/cancel/apply). Thao tác đã thành công ở BE,
+   * nên nếu không đọc được bài (vd vừa chuyển sang CLOSED) thì trả bản rút gọn, không ném lỗi.
+   */
+  private async enrich(dto: ApplicationDto): Promise<ApplicationResponse> {
+    const [app] = await this.enrichMany([dto]);
+    return app ?? this.build(dto, { id: dto.postId } as PostResponse);
+  }
+
+  private async enrichPostApplicants(
+    postId: string,
+    items: PostApplicationItem[],
+  ): Promise<ApplicationResponse[]> {
+    const post = await this.postService.getPostById(postId);
+    const postOwner = await this.loadUser(post.author.id);
+
+    return Promise.all(
+      items.map(async (item) => {
+        const applicant = await this.loadUser(item.userId);
+        const isTutorApplicant = post.type === "FIND_TUTOR";
+
+        return {
+          id: item.applicationId,
+          post,
+          tutor: isTutorApplicant ? asTutor(applicant) : asTutor(postOwner),
+          student: isTutorApplicant
+            ? asStudent(postOwner)
+            : asStudent(applicant),
+          applicationStatus: item.status,
+          appliedAt: item.appliedAt,
+        };
+      }),
+    );
+  }
+
+  // Arrow property: truyền thẳng làm queryFn/mutationFn không mất `this`.
+
+  applyToPost = async (payload: ApplyPayload): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.apply(payload));
+
+  /** GET /v1/applications/mine */
+  getMyApplications = async (): Promise<ApplicationResponse[]> => {
+    const page = await this.gateway.listMine(100);
+    return this.enrichMany(page.content);
   };
-}
 
-async function enrichApplications(
-  items: ApplicationDto[],
-): Promise<ApplicationResponse[]> {
-  return Promise.all(items.map(enrichApplication));
-}
+  /**
+   * GET /v1/applications/mine, chỉ lấy đơn của bài đang xem.
+   * Dùng luôn object post đã tải ở trang, không gọi lại /v1/posts/{id}
+   * (bài CLOSED bị endpoint công khai trả 404).
+   */
+  getMyApplicationsForPost = async (
+    post: PostResponse,
+  ): Promise<ApplicationResponse[]> => {
+    const page = await this.gateway.listMine(100);
+    return this.enrichMany(
+      page.content.filter((a) => a.postId === post.id),
+      post,
+    );
+  };
 
-async function enrichPostApplicants(
-  postId: string,
-  items: PostApplicationItem[],
-): Promise<ApplicationResponse[]> {
-  const post = await http
-    .get<PostResponse>(`/v1/posts/${postId}`)
-    .then((res) => res.data);
-
-  const postOwner = await getPublicUser(post.author.id);
-
-  return Promise.all(
-    items.map(async (item) => {
-      const applicant = await getPublicUser(item.userId);
-      const isTutorApplicant = post.type === "FIND_TUTOR";
-
-      return {
-        id: item.applicationId,
-        post,
-        tutor: isTutorApplicant ? asTutor(applicant) : asTutor(postOwner),
-        student: isTutorApplicant ? asStudent(postOwner) : asStudent(applicant),
-        applicationStatus: item.status,
-        appliedAt: item.appliedAt,
-      };
-    }),
-  );
-}
-
-function flattenRanked(data: RankedApplicationsResponse): ApplicationDto[] {
-  return [...(data.top ?? []), ...(data.others ?? [])]
-    .map((item: ScoredApplicationResponse) => item.application)
-    .filter((item): item is ApplicationDto => Boolean(item));
-}
-
-export const applicationService = {
-  async applyToPost(payload: ApplyPayload): Promise<ApplicationResponse> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      const post = posts.find((p) => p.id === payload.postId);
-      if (!post || post.status !== "PUBLISHED") {
-        throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      }
-      if (post.author.id === me.id)
-        throw new ApiError(ERROR_MESSAGES.OWN_POST, "OWN_POST", 409);
-      if (
-        applications.some((a) => a.post.id === post.id && a.tutor.id === me.id)
-      ) {
-        throw new ApiError(
-          ERROR_MESSAGES.ALREADY_APPLIED,
-          "ALREADY_APPLIED",
-          409,
-        );
-      }
-      if (me.role !== "TUTOR")
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      const t = tutors.find((x) => x.id === me.id);
-      if (!t || t.verificationStatus !== "APPROVED") {
-        throw new ApiError(
-          ERROR_MESSAGES.TUTOR_NOT_APPROVED,
-          "TUTOR_NOT_APPROVED",
-          403,
-        );
-      }
-      const student = users.find((u) => u.id === post.author.id);
-      if (!student)
-        throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      const created: ApplicationResponse = {
-        id: nextId("ap"),
-        post,
-        tutor: t,
-        student: student as any,
-        applicationStatus: "PENDING",
-        message: payload.message,
-        proposedFee: payload.proposedFee,
-        appliedAt: new Date().toISOString(),
-      };
-      applications.push(created);
-      notify(post.author.id, {
-        notificationType: "APPLICATION",
-        title: "New application received",
-        content: `${me.fullName} applied for "${post.title}".`,
-      });
-      return created;
-    }
-
-    const dto = await http
-      .post<ApplicationDto>("/v1/applications", payload)
-      .then((res) => res.data);
-    return enrichApplication(dto);
-  },
-
-  async getMyApplications(): Promise<ApplicationResponse[]> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      return applications
-        .filter((a) => a.tutor.id === me.id || a.student.id === me.id)
-        .sort((a, b) => +new Date(b.appliedAt) - +new Date(a.appliedAt));
-    }
-
-    // BE: GET /v1/applications/mine?cursor=&limit=
-    const page = await http
-      .get<CursorResponse<ApplicationDto>>("/v1/applications/mine", {
-        params: { limit: 100 },
-      })
-      .then((res) => res.data);
-
-    return enrichApplications(page.content);
-  },
-
-  async getConnections(): Promise<ApplicationResponse[]> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      return applications.filter(
-        (a) =>
-          (a.applicationStatus === "PAID" ||
-            a.applicationStatus === "FINISHED") &&
-          (a.tutor.id === me.id || a.student.id === me.id),
-      );
-    }
-
-    const myApplications = await this.getMyApplications();
-    return myApplications.filter(
+  getConnections = async (): Promise<ApplicationResponse[]> => {
+    const mine = await this.getMyApplications();
+    return mine.filter(
       (a) =>
         a.applicationStatus === "PAID" || a.applicationStatus === "FINISHED",
     );
-  },
+  };
 
-  async getApplicationsByPost(postId: string): Promise<ApplicationResponse[]> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      const post = posts.find((p) => p.id === postId);
-      if (!post) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      if (post.author.id !== me.id && me.role !== "ADMIN") {
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      }
-      return applications
-        .filter(
-          (a) => a.post.id === postId && a.applicationStatus !== "CANCELLED",
-        )
-        .sort((a, b) => +new Date(a.appliedAt) - +new Date(b.appliedAt));
-    }
+  /** BE trả PostApplicationResponse, không phải ApplicationResponse. */
+  getApplicationsByPost = async (
+    postId: string,
+  ): Promise<ApplicationResponse[]> => {
+    const page = await this.gateway.listByPost(postId, 100);
+    return this.enrichPostApplicants(postId, page.content);
+  };
 
-    // BE trả PostApplicationResponse, không phải ApplicationResponse.
-    const page = await http
-      .get<
-        CursorResponse<PostApplicationItem>
-      >(`/v1/posts/${postId}/applications`, { params: { limit: 100 } })
-      .then((res) => res.data);
+  /** GET /v1/applications/post/{postId}/ranked: chỉ lấy top 5 khi BE đã chấm điểm. */
+  getAiTop5 = async (postId: string): Promise<AiSuggestionResponse> => {
+    const res = await this.gateway.ranked(postId);
+    if (!res.ranked) return { items: [], source: "AI", ranked: false };
 
-    return enrichPostApplicants(postId, page.content);
-  },
+    const scored = (res.top ?? []).filter(
+      (
+        item,
+      ): item is ScoredApplicationResponse & {
+        application: ApplicationDto;
+      } => Boolean(item.application),
+    );
 
-  async getAiTop5(postId: string): Promise<AiSuggestionResponse> {
-    if (USE_MOCK) {
-      await delay(700);
-      if (aiShouldFail())
-        throw new ApiError(
-          ERROR_MESSAGES.AI_UNAVAILABLE,
-          "AI_UNAVAILABLE",
-          503,
-        );
-      const all = applications.filter((a) => a.post.id === postId);
-      return { items: rankApplications(all), source: "AI" };
-    }
+    const apps = await this.enrichMany(scored.map((i) => i.application));
+    const byId = new Map(apps.map((a) => [a.id, a]));
 
-    // BE: GET /v1/applications/post/{postId}/ranked
-    const ranked = await http
-      .get<RankedApplicationsResponse>(`/v1/applications/post/${postId}/ranked`)
-      .then((res) => res.data);
+    // Giữ thứ tự điểm của BE; đơn bị bỏ qua ở enrichMany thì không có trong byId.
+    const items: AiRankedApplication[] = scored.flatMap((s) => {
+      const app = byId.get(s.application.id);
+      if (!app) return [];
+      return [
+        {
+          ...app,
+          aiRank: 0,
+          aiScore: s.score,
+          aiReason: describeWarnings(s.warnings),
+        },
+      ];
+    });
+    items.forEach((it, i) => (it.aiRank = i + 1));
 
-    const scored = [...(ranked.top ?? []), ...(ranked.others ?? [])];
+    return { items, source: "AI", ranked: true };
+  };
 
-    const items: AiRankedApplication[] = (
-      await Promise.all(
-        scored.map(async (item, index) => {
-          if (!item.application) {
-            return null;
-          }
+  selectApplicant = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.select(id));
 
-          const app = await enrichApplication(item.application);
+  /** POST /v1/payments/applications/{id}/pay rồi đọc lại đơn. */
+  confirmAndPayFee = async (id: string): Promise<ApplicationResponse> => {
+    await this.gateway.pay(id);
+    return this.enrich(await this.gateway.getById(id));
+  };
 
-          const result: AiRankedApplication = {
-            ...app,
-            aiRank: index + 1,
-            aiScore: item.score,
-            aiReason: item.warnings?.join(", "),
-          };
+  confirmApplication = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.confirm(id));
 
-          return result;
-        }),
-      )
-    ).filter((item): item is AiRankedApplication => item !== null);
+  finishApplication = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.finish(id));
 
-    return {
-      items,
-      source: "AI",
-    };
-  },
+  declineOffer = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.cancel(id));
 
-  async selectApplicant(id: string): Promise<ApplicationResponse> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      const a = findApp(id);
-      if (a.post.author.id !== me.id)
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      if (a.applicationStatus !== "PENDING")
-        throw new ApiError("Application is not pending.", "INVALID_STATE", 409);
-      a.applicationStatus = "ACCEPTED";
-      for (const o of applications) {
-        if (
-          o.post.id === a.post.id &&
-          o.id !== a.id &&
-          o.applicationStatus === "PENDING"
-        ) {
-          o.applicationStatus = "REJECTED";
-        }
-      }
-      notify(a.tutor.id, {
-        notificationType: "APPLICATION",
-        title: "You have been selected!",
-        content: `${a.student.fullName} selected you for "${a.post.title}".`,
-      });
-      return a;
-    }
-    const dto = await http
-      .post<ApplicationDto>(`/v1/applications/${id}/select`)
-      .then((res) => res.data);
-    return enrichApplication(dto);
-  },
-
-  async confirmAndPayFee(id: string): Promise<ApplicationResponse> {
-    if (USE_MOCK) {
-      await delay(600);
-      const me = requireUser();
-      const a = findApp(id);
-      const tutorId = payerTutorId(a);
-      if (tutorId !== me.id)
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      if (
-        a.applicationStatus !== "ACCEPTED" &&
-        a.applicationStatus !== "CONFIRMED"
-      ) {
-        throw new ApiError(
-          "Application not in accepted state.",
-          "INVALID_STATE",
-          409,
-        );
-      }
-      const { feeAmount } = quoteFor(a);
-      const balance = wallets[tutorId] ?? 0;
-      if (balance < feeAmount)
-        throw new ApiError(
-          ERROR_MESSAGES.INSUFFICIENT_BALANCE,
-          "INSUFFICIENT_BALANCE",
-          402,
-        );
-      wallets[tutorId] = balance - feeAmount;
-      transactions.push({
-        id: nextId("tx"),
-        transactionType: "COMMISSION",
-        amount: feeAmount,
-        transactionStatus: "SUCCESS",
-        applicationId: a.id,
-        createdAt: new Date().toISOString(),
-      });
-      a.applicationStatus = "PAID";
-      const post = posts.find((p) => p.id === a.post.id);
-      if (post) post.status = "CLOSED";
-      for (const uid of [a.student.id, a.tutor.id]) {
-        notify(uid, {
-          notificationType: "PAYMENT",
-          title: "Connection successful",
-          content: "Contact information and chat channel are now unlocked.",
-        });
-      }
-      return a;
-    }
-    await http.post(`/v1/payments/applications/${id}/pay`);
-
-    const updated = await http
-      .get<ApplicationDto>(`/v1/applications/${id}`)
-      .then((res) => res.data);
-    return enrichApplication(updated);
-  },
-
-  async confirmApplication(id: string): Promise<ApplicationResponse> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      const a = findApp(id);
-      if (a.post.author.id !== me.id)
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      if (a.applicationStatus !== "ACCEPTED")
-        throw new ApiError(
-          "Chỉ xác nhận được đơn đã được chọn.",
-          "INVALID_STATE",
-          409,
-        );
-      a.applicationStatus = "CONFIRMED";
-      notify(a.tutor.id, {
-        notificationType: "APPLICATION",
-        title: "Lớp đã được xác nhận",
-        content: `Lớp "${a.post.title}" đã được xác nhận. Vui lòng thanh toán phí nhận lớp.`,
-      });
-      return a;
-    }
-    const dto = await http
-      .post<ApplicationDto>(`/v1/applications/${id}/confirm`)
-      .then((res) => res.data);
-    return enrichApplication(dto);
-  },
-
-  async finishApplication(id: string): Promise<ApplicationResponse> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      const a = findApp(id);
-      if (![a.tutor.id, a.student.id, a.post.author.id].includes(me.id))
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      if (a.applicationStatus !== "PAID" && a.applicationStatus !== "CONFIRMED")
-        throw new ApiError(
-          "Lớp chưa ở trạng thái có thể hoàn thành.",
-          "INVALID_STATE",
-          409,
-        );
-      a.applicationStatus = "FINISHED";
-      const other = me.id === a.tutor.id ? a.student.id : a.tutor.id;
-      notify(other, {
-        notificationType: "APPLICATION",
-        title: "Lớp đã hoàn thành",
-        content: `Lớp "${a.post.title}" đã được đánh dấu hoàn thành. Bạn có thể đánh giá.`,
-      });
-      return a;
-    }
-    const dto = await http
-      .post<ApplicationDto>(`/v1/applications/${id}/finish`)
-      .then((res) => res.data);
-    return enrichApplication(dto);
-  },
-
-  async declineOffer(id: string): Promise<ApplicationResponse> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      const a = findApp(id);
-      if (payerTutorId(a) !== me.id)
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      if (a.applicationStatus !== "ACCEPTED") {
-        throw new ApiError(
-          "Cannot decline this application.",
-          "INVALID_STATE",
-          409,
-        );
-      }
-      a.applicationStatus = "CANCELLED";
-      for (const o of applications) {
-        if (
-          o.post.id === a.post.id &&
-          o.id !== a.id &&
-          o.applicationStatus === "REJECTED"
-        ) {
-          o.applicationStatus = "PENDING";
-        }
-      }
-      notify(a.student.id, {
-        notificationType: "APPLICATION",
-        title: "Tutor declined the offer",
-        content: `Your post "${a.post.title}" is open for new applicants.`,
-      });
-      return a;
-    }
-    const dto = await http
-      .post<ApplicationDto>(`/v1/applications/${id}/cancel`)
-      .then((res) => res.data);
-    return enrichApplication(dto);
-  },
-
-  async cancelApplication(id: string): Promise<ApplicationResponse> {
-    if (USE_MOCK) {
-      await delay();
-      const me = requireUser();
-      const a = findApp(id);
-      if (a.tutor.id !== me.id || a.applicationStatus !== "PENDING") {
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      }
-      a.applicationStatus = "CANCELLED";
-      return a;
-    }
-    const dto = await http
-      .post<ApplicationDto>(`/v1/applications/${id}/cancel`)
-      .then((res) => res.data);
-    return enrichApplication(dto);
-  },
-};
+  cancelApplication = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.cancel(id));
+}

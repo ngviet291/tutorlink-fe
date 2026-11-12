@@ -13,6 +13,8 @@ import type {
   FeeRatePayload,
   ProfileReviewPayload,
 } from "../types/admin.types";
+import { queryKeys } from "@/constants/queryKeys";
+import { postService } from "@/config/di/container";
 
 export const adminKeys = {
   all: ["admin"] as const,
@@ -52,10 +54,27 @@ export function usePendingTutors() {
   });
 }
 
-export function useAdminPosts(params: AdminPostFilter = {}) {
+export function useAdminPosts(filter: Omit<AdminPostFilter, "cursor"> = {}) {
+  return useInfiniteQuery({
+    queryKey: [...adminKeys.posts, "list", filter],
+    queryFn: ({ pageParam }) =>
+      postService.getAdminPosts({
+        ...filter,
+        status: filter.status || undefined, // "" thì bỏ khỏi query
+        cursor: pageParam,
+        limit: 20,
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) =>
+      last.hasNext ? (last.nextCursor ?? undefined) : undefined,
+  });
+}
+
+export function useAdminPostDetail(id: string | undefined) {
   return useQuery({
-    queryKey: [...adminKeys.posts, params],
-    queryFn: () => adminService.getPosts(params),
+    queryKey: [...adminKeys.posts, "detail", id],
+    queryFn: () => postService.getPostByIdForAdmin(id ?? ""),
+    enabled: Boolean(id),
   });
 }
 
@@ -125,7 +144,7 @@ export function useAdminMutations() {
     }),
     removePost: useMutation({
       mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-        adminService.removePost(id, reason),
+        postService.removePostByAdmin(id, reason),
       onSuccess: () => {
         void refresh();
         void qc.invalidateQueries({ queryKey: ["posts"] });

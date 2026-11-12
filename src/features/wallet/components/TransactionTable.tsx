@@ -76,7 +76,7 @@ export function TransactionTable() {
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[32rem] text-left text-sm">
+            <table className="w-full min-w-lg text-left text-sm">
               <thead className="text-xs uppercase text-text-secondary">
                 <tr>
                   <th className="py-2 pr-3">{t("wallet.time")}</th>

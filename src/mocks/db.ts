@@ -6,7 +6,6 @@ import type { TransactionResponse } from "@/features/wallet/types/wallet.types";
 import type { SubjectResponse } from "@/features/subject/types/subject.types";
 import type { NotificationResponse } from "@/features/notification/types/notification.types";
 import type { ReviewResponse } from "@/features/review/types/review.types";
-import type { ChatMessage } from "@/features/chat/types/chat.types";
 import type {
   ContactInfo,
   StudentSummary,
@@ -775,30 +774,6 @@ export const applications: ApplicationResponse[] = [
 export const contacts: Record<string, ContactInfo> = Object.fromEntries(
   users.map((u) => [u.id, { phone: u.phone, email: u.email }]),
 );
-
-export const chatMessages: ChatMessage[] = [
-  {
-    id: "m-1",
-    applicationId: "ap-10",
-    senderId: "t-1",
-    content: "Chào em, cô là gia sư Vật lý. Em muốn bắt đầu học vào ngày nào?",
-    createdAt: ago(14 * DAY),
-  },
-  {
-    id: "m-2",
-    applicationId: "ap-10",
-    senderId: "s-3",
-    content: "Dạ em chào cô, em rảnh tối thứ 3 và thứ 5 ạ.",
-    createdAt: ago(14 * DAY - 20 * 60_000),
-  },
-  {
-    id: "m-3",
-    applicationId: "ap-9",
-    senderId: "s-2",
-    content: "Chào cô, mình thống nhất học online qua Google Meet nhé.",
-    createdAt: ago(24 * DAY),
-  },
-];
 
 /** userId → danh sách tutorId yêu thích */
 export const favorites: Record<string, string[]> = { "s-1": ["t-1", "t-3"] };

@@ -7,6 +7,7 @@ import { ROUTES } from "@/constants/routes";
 import { usePostMutations } from "@/features/post/hooks/usePosts";
 import { PostForm } from "@/features/post/components/PostForm";
 import type { PostPayload } from "@/features/post/types/post.types";
+import { ApiError } from "@/config/http/apiError";
 
 export default function PostCreatePage() {
   const { t } = useTranslation();
@@ -21,6 +22,7 @@ export default function PostCreatePage() {
       navigate(asDraft ? ROUTES.MY_POSTS : ROUTES.POST_DETAIL(post.id));
     } catch (err) {
       toast.error(getErrorMessage(err));
+      return err instanceof ApiError ? err.fieldErrors : undefined;
     }
   };
 

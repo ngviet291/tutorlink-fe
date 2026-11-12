@@ -3,7 +3,7 @@ export type Gender = "MALE" | "FEMALE" ;
 export type UserStatus = "ACTIVE" | "BANNED"|"INACTIVE" | "PENDING_VERIFICATION";
 export type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type PostType = "FIND_TUTOR" | "FIND_STUDENT";
-export type PostStatus = "DRAFT" | "PUBLISHED" | "CLOSED" | "REMOVED";
+export type PostStatus = "DRAFT" | "PUBLISHED" |"PENDING" | "CLOSED" | "REMOVED";
 export type ApplicationStatus =
   | "PENDING"
   | "ACCEPTED"

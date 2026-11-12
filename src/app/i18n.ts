@@ -218,7 +218,7 @@ const vi = {
     status: {
       DRAFT: "Bản nháp",
       PUBLISHED: "Đang tuyển",
-      CLOSED: "Đã đủ",
+      CLOSED: "Đã đóng",
       REMOVED: "Đã gỡ",
     },
   },

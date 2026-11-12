@@ -1,158 +1,94 @@
-import { http } from "@/config/axiosClient";
-import { mockConfig } from "@/config/env";
-import { ApiError } from "@/shared/types/api.types";
-import { ERROR_MESSAGES } from "@/constants/errorMessage";
-import type { ChatMessage, ChatRoom, ChatThread } from "../types/chat.types";
+import { ApiError } from "@/config/http/apiError";
+import type { ChatGateway } from "../api/chat.gateway";
 import {
-  applications,
-  chatMessages,
-  contacts,
-  nextId,
-  notifications,
-} from "@/mocks/db";
-import { delay, requireUser } from "@/mocks/session";
+  toChatMessage,
+  toChatThread,
+  toMessagePage,
+  toSendMessageRequest,
+} from "../mapper/chat.mapper";
+import type {
+  ChatMessage,
+  ChatThread,
+  MediaPayload,
+  MessagePage,
+} from "../types/chat.types";
+import type { MediaType } from "@/shared/types/common.types";
 
-const USE_MOCK = mockConfig.chat;
+const CHANNEL_PAGE_SIZE = 50;
+/** Chặn vòng lặp vô hạn nếu BE trả cursor sai. */
+const MAX_CHANNEL_PAGES = 20;
 
-/** Mock: thời điểm đã đọc gần nhất của người dùng hiện tại ở mỗi cuộc trò chuyện. */
-const lastRead: Record<string, string> = {};
-const readKey = (userId: string, appId: string) => `${userId}:${appId}`;
+/** Use-case chat: gọi gateway và map DTO sang model UI. Không biết axios hay React. */
+export class ChatService {
+  private readonly gateway: ChatGateway;
 
-export const chatService = {
-  /** Danh sách cuộc trò chuyện của tôi (mới nhất trước). */
-  async getInbox(): Promise<ChatThread[]> {
-    if (USE_MOCK) {
-      await delay(200);
-      const me = requireUser();
-      return applications
-        .filter(
-          (a) =>
-            (a.applicationStatus === "PAID" ||
-              a.applicationStatus === "FINISHED") &&
-            (a.post.author.id === me.id || a.tutor.id === me.id),
-        )
-        .map((a): ChatThread => {
-          const msgs = chatMessages.filter((m) => m.applicationId === a.id);
-          const last = msgs[msgs.length - 1];
-          const since = lastRead[readKey(me.id, a.id)] ?? "";
-          const partner = a.post.author.id === me.id ? a.tutor : a.post.author;
-          return {
-            id: a.id,
-            partnerName: partner.fullName,
-            partnerAvatarUrl: partner.avatarUrl,
-            lastMessage: last?.content,
-            lastMessageAt: last?.createdAt,
-            unreadCount: msgs.filter(
-              (m) => m.senderId !== me.id && m.createdAt > since,
-            ).length,
-          };
-        })
-        .sort((x, y) =>
-          (y.lastMessageAt ?? "").localeCompare(x.lastMessageAt ?? ""),
-        );
+  constructor(gateway: ChatGateway) {
+    this.gateway = gateway;
+  }
+
+  /** Toàn bộ channel của tôi (mới nhất trước). Số channel của một người nhỏ nên gom hết các trang. */
+  async listChannels(): Promise<ChatThread[]> {
+    const threads: ChatThread[] = [];
+    let cursor: string | undefined;
+    for (let i = 0; i < MAX_CHANNEL_PAGES; i += 1) {
+      const page = await this.gateway.listChannels(cursor, CHANNEL_PAGE_SIZE);
+      threads.push(...page.content.map((dto) => toChatThread(dto, dto.id)));
+      if (!page.hasNext || !page.nextCursor) break;
+      cursor = page.nextCursor;
     }
-    // BE: GET /v1/chat/channels → { items: [{ id, lastMessageAt, partner: { id, fullName, avatarUrl } }] }
-    const r = await http
-      .get<{
-        items: {
-          id: string;
-          lastMessageAt?: string;
-          partner: { fullName: string; avatarUrl?: string };
-        }[];
-      }>("/v1/chat/channels")
-      .then((res) => res.data);
-    return r.items.map((ch) => ({
-      id: ch.id,
-      partnerName: ch.partner.fullName,
-      partnerAvatarUrl: ch.partner.avatarUrl,
-      lastMessageAt: ch.lastMessageAt,
-      unreadCount: 0,
-    }));
-  },
+    return threads;
+  }
 
-  async getUnreadCount(): Promise<number> {
-    if (USE_MOCK)
-      return (await chatService.getInbox()).reduce(
-        (s, t) => s + t.unreadCount,
-        0,
-      );
-    return http.get<number>("/v1/chat/unread-count").then((res) => res.data);
-  },
+  async getChannel(channelId: string): Promise<ChatThread> {
+    return toChatThread(await this.gateway.getChannel(channelId));
+  }
 
-  /** Chưa thanh toán → unlocked=false, không trả liên hệ và tin nhắn. */
-  async getRoom(applicationId: string): Promise<ChatRoom> {
-    if (USE_MOCK) {
-      await delay(250);
-      const me = requireUser();
-      const a = applications.find((x) => x.id === applicationId);
-      if (!a) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
-      const isParty = a.post.author.id === me.id || a.tutor.id === me.id;
-      if (!isParty && me.role !== "ADMIN")
-        throw new ApiError(ERROR_MESSAGES.FORBIDDEN, "FORBIDDEN", 403);
-      const partnerId =
-        a.post.author.id === me.id ? a.tutor.id : a.post.author.id;
-      const partnerName =
-        a.post.author.id === me.id ? a.tutor.fullName : a.post.author.fullName;
-      if (a.applicationStatus !== "PAID" && a.applicationStatus !== "FINISHED")
-        return { applicationId, unlocked: false, partnerName, messages: [] };
-      lastRead[readKey(me.id, applicationId)] = new Date().toISOString();
-      return {
-        applicationId,
-        unlocked: true,
-        partnerName,
-        contact: contacts[partnerId],
-        messages: chatMessages.filter((m) => m.applicationId === applicationId),
-      };
+  /** `null` khi chưa có channel (BE trả 404). Các lỗi khác được ném lại. */
+  async findChannelWithPartner(partnerId: string): Promise<ChatThread | null> {
+    try {
+      return toChatThread(await this.gateway.getChannelWithUser(partnerId));
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) return null;
+      throw error;
     }
-    return http
-      .get<ChatRoom>(`/v1/chat/${applicationId}`)
-      .then((res) => res.data); // TODO: nối API
-  },
+  }
 
+  async getMessages(
+    channelId: string,
+    cursor?: string,
+    size?: number,
+  ): Promise<MessagePage> {
+    return toMessagePage(
+      await this.gateway.listMessages(channelId, cursor, size),
+    );
+  }
+
+  // async sendMessage(receiverId: string, content: string): Promise<ChatMessage> {
+  //   return toChatMessage(
+  //     await this.gateway.sendMessage(toSendMessageRequest(receiverId, content)),
+  //   );
+  // }
+
+  async uploadMedia(channelId: string, mediaType: MediaType, file: File) {
+    return this.gateway.uploadMedia(channelId, mediaType, file);
+  }
+
+  markRead(channelId: string): Promise<void> {
+    return this.gateway.markRead(channelId);
+  }
+
+  getUnreadCount(): Promise<number> {
+    return this.gateway.getUnreadCount();
+  }
   async sendMessage(
-    applicationId: string,
+    receiverId: string,
     content: string,
+    media: MediaPayload[] = [],
   ): Promise<ChatMessage> {
-    if (USE_MOCK) {
-      await delay(150);
-      const me = requireUser();
-      const a = applications.find((x) => x.id === applicationId);
-      if (
-        a?.applicationStatus !== "PAID" &&
-        a?.applicationStatus !== "FINISHED"
-      )
-        throw new ApiError(
-          "Kênh chat chỉ mở sau khi thanh toán phí nhận lớp.",
-          "CHAT_LOCKED",
-          403,
-        );
-      const msg: ChatMessage = {
-        id: nextId("m"),
-        applicationId,
-        senderId: me.id,
-        content,
-        createdAt: new Date().toISOString(),
-      };
-      chatMessages.push(msg);
-      const partnerId =
-        a.post.author.id === me.id ? a.tutor.id : a.post.author.id;
-      notifications[partnerId] = [
-        {
-          id: nextId("n"),
-          notificationType: "CHAT" as const,
-          title: "Tin nhắn mới",
-          content: `${me.fullName}: ${content.slice(0, 60)}`,
-          isRead: false,
-          createdAt: msg.createdAt,
-        },
-        ...(notifications[partnerId] ?? []),
-      ];
-      return msg;
-    }
-    return http
-      .post<ChatMessage>(`/v1/chat/${applicationId}/messages`, {
-        content,
-      })
-      .then((res) => res.data); // TODO: nối API
-  },
-};
+    return toChatMessage(
+      await this.gateway.sendMessage(
+        toSendMessageRequest(receiverId, content, media),
+      ),
+    );
+  }
+}
