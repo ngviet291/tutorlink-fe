@@ -17,6 +17,8 @@ import { StompRealtimeClient } from "../realtime/StompRealtimeClient";
 import { RealtimeEventRouter } from "../realtime/RealtimeEventRouter";
 import { HttpPostGateway } from "@/features/post/api/http.post.gateway";
 import { PostService } from "@/features/post/service/post.service";
+import { ApplicationService } from "@/features/application/service/application.service";
+import { HttpApplicationGateway } from "@/features/application/api/http.application.gateway";
 
 // Toàn bộ bean được quản lí ở đây
 export const tokenStorage = new SecureTokenStorage();
@@ -45,6 +47,8 @@ const privateHttpClient = new AxiosHttpClient(privateHttp);
 const gateway: AuthGateway = new HttpAuthGateway(publicHttpClient);
 const subjectGateway = new HttpSubjectGateway(privateHttpClient); // client có gắn token, không phải client PUBLIC
 
+const applicationGateway = new HttpApplicationGateway(privateHttpClient); // client có gắn token, không phải client PUBLIC
+
 const postGateway = new HttpPostGateway(privateHttpClient); // client có gắn token, không phải client PUBLIC
 export const postService = new PostService(postGateway);
 
@@ -53,4 +57,9 @@ export const addressGateway = new HttpAddressGateway(privateHttpClient);
 export const authService = new AuthService(gateway, tokenStorage);
 export const chatService = new ChatService(
   new HttpChatGateway(privateHttpClient),
+);
+
+export const applicationService = new ApplicationService(
+  applicationGateway,
+  postService,
 );

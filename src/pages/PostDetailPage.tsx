@@ -36,7 +36,10 @@ import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { useToast } from "@/shared/hooks/useToast";
 import { ApplicantList } from "@/features/application/components/ApplicantList";
 import { ApplyModal } from "@/features/application/components/ApplyModal";
-import { useMyApplications } from "@/features/application/hooks/useApplications";
+import {
+  useMyApplications,
+  useMyApplicationsForPost,
+} from "@/features/application/hooks/useApplications";
 import { useApplicationMutations } from "@/features/application/hooks/useApplications";
 import {
   usePostDetail,
@@ -58,7 +61,7 @@ export default function PostDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const isAdmin = user?.role === "ADMIN";
   const isTutor = user?.role === "TUTOR";
-  const myApps = useMyApplications(Boolean(user));
+
   const myTutor = useMyTutorProfile(isTutor);
 
   const {
@@ -67,6 +70,8 @@ export default function PostDetailPage() {
     isError,
     refetch,
   } = usePostDetail(id, Boolean(user), isAdmin);
+
+  const myApps = useMyApplicationsForPost(post, Boolean(user));
   if (isLoading) {
     return (
       <div className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-8">

@@ -24,7 +24,7 @@ export default function MyApplicationsPage() {
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
       <PageHeader title="Đơn đã ứng tuyển" description="Theo dõi trạng thái các lớp bạn đăng ký và thanh toán phí nhận lớp khi được chọn." />
       <OfferList onPay={setOffer} />
-
+    
       {isLoading ? <ListSkeleton /> : isError ? <ErrorState onRetry={() => void refetch()} /> : !data?.length ? (
         <EmptyState title="Bạn chưa đăng ký lớp nào" action={<Link to={ROUTES.FIND_CLASS}><Button>Tìm lớp ngay</Button></Link>} />
       ) : (

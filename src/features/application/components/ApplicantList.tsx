@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
@@ -8,6 +8,8 @@ import { getErrorMessage } from "@/shared/utils/errors";
 import {
   useApplicationMutations,
   useApplicationsByPost,
+  useMyApplications,
+  useMyApplicationsForPost,
 } from "../hooks/useApplications";
 import { AiTop5Panel } from "./AiTop5Panel";
 import { ApplicantRow } from "./ApplicantRow";
@@ -17,9 +19,20 @@ import type { PostResponse } from "@/features/post/types/post.types";
 export function ApplicantList({ post }: { post: PostResponse }) {
   const { t } = useTranslation();
   const toast = useToast();
-  const { data, isLoading, isError, refetch } = useApplicationsByPost(
-    post.id,
-    true,
+  const {
+    data: mine,
+    isLoading,
+    isError,
+    refetch,
+  } = useMyApplicationsForPost(post);
+  const data = useMemo(
+    () =>
+      mine
+        ?.filter(
+          (a) => a.post.id === post.id && a.applicationStatus !== "CANCELLED",
+        )
+        .sort((a, b) => +new Date(a.appliedAt) - +new Date(b.appliedAt)),
+    [mine, post.id],
   );
   const { select } = useApplicationMutations();
   const [target, setTarget] = useState<ApplicationResponse | null>(null);
@@ -59,8 +72,7 @@ export function ApplicantList({ post }: { post: PostResponse }) {
       <section aria-labelledby="all-applicants">
         <h2
           id="all-applicants"
-          className="mb-3 text-lg font-extrabold text-text"
-        >
+          className="mb-3 text-lg font-extrabold text-text">
           {t("application.allApplicants", { count: data?.length ?? 0 })}
         </h2>
         {isLoading ? (

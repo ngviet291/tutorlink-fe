@@ -49,6 +49,8 @@ export type AiRankedApplication = ApplicationResponse & {
 export interface AiSuggestionResponse {
   items: AiRankedApplication[];
   source?: "AI" | "RULE_BASED";
+  /** BE chỉ chấm điểm khi > 5 ứng viên. Mock không có field này. */
+  ranked?: boolean;
 }
 
 export interface ApplyPayload {

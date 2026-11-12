@@ -22,11 +22,17 @@ export interface CreateApplicationRequest {
 }
 
 /** BE: application/dto/response/ApplicationResponse.java */
+export interface UserSummary {
+  id: string;
+  fullName: string;
+  avatarUrl?: string | null;
+}
+
 export interface ApplicationResponse {
   id: string;
   postId: string;
-  studentId: string;
-  tutorId: string;
+  student: UserSummary;
+  tutor: UserSummary;
   applicationStatus: string;
   proposedFee?: number;
   message?: string;
@@ -34,7 +40,6 @@ export interface ApplicationResponse {
   processedByAdminId?: string;
   transactionId?: string;
 }
-
 /** BE: application/dto/response/MatchBreakdown.java */
 export interface MatchBreakdown {
   /** 0..1 */
@@ -61,6 +66,6 @@ export interface RankedApplicationsResponse {
 export interface ScoredApplicationResponse {
   application?: ApplicationResponse;
   score?: number;
-  breakdown?: MatchBreakdown;
+  breakdown?: Record<string, number>;
   warnings?: MatchWarning[];
 }
