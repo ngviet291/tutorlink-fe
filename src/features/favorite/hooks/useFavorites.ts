@@ -11,7 +11,6 @@ export function useFavorites(enabled = true) {
   });
 }
 
-/** Chỉ danh sách id — dùng cho nút trái tim, không cần tải cả hồ sơ. */
 export function useFavoriteIds(enabled = true) {
   return useQuery({
     queryKey: queryKeys.favorites.ids,
@@ -23,10 +22,14 @@ export function useFavoriteIds(enabled = true) {
 export function useToggleFavorite(source: string = "unknown") {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (tutorId: string) => favoriteService.toggleFavorite(tutorId),
+    // Dùng danh sách id đã có trong cache để khỏi gọi thêm GET /v1/favorites mỗi lần bấm tim
+    mutationFn: (tutorId: string) =>
+      favoriteService.toggleFavorite(
+        tutorId,
+        qc.getQueryData<string[]>(queryKeys.favorites.ids)?.includes(tutorId),
+      ),
     onSuccess: (result, tutorId) => {
       qc.invalidateQueries({ queryKey: queryKeys.favorites.all });
-      // Track event khi user favorite gia sư
       if (result.favorited) {
         track("tutor_favorited", { tutorId, source });
       }

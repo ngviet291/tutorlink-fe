@@ -47,7 +47,7 @@ export function FilterSidebar({
   rangeMax = 1_000_000,
   rangeStep = 10_000,
   className = "",
-  onSearchPerformed,
+  // onSearchPerformed,
   hideProvince = false,
 }: FilterSidebarProps) {
   const { t } = useTranslation();

@@ -39,8 +39,8 @@ export default function MyApplicationsPage() {
                 <StatusBadge kind="application" status={a.applicationStatus} />
                 {a.applicationStatus === 'ACCEPTED' && <Button size="sm" onClick={() => setOffer(a)}>Thanh toán phí</Button>}
                 {a.applicationStatus === 'CONFIRMED' && <Button size="sm" onClick={() => setOffer(a)}>Thanh toán phí</Button>}
-                {(a.applicationStatus === 'PAID' || a.applicationStatus === 'CONFIRMED') && <Button size="sm" variant="outline" loading={finish.isPending && finish.variables === a.id} onClick={() => finish.mutate(a.id, { onSuccess: () => toast.success('Đã đánh dấu hoàn thành'), onError: (e) => toast.error(getErrorMessage(e)) })}>Hoàn thành lớp</Button>}
-                {(a.applicationStatus === 'PAID' || a.applicationStatus === 'FINISHED') && <Link to={ROUTES.CHAT_WITH(a.post.author.id)}><Button size="sm" variant="secondary">Mở chat</Button></Link>}
+                {a.applicationStatus === 'CONFIRMED' && <Button size="sm" variant="outline" loading={finish.isPending && finish.variables === a.id} onClick={() => finish.mutate(a.id, { onSuccess: () => toast.success('Đã đánh dấu hoàn thành'), onError: (e) => toast.error(getErrorMessage(e)) })}>Hoàn thành lớp</Button>}
+                {a.applicationStatus === 'FINISHED' && <Link to={ROUTES.CHAT_WITH(a.post.author.id)}><Button size="sm" variant="secondary">Mở chat</Button></Link>}
               </div>
             </li>
           ))}

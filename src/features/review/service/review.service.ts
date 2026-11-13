@@ -68,10 +68,7 @@ export const reviewService = {
       await delay();
       const me = requireUser();
       const a = applications.find((x) => x.id === payload.applicationId);
-      if (
-        !a ||
-        (a.applicationStatus !== "PAID" && a.applicationStatus !== "FINISHED")
-      )
+      if (!a || a.applicationStatus !== "FINISHED")
         throw new ApiError(
           "Lớp chưa được kết nối nên chưa thể đánh giá.",
           "INVALID_STATE",

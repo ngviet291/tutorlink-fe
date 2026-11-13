@@ -8,8 +8,6 @@ import { useNotificationMutations } from '../hooks/useNotifications'
 const icons: Record<NotificationType, typeof Bell> = {
   SYSTEM: ShieldCheck,
   APPLICATION: UserPlus,
-  PAYMENT: CreditCard,
-  CHAT: MessageSquare,
   TRANSACTION: CreditCard,
   MESSAGE: MessageSquare,
   REVIEW: Star,
