@@ -3,11 +3,6 @@ import type { NotificationResponse } from "../types/notification.types";
 import type { CursorResponse } from "@/shared/types/common.dto";
 import type { IHttpClient } from "@/config/http/IHttpClient";
 
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
-} // ĐỔI: dùng type có sẵn
 
 export class HttpNotificationGateway implements NotificationGateway {
   private readonly http: IHttpClient;
@@ -34,5 +29,9 @@ export class HttpNotificationGateway implements NotificationGateway {
   async markAllAsRead() {
     const res = await this.http.patch<number>("/v1/notifications/read-all");
     return res;
+  }
+
+  async getUnreadCount() {
+    return this.http.get<number>("/v1/notifications/unread-count");
   }
 }

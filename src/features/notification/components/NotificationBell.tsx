@@ -3,14 +3,18 @@ import { Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/constants/routes";
 import { Dropdown } from "@/shared/components/ui/Dropdown";
-import { useNotifications } from "../hooks/useNotifications";
+import {
+  useNotifications,
+  useUnreadNotificationCount,
+} from "../hooks/useNotifications";
 import { NotificationList } from "./NotificationList";
 
 export function NotificationBell() {
   const { t } = useTranslation();
   const { data } = useNotifications();
   const items = data ?? [];
-  const unread = items.filter((n) => !n.read).length;
+  const { data: unreadFromServer } = useUnreadNotificationCount();
+  const unread = unreadFromServer ?? items.filter((n) => !n.read).length;
 
   return (
     <Dropdown

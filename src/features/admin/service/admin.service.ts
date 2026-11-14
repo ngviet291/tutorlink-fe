@@ -2,10 +2,7 @@ import { adminPaymentService } from "./admin.payment.service";
 import { adminStatsService } from "./admin.stats.service";
 import { http } from "@/config/axiosClient";
 import { mockConfig } from "@/config/env";
-import {
-  ApiError,
-  type CursorResponse,
-} from "@/shared/types/api.types";
+import { ApiError, type CursorResponse } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";
 import type { AccountStatus, Role } from "@/shared/types/common.types";
 import type { VerificationStatus } from "@/shared/types/common.types";
@@ -16,9 +13,7 @@ import type {
 } from "@/features/user/types/user.dto";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 import type { BaseUserResponse } from "@/features/user/types/user.types";
-import type {
-  ProfileReviewPayload,
-} from "../types/admin.types";
+import type { ProfileReviewPayload } from "../types/admin.types";
 import {
   nextId,
   notifications,
@@ -93,7 +88,7 @@ export const adminService = {
         {
           id: nextId("n"),
           notificationType: "SYSTEM" as const,
-          isRead: false,
+          read: false,
           createdAt: new Date().toISOString(),
           title:
             payload.decision === "APPROVED"
@@ -206,7 +201,7 @@ export const adminService = {
           notificationType: "SYSTEM" as const,
           title: "Bài đăng bị gỡ",
           content: `"${p.title}" đã bị gỡ: ${reason}`,
-          isRead: false,
+          read: false,
           createdAt: new Date().toISOString(),
         },
         ...(notifications[p.author.id] ?? []),

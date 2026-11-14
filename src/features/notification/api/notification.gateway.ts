@@ -1,7 +1,5 @@
 import type { CursorResponse } from "@/shared/types/common.dto";
-import type {
-  NotificationResponse,
-} from "../types/notification.types";
+import type { NotificationResponse } from "../types/notification.types";
 
 export interface NotificationGateway {
   getMyNotifications(
@@ -10,4 +8,5 @@ export interface NotificationGateway {
   ): Promise<CursorResponse<NotificationResponse>>;
   markAsRead(id: string): Promise<NotificationResponse>;
   markAllAsRead(): Promise<number>;
+  getUnreadCount(): Promise<number>;
 }
