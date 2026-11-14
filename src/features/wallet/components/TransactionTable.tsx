@@ -1,21 +1,17 @@
-import { useState, useRef, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
-import { Select } from "@/shared/components/ui/Select";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import {
-  TRANSACTION_STATUS_META,
   TRANSACTION_TYPE_LABEL,
 } from "@/constants/enums";
 import { formatVnd } from "@/shared/utils/currency";
 import { formatDateTime } from "@/shared/utils/date";
-import type { TransactionStatus } from "@/shared/types/common.types";
 import { useTransactions } from "../hooks/useWallet";
 
 export function TransactionTable() {
   const { t } = useTranslation();
-  const [status, setStatus] = useState<TransactionStatus | "">("");
   const {
     data,
     isLoading,
@@ -24,7 +20,7 @@ export function TransactionTable() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useTransactions({ transactionStatus: status || undefined });
+  } = useTransactions();
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loaderRef = useCallback(
@@ -49,22 +45,7 @@ export function TransactionTable() {
         <h2 className="text-lg font-bold text-text">
           {t("wallet.transactionHistory")}
         </h2>
-        <div className="w-44">
-          <Select
-            aria-label={t("wallet.filterByStatus")}
-            placeholder={t("wallet.allStatuses")}
-            value={status}
-            onChange={(e) =>
-              setStatus(e.target.value as TransactionStatus | "")
-            }
-            options={(
-              Object.keys(TRANSACTION_STATUS_META) as TransactionStatus[]
-            ).map((s) => ({
-              value: s,
-              label: TRANSACTION_STATUS_META[s].label,
-            }))}
-          />
-        </div>
+
       </div>
 
       {isLoading ? (

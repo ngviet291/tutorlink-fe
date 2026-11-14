@@ -39,9 +39,8 @@ export interface TransactionFilter {
 
 export interface AdminTransactionFilter {
   status?: TransactionStatus | "";
-  tutorId?: string;
-  page?: number;
-  pageSize?: number;
+  cursor?: string;
+  limit?: number;
 }
 
 export interface TopUpPayload {
@@ -51,10 +50,6 @@ export interface TopUpPayload {
 
 export interface TopUpResponse {
   transaction: TransactionResponse;
-  transferCode: string;
-  bankName: string;
-  accountNumber: string;
-  accountName: string;
   /** Cổng MoMo/ZaloPay trả về để chuyển hướng người dùng đi thanh toán */
   paymentLink?: string;
   qrCodeUrl?: string;

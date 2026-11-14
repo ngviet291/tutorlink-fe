@@ -143,6 +143,10 @@ export const router = createBrowserRouter([
                 element: page(() => import("@/pages/MyApplicationsPage")),
               },
               {
+                path: "/wallet/top-up/result",
+                element: <Navigate to={ROUTES.WALLET} replace />,
+              },
+              {
                 path: ROUTES.WALLET,
                 element: page(() => import("@/pages/WalletPage")),
               },

@@ -57,6 +57,10 @@ export function useWalletMutations() {
   const refresh = () =>
     qc.invalidateQueries({ queryKey: queryKeys.wallet.all });
   return {
+    payCommission: useMutation({
+      mutationFn: (id: string) => walletService.payCommission(id),
+      onSuccess: () => { void refresh(); void qc.invalidateQueries({ queryKey: ['applications'] }); },
+    }),
     topUp: useMutation({
       mutationFn: (payload: TopUpPayload) => walletService.topUp(payload),
       onSuccess: refresh,
