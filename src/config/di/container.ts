@@ -19,6 +19,8 @@ import { HttpPostGateway } from "@/features/post/api/http.post.gateway";
 import { PostService } from "@/features/post/service/post.service";
 import { ApplicationService } from "@/features/application/service/application.service";
 import { HttpApplicationGateway } from "@/features/application/api/http.application.gateway";
+import { NotificationService } from "@/features/notification/service/notification.service";
+import { HttpNotificationGateway } from "@/features/notification/api/http.notification.gateway";
 
 // Toàn bộ bean được quản lí ở đây
 export const tokenStorage = new SecureTokenStorage();
@@ -62,4 +64,8 @@ export const chatService = new ChatService(
 export const applicationService = new ApplicationService(
   applicationGateway,
   postService,
+);
+
+export const notificationService = new NotificationService(
+  new HttpNotificationGateway(privateHttpClient),
 );
