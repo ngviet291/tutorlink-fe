@@ -55,6 +55,14 @@ export function useApplicationMutations() {
       mutationFn: (id: string) => applicationService.selectApplicant(id),
       onSuccess: invalidate,
     }),
+    unselect: useMutation({
+      mutationFn: (id: string) => applicationService.unselectApplicant(id),
+      onSuccess: invalidate,
+    }),
+    reject: useMutation({
+      mutationFn: (id: string) => applicationService.rejectApplicant(id),
+      onSuccess: invalidate,
+    }),
     pay: useMutation({
       mutationFn: (id: string) => applicationService.confirmAndPayFee(id),
       onSuccess: invalidate,

@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next'
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/app/store'
 import { CheckCircle, XCircle } from 'lucide-react'
 import { Badge } from '@/shared/components/ui/Badge'
 import { Button } from '@/shared/components/ui/Button'
@@ -8,6 +10,8 @@ import { formatDate } from '@/shared/utils/date'
 import { useToast } from '@/shared/hooks/useToast'
 import { getErrorMessage } from '@/shared/utils/errors'
 import { useMyApplications, useApplicationMutations } from '../hooks/useApplications'
+import { ExpiryCountdown } from './ExpiryCountdown'
+import { isApplicant, isFeePayer } from '../util/applicant'
 import type { ApplicationResponse } from '../types/application.types'
 
 interface Props {
@@ -17,8 +21,9 @@ interface Props {
 export function OfferList({ onPay }: Props) {
   const { t } = useTranslation()
   const toast = useToast()
-  const { data, isLoading } = useMyApplications()
-  const { decline } = useApplicationMutations()
+  const { data, isLoading, refetch } = useMyApplications()
+  const { decline, confirm } = useApplicationMutations()
+  const user = useSelector((state: RootState) => state.auth.user)
 
   const offers = data?.filter((a) => a.applicationStatus === 'ACCEPTED') ?? []
 
@@ -50,6 +55,10 @@ export function OfferList({ onPay }: Props) {
               <p className="text-xs text-text-secondary">
                 {t('application.offeredBy', { name: a.student.fullName })} · {formatDate(a.appliedAt)}
               </p>
+              {/* Hạn cuối do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
+              {a.expiresAt && (
+                <ExpiryCountdown expiresAt={a.expiresAt} actionLabel={a.paid ? 'xác nhận' : 'thanh toán'} onExpire={() => void refetch()} className="mt-1" />
+              )}
               {a.post.minBudget != null && (
                 <Badge tone="green" className="mt-1">
                   {formatVnd(a.post.minBudget)}
@@ -61,9 +70,25 @@ export function OfferList({ onPay }: Props) {
               )}
             </div>
             <div className="flex shrink-0 gap-2">
-              <Button size="sm" onClick={() => onPay(a)}>
-                <CheckCircle className="size-4" /> {t('application.payAndConnect')}
-              </Button>
+              {!a.paid && isFeePayer(a, user?.id) && (
+                <Button size="sm" onClick={() => onPay(a)}>
+                  <CheckCircle className="size-4" /> {t('application.payAndConnect')}
+                </Button>
+              )}
+              {a.paid && isApplicant(a, user?.id) && (
+                <Button
+                  size="sm"
+                  loading={confirm.isPending && confirm.variables === a.id}
+                  onClick={() =>
+                    confirm.mutate(a.id, {
+                      onSuccess: () => toast.success('Đã xác nhận'),
+                      onError: (e) => toast.error(getErrorMessage(e)),
+                    })
+                  }
+                >
+                  <CheckCircle className="size-4" /> Xác nhận
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="ghost"

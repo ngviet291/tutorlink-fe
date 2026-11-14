@@ -12,6 +12,7 @@ interface Props {
   canSelect: boolean;
   onSelect: (a: ApplicationResponse) => void;
   pendingCount: number;
+  isOwner?: boolean;
 }
 
 export function AiTop5Panel({
@@ -19,6 +20,7 @@ export function AiTop5Panel({
   canSelect,
   onSelect,
   pendingCount,
+  isOwner,
 }: Props) {
   const { t } = useTranslation();
   const { data, isLoading, isError } = useAiTop5(
@@ -53,6 +55,7 @@ export function AiTop5Panel({
               canSelect={canSelect}
               onSelect={onSelect}
               showAi
+              isOwner={isOwner}
             />
           ))}
         </ul>

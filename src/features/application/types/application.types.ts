@@ -20,6 +20,8 @@ export interface ApplicationResponse {
   message?: string;
   proposedFee?: number;
   appliedAt: string;
+  /** Hạn cuối bước đang chờ do BE tính (W1 chờ thanh toán / W2 chờ applicant confirm). */
+  expiresAt?: string;
   processedByAdminId?: string;
   transactionId?: string;
   paid?: boolean;
