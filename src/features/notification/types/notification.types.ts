@@ -1,12 +1,12 @@
-import type { NotificationType } from '@/shared/types/common.types'
+import type { NotificationType } from "@/shared/types/common.types";
 
 export interface NotificationResponse {
-  id: string
-  title: string
-  content: string
-  notificationType: NotificationType
-  isRead: boolean
-  createdAt: string
+  id: string;
+  title: string;
+  content: string;
+  notificationType: NotificationType;
+  read: boolean;
+  createdAt: string;
 }
 
-export { type NotificationType }
+export { type NotificationType };

@@ -7,8 +7,6 @@ import { useToast } from "@/shared/hooks/useToast";
 import { getErrorMessage } from "@/shared/utils/errors";
 import {
   useApplicationMutations,
-  useApplicationsByPost,
-  useMyApplications,
   useMyApplicationsForPost,
 } from "../hooks/useApplications";
 import { AiTop5Panel } from "./AiTop5Panel";
