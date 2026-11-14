@@ -1,44 +1,54 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { Provider } from 'react-redux'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterProvider } from 'react-router-dom'
-import './index.css'
-import './app/i18n'
-import { store } from './app/store'
-import { router } from './app/router'
-import { ErrorBoundary } from './shared/components/ErrorBoundary'
-import { ToastContainer } from './shared/components/ui/Toast'
-import { AuthInitializer } from './features/auth/components/AuthInitializer'
-import { initTracking } from './features/tracking/tracker'
-import { ChatRealtimeBinding } from './features/chat/realtime/ChatRealtimeBinding'
-import { RealtimeBridge } from './shared/realtime/RealtimeBridge'
-import { realtimeClient, realtimeRouter } from './config/di/container'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "react-router-dom";
+import "./index.css";
+import "./app/i18n";
+import { store } from "./app/store";
+import { router } from "./app/router";
+import { ErrorBoundary } from "./shared/components/ErrorBoundary";
+import { ToastContainer } from "./shared/components/ui/Toast";
+import { AuthInitializer } from "./features/auth/components/AuthInitializer";
+import { initTracking } from "./features/tracking/tracker";
+import { ChatRealtimeBinding } from "./features/chat/realtime/ChatRealtimeBinding";
+import { RealtimeBridge } from "./shared/realtime/RealtimeBridge";
+import { realtimeClient, realtimeRouter } from "./config/di/container";
+import { NotificationRealtimeBinding } from "./features/notification/realtime/NotificationRealtimeBinding";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 },
   },
-})
+});
 
 // Áp dụng theme sớm để tránh nháy
 try {
-  const saved = localStorage.getItem('tl_theme')
-  const dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
-  document.documentElement.classList.toggle('dark', dark)
+  const saved = localStorage.getItem("tl_theme");
+  const dark = saved
+    ? saved === "dark"
+    : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.classList.toggle("dark", dark);
 } catch {
   /* bỏ qua */
 }
 
-initTracking(router)
+initTracking(router);
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <AuthInitializer>
-            <ChatRealtimeBinding client={realtimeClient} router={realtimeRouter} />
+            <ChatRealtimeBinding
+              client={realtimeClient}
+              router={realtimeRouter}
+            />
+            <NotificationRealtimeBinding
+              client={realtimeClient}
+              router={realtimeRouter}
+            />
             <RealtimeBridge client={realtimeClient} router={realtimeRouter} />
             <RouterProvider router={router} />
           </AuthInitializer>
@@ -47,4 +57,4 @@ createRoot(document.getElementById('root')!).render(
       </Provider>
     </ErrorBoundary>
   </StrictMode>,
-)
+);
