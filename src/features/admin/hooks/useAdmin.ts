@@ -1,3 +1,4 @@
+import { adminComplaintsService, type ComplaintStatus } from "../service/admin.complaints.service";
 import {
   useInfiniteQuery,
   useMutation,
@@ -9,11 +10,9 @@ import type { AdminPostFilter } from "@/features/post/types/post.types";
 import type { AdminTransactionFilter } from "@/features/wallet/types/wallet.types";
 import type { AccountStatus } from "@/shared/types/common.types";
 import type {
-  ComplaintDecisionPayload,
   FeeRatePayload,
   ProfileReviewPayload,
 } from "../types/admin.types";
-import { queryKeys } from "@/constants/queryKeys";
 import { postService } from "@/config/di/container";
 
 export const adminKeys = {
@@ -78,11 +77,17 @@ export function useAdminPostDetail(id: string | undefined) {
   });
 }
 
-export function useAdminTransactions(params: AdminTransactionFilter = {}) {
-  return useQuery({
-    queryKey: [...adminKeys.transactions, params],
-    queryFn: () => adminService.getTransactions(params),
+export function useAdminTransactions(params: Omit<AdminTransactionFilter, "cursor"> = {}) {
+  return useInfiniteQuery({
+    queryKey: [...adminKeys.transactions, "list", params],
+    queryFn: ({ pageParam }) => adminService.getTransactions({ ...params, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: last => last.hasNext ? last.nextCursor : undefined,
   });
+}
+export function useAdminTransaction(id: string | undefined) {
+  return useQuery({ queryKey: [...adminKeys.transactions, 'detail', id],
+    queryFn: () => adminService.getTransaction(id!), enabled: Boolean(id) });
 }
 
 export function useFeeRates() {
@@ -92,10 +97,10 @@ export function useFeeRates() {
   });
 }
 
-export function useComplaints() {
+export function useComplaints(status?: ComplaintStatus) {
   return useQuery({
-    queryKey: adminKeys.complaints,
-    queryFn: () => adminService.getComplaints(),
+    queryKey: [...adminKeys.complaints, status],
+    queryFn: () => adminComplaintsService.getComplaints(status),
   });
 }
 
@@ -105,6 +110,7 @@ export function useRevenueStatistics(
   return useQuery({
     queryKey: [...adminKeys.transactions, "revenue", range],
     queryFn: () => adminService.getRevenueStatistics(range),
+    enabled: (!range.from && !range.to) || Boolean(range.from && range.to && range.from <= range.to),
   });
 }
 
@@ -140,7 +146,7 @@ export function useAdminMutations() {
     }),
     refundTransaction: useMutation({
       mutationFn: (id: string) => adminService.refundTransaction(id),
-      onSuccess: refresh,
+      onSuccess: () => { void refresh(); void qc.invalidateQueries({ queryKey: ['wallet'] }); },
     }),
     removePost: useMutation({
       mutationFn: ({ id, reason }: { id: string; reason: string }) =>
@@ -157,13 +163,8 @@ export function useAdminMutations() {
       onSuccess: refresh,
     }),
     decideComplaint: useMutation({
-      mutationFn: ({
-        reviewId,
-        payload,
-      }: {
-        reviewId: string;
-        payload: ComplaintDecisionPayload;
-      }) => adminService.decideComplaint(reviewId, payload),
+      mutationFn: ({ complaintId, status }: { complaintId: string; status: 'APPROVED' | 'REJECTED' }) =>
+        adminComplaintsService.resolve(complaintId, status),
       onSuccess: () => {
         void refresh();
         void qc.invalidateQueries({ queryKey: ["reviews"] });

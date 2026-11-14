@@ -18,6 +18,8 @@ import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 import type { StudentResponse } from "@/features/user/types/user.types";
 import { describeWarnings } from "../util/matchwarning";
 
+const CONNECTED_STATUSES: string[] = ["CONFIRMED"];
+
 /** BE chỉ trả id/fullName/avatarUrl; các field còn lại của public-profile để trống. */
 function fromSummary(u: UserSummary): BaseUserResponse {
   return {
@@ -194,12 +196,13 @@ export class ApplicationService {
     );
   };
 
+  /**
+   * "Lớp đã kết nối" = lớp đang học. BE không có trạng thái PAID: CONFIRMED là lớp đã xác nhận,
+   * FINISHED là lớp đã kết thúc. Muốn hiện cả lớp đã kết thúc thì thêm "FINISHED" vào CONNECTED_STATUSES.
+   */
   getConnections = async (): Promise<ApplicationResponse[]> => {
     const mine = await this.getMyApplications();
-    return mine.filter(
-      (a) =>
-        a.applicationStatus === "PAID" || a.applicationStatus === "FINISHED",
-    );
+    return mine.filter((a) => CONNECTED_STATUSES.includes(a.applicationStatus));
   };
 
   /** BE trả PostApplicationResponse, không phải ApplicationResponse. */

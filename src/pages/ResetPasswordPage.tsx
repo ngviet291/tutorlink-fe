@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, KeyRound } from 'lucide-react'
-import { http } from '@/config/axiosClient'
+import { useResetPassword } from '@/features/auth/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
 import { Input } from '@/shared/components/ui/Input'
 import { Button } from '@/shared/components/ui/Button'
@@ -22,6 +22,7 @@ export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const [showPassword, setShowPassword] = useState(false)
+  const resetPassword = useResetPassword()
 
   const {
     register,
@@ -34,7 +35,7 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data: ResetForm) => {
     try {
-      await http.post('/v1/auth/reset-password', { token, newPassword: data.password })
+      await resetPassword.mutateAsync({ token, newPassword: data.password })
       toast.success(t('auth.resetPassword'))
       navigate(ROUTES.LOGIN)
     } catch (err) {

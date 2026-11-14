@@ -22,9 +22,9 @@ function scoreOne(app: ApplicationResponse): Scored {
     reasons.push('khác môn học yêu cầu')
   }
 
-  if (t.address?.province === app.post.address.province) {
+  if (t.address?.province === app.post.address?.province) {
     score += 20
-    reasons.push(`cùng khu vực ${app.post.address.province}`)
+    reasons.push(`cùng khu vực ${app.post.address?.province}`)
   }
 
   score += Math.min(t.experienceYears, 7) * (25 / 7)

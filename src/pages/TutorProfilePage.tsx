@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { CheckCircle2, Clock, Plus, Trash2, XCircle } from "lucide-react";
-import { TEACHING_MODES, TEACHING_MODE_LABEL } from "@/constants/enums";
+import {
+  DAY_LABEL,
+  EDUCATION_LEVELS,
+  EDUCATION_LEVEL_LABEL,
+  TEACHING_MODES,
+  TEACHING_MODE_LABEL,
+} from "@/constants/enums";
 import { Button } from "@/shared/components/ui/Button";
 import { ErrorState } from "@/shared/components/ui/EmptyState";
 import { Input } from "@/shared/components/ui/Input";
@@ -20,7 +26,25 @@ import type {
   TutorProfilePayload,
   TutorResponse,
 } from "@/features/tutor/types/tutor.types";
-import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
+import type { DayOfWeek, EducationLevel } from "@/shared/types/common.types";
+
+const TEACHING_LEVELS: EducationLevel[] = [...EDUCATION_LEVELS, "OTHER"];
+const DAYS = Object.keys(DAY_LABEL) as DayOfWeek[];
+type TutorProfileFormValues = Omit<TutorProfilePayload, "teachingAreas"> & {
+  teachingAreasText: string;
+};
+function parseAreas(text: string): string[] {
+  const seen = new Set<string>();
+  return text
+    .split(/[,\n]/)
+    .map((area) => area.trim())
+    .filter((area) => {
+      const key = area.toLowerCase();
+      if (!area || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
 
 function StatusBanner({ tutor }: { tutor: TutorResponse }) {
   const map = {
@@ -72,15 +96,17 @@ export default function TutorProfilePage() {
     control,
     handleSubmit,
     reset,
-    setValue,
+    getValues,
     formState: { errors },
-  } = useForm<TutorProfilePayload>({
+  } = useForm<TutorProfileFormValues>({
     defaultValues: {
       subjectId: "",
       experienceYears: 0,
       hourlyRate: 100000,
       teachingMode: "BOTH",
-      address: { province: "" },
+      educationLevels: [],
+      teachingAreasText: "",
+      schedule: [],
       certificates: [],
     },
   });
@@ -88,15 +114,11 @@ export default function TutorProfilePage() {
     control,
     name: "certificates",
   });
-
-  // Hook phải gọi trước các `return` sớm bên dưới.
-  const { provinceOptions, isLoadingProvinces, manualEntry } = useAddressSelect(
-    {
-      control,
-      setValue,
-      provinceField: "address.province",
-    },
-  );
+  const {
+    fields: slotFields,
+    append: appendSlot,
+    remove: removeSlot,
+  } = useFieldArray({ control, name: "schedule" });
 
   useEffect(() => {
     if (!data) return;
@@ -106,10 +128,10 @@ export default function TutorProfilePage() {
       education: data.education ?? "",
       hourlyRate: data.hourlyRate || 100000,
       bio: data.bio ?? "",
-      address: {
-        province: data.teachingAreas?.[0] ?? data.address?.province ?? "",
-      },
       teachingMode: data.teachingMode ?? "BOTH",
+      educationLevels: data.educationLevels ?? [],
+      teachingAreasText: (data.teachingAreas ?? []).join(", "),
+      schedule: data.schedule ?? [],
       certificates: (data.certificates ?? []).map((c) => ({
         name: c.name,
         issuer: c.issuer,
@@ -121,16 +143,23 @@ export default function TutorProfilePage() {
   if (isLoading) return <Skeleton className="mx-auto h-96 max-w-3xl" />;
   if (isError || !data) return <ErrorState onRetry={() => void refetch()} />;
 
-  const submit = handleSubmit((v) =>
-    save.mutate(v, {
-      onSuccess: () =>
-        toast.success(
-          data.verificationStatus === "APPROVED"
-            ? "Đã cập nhật hồ sơ"
-            : "Đã gửi hồ sơ, vui lòng chờ Admin duyệt",
-        ),
-      onError: (e) => toast.error(getErrorMessage(e)),
-    }),
+  const submit = handleSubmit(({ teachingAreasText, educationLevels, ...rest }) =>
+    save.mutate(
+      {
+        ...rest,
+        educationLevels: Array.isArray(educationLevels) ? educationLevels : [],
+        teachingAreas: parseAreas(teachingAreasText),
+      },
+      {
+        onSuccess: () =>
+          toast.success(
+            data.verificationStatus === "APPROVED"
+              ? "Đã cập nhật hồ sơ"
+              : "Đã gửi hồ sơ, vui lòng chờ Admin duyệt",
+          ),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    ),
   );
 
   return (
@@ -181,19 +210,6 @@ export default function TutorProfilePage() {
               min: { value: 50000, message: "Tối thiểu 50.000đ" },
             })}
           />
-          {manualEntry ? (
-            // API địa chỉ lỗi: cho nhập tay để không chặn lưu hồ sơ
-            <Input label="Tỉnh / Thành phố" {...register("address.province")} />
-          ) : (
-            <Select
-              // `key` ép gắn lại select khi danh sách tỉnh tải xong, để giá trị đã lưu được chọn lại
-              key={isLoadingProvinces ? "loading" : "ready"}
-              label="Tỉnh / Thành phố"
-              disabled={isLoadingProvinces}
-              options={provinceOptions}
-              {...register("address.province")}
-            />
-          )}
           <Select
             label="Hình thức dạy"
             options={TEACHING_MODES.map((m) => ({
@@ -220,6 +236,86 @@ export default function TutorProfilePage() {
             minLength: { value: 30, message: "Tối thiểu 30 ký tự" },
           })}
         />
+
+        <Input
+          label="Khu vực nhận dạy"
+          placeholder="VD: Gò Vấp, Quận 1, Thủ Đức (cách nhau bằng dấu phẩy)"
+          {...register("teachingAreasText")}
+        />
+
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 text-sm font-medium text-text">
+            Cấp học nhận dạy
+          </legend>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            {TEACHING_LEVELS.map((level) => (
+              <label
+                key={level}
+                className="flex cursor-pointer items-center gap-2 text-sm text-text"
+              >
+                <input
+                  type="checkbox"
+                  value={level}
+                  className="size-4 accent-primary"
+                  {...register("educationLevels")}
+                />
+                {EDUCATION_LEVEL_LABEL[level]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-1 text-sm font-medium text-text">
+            Lịch rảnh trong tuần
+          </legend>
+          {slotFields.map((f, i) => (
+            <div
+              key={f.id}
+              className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_1fr_auto]"
+            >
+              <Select
+                aria-label="Thứ"
+                options={DAYS.map((d) => ({ value: d, label: DAY_LABEL[d] }))}
+                {...register(`schedule.${i}.day`)}
+              />
+              <Input
+                aria-label="Từ giờ"
+                type="time"
+                error={errors.schedule?.[i]?.from?.message}
+                {...register(`schedule.${i}.from`, { required: "Nhập giờ" })}
+              />
+              <Input
+                aria-label="Đến giờ"
+                type="time"
+                error={errors.schedule?.[i]?.to?.message}
+                {...register(`schedule.${i}.to`, {
+                  required: "Nhập giờ",
+                  validate: (to) =>
+                    to > getValues(`schedule.${i}.from`) ||
+                    "Phải sau giờ bắt đầu",
+                })}
+              />
+              <Button
+                variant="ghost"
+                aria-label="Xóa ca"
+                onClick={() => removeSlot(i)}
+              >
+                <Trash2 className="size-4 text-danger" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-fit"
+            onClick={() =>
+              appendSlot({ day: "MONDAY", from: "18:00", to: "20:00" })
+            }
+          >
+            <Plus className="size-4" /> Thêm ca rảnh
+          </Button>
+        </fieldset>
 
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-1 text-sm font-medium text-text">

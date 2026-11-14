@@ -13,7 +13,7 @@ export default function WalletPage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
-      <PageHeader title="Ví của tôi" description="Nạp tiền bằng chuyển khoản và dùng để thanh toán phí nhận lớp." />
+      <PageHeader title="Ví của tôi" description="Nạp tiền qua MoMo và dùng để thanh toán phí nhận lớp." />
       <WalletCard onTopUp={() => setTopUp(true)} />
       <OfferList onPay={setOffer} />
       <TransactionTable />

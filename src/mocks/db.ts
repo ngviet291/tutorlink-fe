@@ -704,7 +704,7 @@ function app(
     applicationStatus: status,
     message,
     appliedAt: ago(createdAgo),
-    paid: status === "PAID",
+    paid: status === "CONFIRMED" || status === "FINISHED",
   };
 }
 
@@ -765,8 +765,8 @@ export const applications: ApplicationResponse[] = [
     "Mình chuyên giao tiếp, học online linh hoạt.",
   ),
   app("ap-8", "p-3", "t-3", "s-3", "PENDING", 1.5 * DAY),
-  app("ap-9", "p-5", "t-5", "s-2", "PAID", 25 * DAY),
-  app("ap-10", "p-10", "t-1", "s-3", "PAID", 15 * DAY),
+  app("ap-9", "p-5", "t-5", "s-2", "CONFIRMED", 25 * DAY),
+  app("ap-10", "p-10", "t-1", "s-3", "FINISHED", 15 * DAY),
   app("ap-11", "p-11", "t-1", "s-2", "ACCEPTED", 2 * HOUR),
 ];
 
@@ -939,7 +939,7 @@ export const notifications: Record<string, NotificationResponse[]> = {
     },
     {
       id: "n-5",
-      notificationType: "PAYMENT",
+      notificationType: "TRANSACTION",
       title: "Thanh toán phí nhận lớp thành công",
       content: "Thông tin liên hệ và kênh chat đã được mở.",
       isRead: true,

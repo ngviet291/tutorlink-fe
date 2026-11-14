@@ -44,6 +44,12 @@ export const POST_STATUS_META: Record<
     },
     tone: "green",
   },
+  PENDING: {
+    get label() {
+      return t("post.status.PENDING");
+    },
+    tone: "yellow",
+  },
   CLOSED: {
     get label() {
       return t("post.status.CLOSED");
@@ -213,16 +219,16 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
   get APPLICATION() {
     return t("application.title");
   },
-  get PAYMENT() {
-    return t("wallet.title");
-  },
-  get CHAT() {
-    return t("chat.open");
-  },
   get TRANSACTION() {
     return t("wallet.title");
   },
   get MESSAGE() {
+    return t("chat.open");
+  },
+  get PAYMENT() {
+    return t("wallet.title");
+  },
+  get CHAT() {
     return t("chat.open");
   },
   get REVIEW() {

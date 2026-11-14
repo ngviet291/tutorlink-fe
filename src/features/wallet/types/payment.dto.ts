@@ -17,7 +17,6 @@ export interface CreateFeeConfigRequest {
 /** BE: payment/dto/request/TopUpRequest.java */
 export interface TopUpRequest {
   amount: number;
-  paymentMethod: PaymentMethod;
 }
 
 /** BE: payment/dto/response/FeeConfigResponse.java */

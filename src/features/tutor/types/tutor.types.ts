@@ -44,12 +44,9 @@ export interface TutorResponse {
   createdAt?: string;
   certificates?: Certificate[];
   educationLevels?: EducationLevel[];
-  /** BE trả danh sách môn; `subject` là môn đầu tiên */
   subjects?: SubjectSummary[];
-  /** Khu vực nhận dạy (BE: teachingAreas) */
   teachingAreas?: string[];
   userStatus?: UserStatus;
-  /** Lịch dạy (BE: availableSlots) */
   schedule?: ScheduleSlot[];
 }
 
@@ -70,7 +67,10 @@ export interface TutorProfilePayload {
   education: string;
   hourlyRate: number;
   bio: string;
-  address: Address;
+  address?: Address;
   teachingMode: TeachingMode;
+  educationLevels: EducationLevel[];
+  teachingAreas: string[];
+  schedule: ScheduleSlot[];
   certificates: Certificate[];
 }

@@ -96,7 +96,7 @@ export default function AdminSubjectsPage() {
               <div>
                 <p className="font-semibold text-text">{s.name}</p>
                 <p className="text-xs text-text-secondary">
-                  Đang được dùng ở {s.usageCount} bài đăng/hồ sơ
+                  {s.usageCount === undefined ? s.category : `Đang được dùng ở ${s.usageCount} bài đăng/hồ sơ`}
                 </p>
               </div>
               <div className="flex gap-1">

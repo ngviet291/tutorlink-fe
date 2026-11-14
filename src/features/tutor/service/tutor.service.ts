@@ -127,7 +127,11 @@ export const tutorService = {
       t.education = payload.education;
       t.hourlyRate = payload.hourlyRate;
       t.bio = payload.bio;
-      t.address = payload.address;
+      if (payload.address) t.address = payload.address;
+      t.teachingMode = payload.teachingMode;
+      t.educationLevels = payload.educationLevels;
+      t.teachingAreas = payload.teachingAreas;
+      t.schedule = payload.schedule;
       if (t.verificationStatus !== "APPROVED") {
         t.verificationStatus = "PENDING";
         t.verificationNote = undefined;

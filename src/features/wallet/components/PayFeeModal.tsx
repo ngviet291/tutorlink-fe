@@ -6,8 +6,7 @@ import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { formatVnd } from '@/shared/utils/currency'
 import { useToast } from '@/shared/hooks/useToast'
 import { getErrorMessage } from '@/shared/utils/errors'
-import { useApplicationMutations } from '@/features/application/hooks/useApplications'
-import { useFeeQuote, useWallet } from '../hooks/useWallet'
+import { useFeeQuote, useWallet, useWalletMutations } from '../hooks/useWallet'
 import type { ApplicationResponse } from '@/features/application/types/application.types'
 
 interface Props {
@@ -18,7 +17,7 @@ interface Props {
 export function PayFeeModal({ application, onClose }: Props) {
   const { t } = useTranslation()
   const toast = useToast()
-  const { pay } = useApplicationMutations()
+  const { payCommission: pay } = useWalletMutations()
   const wallet = useWallet(Boolean(application))
   const quote = useFeeQuote(application?.id ?? '', Boolean(application))
 
@@ -27,7 +26,7 @@ export function PayFeeModal({ application, onClose }: Props) {
   const insufficient = fee > 0 && balance < fee
 
   const handlePay = () => {
-    if (!application) return
+    if (!application || !quote.data || wallet.isError || quote.isError) return
     pay.mutate(application.id, {
       onSuccess: () => {
         toast.success(t('wallet.paySuccess'))
@@ -46,6 +45,8 @@ export function PayFeeModal({ application, onClose }: Props) {
 
         {quote.isLoading || wallet.isLoading ? (
           <Skeleton className="h-24 w-full" />
+        ) : quote.isError || wallet.isError ? (
+          <p role="alert" className="text-danger">{getErrorMessage(quote.error ?? wallet.error)}</p>
         ) : (
           <div className="flex flex-col gap-2 rounded-xl bg-surface-hover p-4">
             <div className="flex justify-between text-sm">
@@ -77,7 +78,7 @@ export function PayFeeModal({ application, onClose }: Props) {
           <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
           <Button
             loading={pay.isPending}
-            disabled={insufficient || quote.isLoading}
+            disabled={insufficient || !quote.data || wallet.isLoading || wallet.isError || quote.isError}
             onClick={handlePay}
           >
             {t('wallet.confirmPay')}

@@ -53,10 +53,15 @@ export const favoriteService = {
   },
 
   /**
-   * BE không có toggle: POST /v1/favorites/{tutorId} để thêm,
-   * DELETE /v1/favorites/{tutorId} để bỏ. Hỏi BE trạng thái hiện tại để không lệch cache.
+   * BE không có toggle: POST /v1/favorites/{tutorId} để thêm, DELETE /v1/favorites/{tutorId} để bỏ.
+   * `knownFavorited` là trạng thái UI đang biết (từ cache). Cả POST lẫn DELETE của BE đều idempotent
+   * (thêm trùng / xóa cái không có đều không lỗi) nên cache cũ cũng không gây hại.
+   * Không truyền thì mới phải hỏi BE (GET /v1/favorites).
    */
-  async toggleFavorite(tutorId: string): Promise<{ favorited: boolean }> {
+  async toggleFavorite(
+    tutorId: string,
+    knownFavorited?: boolean,
+  ): Promise<{ favorited: boolean }> {
     if (USE_MOCK) {
       await delay(150);
       const me = requireUser();
@@ -67,7 +72,7 @@ export const favoriteService = {
         : [...list, tutorId];
       return { favorited: !has };
     }
-    const has = (await fetchFavoriteIds()).includes(tutorId);
+    const has = knownFavorited ?? (await fetchFavoriteIds()).includes(tutorId);
     if (has) {
       await http.delete(`/v1/favorites/${tutorId}`);
       return { favorited: false };
