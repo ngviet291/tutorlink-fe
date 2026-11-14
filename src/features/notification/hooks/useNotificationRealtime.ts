@@ -29,3 +29,4 @@ export function useNotificationRealtime() {
     };
   }, [queryClient, toast]);
 }
+
