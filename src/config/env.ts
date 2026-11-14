@@ -1,7 +1,8 @@
 const flag = import.meta.env.VITE_USE_MOCK as string | undefined;
+const useMock = flag !== undefined ? flag === "true" : import.meta.env.DEV;
 
 export const env = {
-  useMock: flag !== undefined ? flag === "true" : import.meta.env.DEV,
+  useMock,
 
   features: {
     auth: false,
@@ -18,7 +19,7 @@ export const env = {
     application: true,
     favorite: false,
     review: true,
-    wallet: true,
+    wallet: false,
 
     tracking: false, // false = Gọi API thật
   },
@@ -52,3 +53,6 @@ export const mockConfig = {
   wallet: env.features.wallet,
   tracking: env.features.tracking,
 };
+
+
+

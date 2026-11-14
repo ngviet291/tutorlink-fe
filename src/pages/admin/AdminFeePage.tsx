@@ -30,12 +30,12 @@ export default function AdminFeePage() {
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       <PageHeader title="Cấu hình tỉ lệ phí nhận lớp" />
       <form onSubmit={(e) => void submit(e)} noValidate className="grid gap-4 rounded-2xl border border-border bg-surface p-5 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-start">
-        <Input label="Tỉ lệ (%)" type="number" step="0.5" required error={errors.ratePercent?.message} {...register('ratePercent', { valueAsNumber: true, required: 'Bắt buộc', min: { value: 1, message: 'Tối thiểu 1%' }, max: { value: 100, message: 'Tối đa 100%' } })} />
+        <Input label="Tỉ lệ (%)" type="number" step="0.5" required error={errors.ratePercent?.message} {...register('ratePercent', { valueAsNumber: true, required: 'Bắt buộc', min: { value: 0, message: 'Tối thiểu 0%' }, max: { value: 100, message: 'Tối đa 100%' } })} />
         <Input label="Phí cố định (VND)" type="number" min={0} step={1000} error={errors.fixedFee?.message} {...register('fixedFee', { valueAsNumber: true, min: { value: 0, message: 'Không âm' } })} />
         <Input label="Ngày hiệu lực" type="date" required error={errors.effectiveFrom?.message} {...register('effectiveFrom', { required: 'Bắt buộc' })} />
         <Button type="submit" className="sm:mt-6" loading={createFeeRate.isPending}>Lưu</Button>
       </form>
-      <p className="flex items-start gap-2 text-xs text-text-secondary"><Info className="mt-0.5 size-4 shrink-0 text-primary" /> Tỉ lệ mới chỉ áp dụng cho các lượt thanh toán từ ngày hiệu lực. Giao dịch cũ không bị ảnh hưởng.</p>
+      <p className="flex items-start gap-2 text-xs text-text-secondary"><Info className="mt-0.5 size-4 shrink-0 text-primary" /> Các mức phí được lưu để quản lý. Hệ thống hiện chưa áp dụng bảng cấu hình này khi tính phí nhận lớp.</p>
 
       <section>
         <h2 className="mb-3 text-lg font-bold text-text">Lịch sử các mức phí</h2>
@@ -48,7 +48,7 @@ export default function AdminFeePage() {
                   <tr key={f.id}>
                     <td className="p-3 text-base font-extrabold text-primary">{Math.round(f.rate * 1000) / 10}%</td>
                     <td>{formatVnd(f.fixedFee ?? 0)}</td><td>{formatDate(f.effectiveFrom)}</td><td>{f.effectiveTo ? formatDate(f.effectiveTo) : '—'}</td><td>{f.createdBy}</td>
-                    <td className="pr-3">{f.active ? <Badge tone="green">Đang áp dụng</Badge> : <Badge tone="gray">Đã thay thế</Badge>}</td>
+                    <td className="pr-3">{f.active ? <Badge tone="green">Đang áp dụng</Badge> : <Badge tone="gray">{f.effectiveFrom > new Date().toLocaleDateString('en-CA') ? 'Chưa đến hiệu lực' : 'Hết hiệu lực'}</Badge>}</td>
                   </tr>
                 ))}
               </tbody>
