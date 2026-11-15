@@ -20,7 +20,15 @@ export function OfferList({ onPay }: Props) {
   const { data, isLoading } = useMyApplications()
   const { decline } = useApplicationMutations()
 
-  const offers = data?.filter((a) => a.applicationStatus === 'ACCEPTED') ?? []
+  const offers = data?.filter((a) => {
+    if (a.applicationStatus !== 'ACCEPTED') {
+      return false
+    }
+    if (a.transactionStatus === 'SUCCESS') {
+      return false
+    }
+    return true
+  }) ?? []
 
   if (isLoading) return <Skeleton className="h-24 w-full" />
   if (!offers.length) return null

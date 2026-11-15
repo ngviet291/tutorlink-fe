@@ -32,6 +32,7 @@ export const queryKeys = {
     all: ["wallet"] as const,
     me: ["wallet", "me"] as const,
     balance: ["wallet", "balance"] as const,
+    topUpStatus: (id?: string) => ["wallet", "topup-status", id] as const,
     transactions: (params: object) =>
       ["wallet", "transactions", params] as const,
     quote: (applicationId: string) =>

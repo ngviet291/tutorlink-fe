@@ -1,8 +1,5 @@
 import type { SubjectRequest } from "../types/subject.dto";
-import type {
-  SubjectPageParams,
-  SubjectResponse,
-} from "../types/subject.types";
+import type { SubjectPageParams, SubjectResponse } from "../types/subject.types";
 import type { SubjectGateway } from "../api/subject.gateway";
 import type { CursorResponse } from "@/shared/types/common.dto";
 
@@ -10,7 +7,7 @@ const ALL_PAGE_SIZE = 50;
 const MAX_PAGES = 100; // chặn vòng lặp vô hạn nếu BE trả cursor sai
 
 /**
- * Use-case của môn học: chỉ gọi gateway.
+ * Điều phối nghiệp vụ môn học qua hợp đồng gateway.
  */
 export class SubjectService {
   private readonly gateway: SubjectGateway;
@@ -19,9 +16,7 @@ export class SubjectService {
     this.gateway = gateway;
   }
 
-  getPage(
-    params?: SubjectPageParams,
-  ): Promise<CursorResponse<SubjectResponse>> {
+  getPage(params?: SubjectPageParams): Promise<CursorResponse<SubjectResponse>> {
     return this.gateway.getPage(params);
   }
 
@@ -36,7 +31,9 @@ export class SubjectService {
         limit: ALL_PAGE_SIZE,
       });
       all.push(...page.content);
-      if (!page.hasNext || !page.nextCursor) break;
+      if (!page.hasNext || !page.nextCursor) {
+        break;
+      }
       cursor = page.nextCursor;
     }
     return all;

@@ -22,6 +22,7 @@ export interface ApplicationResponse {
   appliedAt: string;
   processedByAdminId?: string;
   transactionId?: string;
+  transactionStatus?: string;
   paid?: boolean;
   awaitingPayment?: boolean;
   aiRank?: number;

@@ -1,4 +1,4 @@
-// AUTO-GENERATED từ DTO của BE (src/main/java/.../dto). Tên class + tên field giữ nguyên như BE.
+// Kiểu dữ liệu tương ứng DTO của backend; giữ nguyên tên trường theo hợp đồng API.
 // Quy ước: Instant/LocalDate/UUID → string, BigDecimal/Integer/long/double → number, `?` = BE có thể không trả / request không bắt buộc.
 
 /** BE: subject/dto/request/SubjectRequest.java */
@@ -15,4 +15,3 @@ export interface SubjectResponse {
   description: string;
   category: string;
 }
-

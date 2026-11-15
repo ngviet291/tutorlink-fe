@@ -3,10 +3,7 @@ import type {
   SubjectRequest,
   SubjectResponse as SubjectResponseDto,
 } from "../types/subject.dto";
-import type {
-  SubjectPageParams,
-  SubjectResponse,
-} from "../types/subject.types";
+import type { SubjectPageParams, SubjectResponse } from "../types/subject.types";
 import type { CursorResponse } from "@/shared/types/common.dto";
 import type { SubjectGateway } from "./subject.gateway";
 import { toCursorPage, toSubject } from "../mapper/subject.mapper";
@@ -30,8 +27,12 @@ export class HttpSubjectGateway implements SubjectGateway {
   ): Promise<CursorResponse<SubjectResponse>> {
     // Tự ghép query string để không phụ thuộc chữ ký `params` của IHttpClient.
     const query = new URLSearchParams();
-    if (params.cursor) query.set("cursor", params.cursor);
-    if (params.limit !== undefined) query.set("limit", String(params.limit));
+    if (params.cursor) {
+      query.set("cursor", params.cursor);
+    }
+    if (params.limit !== undefined) {
+      query.set("limit", String(params.limit));
+    }
     const qs = query.toString();
 
     const res = await this.http.get<CursorResponse<SubjectResponseDto>>(
@@ -41,9 +42,7 @@ export class HttpSubjectGateway implements SubjectGateway {
   }
 
   async getById(id: string): Promise<SubjectResponse> {
-    return toSubject(
-      await this.http.get<SubjectResponseDto>(`${SUBJECTS}/${id}`),
-    );
+    return toSubject(await this.http.get<SubjectResponseDto>(`${SUBJECTS}/${id}`));
   }
 
   async create(req: SubjectRequest): Promise<SubjectResponse> {
@@ -51,9 +50,7 @@ export class HttpSubjectGateway implements SubjectGateway {
   }
 
   async update(id: string, req: SubjectRequest): Promise<SubjectResponse> {
-    return toSubject(
-      await this.http.put<SubjectResponseDto>(`${SUBJECTS}/${id}`, req),
-    );
+    return toSubject(await this.http.put<SubjectResponseDto>(`${SUBJECTS}/${id}`, req));
   }
 
   async remove(id: string): Promise<void> {

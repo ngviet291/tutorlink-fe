@@ -39,6 +39,7 @@ export interface ApplicationResponse {
   appliedAt: string;
   processedByAdminId?: string;
   transactionId?: string;
+  transactionStatus?: string;
 }
 /** BE: application/dto/response/MatchBreakdown.java */
 export interface MatchBreakdown {

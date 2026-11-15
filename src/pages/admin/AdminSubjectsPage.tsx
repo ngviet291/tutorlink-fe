@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SUBJECT_FORM_NAME_MAX_LENGTH } from "@/features/subject/constants/subject.constants";
 import { useForm } from "react-hook-form";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
@@ -10,10 +11,7 @@ import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { useToast } from "@/shared/hooks/useToast";
-import {
-  useSubjectMutations,
-  useSubjects,
-} from "@/features/subject/hooks/useSubjects";
+import { useSubjectMutations, useSubjects } from "@/features/subject/hooks/useSubjects";
 import type {
   SubjectPayload,
   SubjectResponse,
@@ -57,12 +55,17 @@ export default function AdminSubjectsPage() {
       },
       onError: (e: unknown) => toast.error(getErrorMessage(e)),
     };
-    if (editing === "new") create.mutate(v, opts);
-    else if (editing) update.mutate({ id: editing.id, payload: v }, opts);
+    if (editing === "new") {
+      create.mutate(v, opts);
+    } else if (editing) {
+      update.mutate({ id: editing.id, payload: v }, opts);
+    }
   });
 
   const confirmDelete = () => {
-    if (!deleting) return;
+    if (!deleting) {
+      return;
+    }
     remove.mutate(deleting.id, {
       onSuccess: () => {
         toast.success("Đã xóa môn học");
@@ -90,13 +93,13 @@ export default function AdminSubjectsPage() {
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
           {data?.map((s) => (
-            <li
-              key={s.id}
-              className="flex items-center justify-between gap-3 p-3">
+            <li key={s.id} className="flex items-center justify-between gap-3 p-3">
               <div>
                 <p className="font-semibold text-text">{s.name}</p>
                 <p className="text-xs text-text-secondary">
-                  {s.usageCount === undefined ? s.category : `Đang được dùng ở ${s.usageCount} bài đăng/hồ sơ`}
+                  {s.usageCount === undefined
+                    ? s.category
+                    : `Đang được dùng ở ${s.usageCount} bài đăng/hồ sơ`}
                 </p>
               </div>
               <div className="flex gap-1">
@@ -104,7 +107,8 @@ export default function AdminSubjectsPage() {
                   variant="ghost"
                   size="sm"
                   aria-label={`Sửa ${s.name}`}
-                  onClick={() => open(s)}>
+                  onClick={() => open(s)}
+                >
                   <Pencil className="size-4" />
                 </Button>
                 <Button
@@ -114,7 +118,8 @@ export default function AdminSubjectsPage() {
                   onClick={() => {
                     setDeleteError("");
                     setDeleting(s);
-                  }}>
+                  }}
+                >
                   <Trash2 className="size-4 text-danger" />
                 </Button>
               </div>
@@ -135,11 +140,13 @@ export default function AdminSubjectsPage() {
             </Button>
             <Button
               loading={create.isPending || update.isPending}
-              onClick={() => void submit()}>
+              onClick={() => void submit()}
+            >
               Lưu
             </Button>
           </>
-        }>
+        }
+      >
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-3">
           <Input
             label="Tên môn học"
@@ -147,7 +154,10 @@ export default function AdminSubjectsPage() {
             error={errors.name?.message}
             {...register("name", {
               required: "Tên môn học là bắt buộc",
-              maxLength: { value: 50, message: "Tối đa 50 ký tự" },
+              maxLength: {
+                value: SUBJECT_FORM_NAME_MAX_LENGTH,
+                message: `Tối đa ${SUBJECT_FORM_NAME_MAX_LENGTH} ký tự`,
+              },
             })}
           />
           <Input
@@ -171,13 +181,14 @@ export default function AdminSubjectsPage() {
         description={
           <>
             <p>
-              Xóa môn <strong>{deleting?.name}</strong>? Không thể xóa môn đang
-              được sử dụng.
+              Xóa môn <strong>{deleting?.name}</strong>? Không thể xóa môn đang được sử
+              dụng.
             </p>
             {deleteError && (
               <p
                 role="alert"
-                className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-red-700 dark:bg-red-500/20 dark:text-red-300">
+                className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-red-700 dark:bg-red-500/20 dark:text-red-300"
+              >
                 {deleteError}
               </p>
             )}

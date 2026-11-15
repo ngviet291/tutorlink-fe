@@ -132,6 +132,7 @@ export class ApplicationService {
       appliedAt: dto.appliedAt,
       processedByAdminId: dto.processedByAdminId,
       transactionId: dto.transactionId,
+      transactionStatus: dto.transactionStatus,
     };
   }
 

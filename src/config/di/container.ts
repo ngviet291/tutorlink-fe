@@ -21,6 +21,10 @@ import { ApplicationService } from "@/features/application/service/application.s
 import { HttpApplicationGateway } from "@/features/application/api/http.application.gateway";
 import { NotificationService } from "@/features/notification/service/notification.service";
 import { HttpNotificationGateway } from "@/features/notification/api/http.notification.gateway";
+import { HttpWalletGateway } from "@/features/wallet/api/http.wallet.gateway";
+import { WalletService } from "@/features/wallet/service/wallet.service";
+import { HttpAdminPaymentGateway } from "@/features/admin/api/http.admin.payment.gateway";
+import { AdminPaymentService } from "@/features/admin/service/admin.payment.service";
 
 // Toàn bộ bean được quản lí ở đây
 export const tokenStorage = new SecureTokenStorage();
@@ -45,6 +49,13 @@ export const realtimeRouter = new RealtimeEventRouter();
 
 const publicHttpClient = new AxiosHttpClient(publicHttp);
 const privateHttpClient = new AxiosHttpClient(privateHttp);
+
+export const walletService = new WalletService(
+  new HttpWalletGateway(privateHttpClient),
+);
+export const adminPaymentService = new AdminPaymentService(
+  new HttpAdminPaymentGateway(privateHttpClient),
+);
 
 const gateway: AuthGateway = new HttpAuthGateway(publicHttpClient);
 const subjectGateway = new HttpSubjectGateway(privateHttpClient); // client có gắn token, không phải client PUBLIC

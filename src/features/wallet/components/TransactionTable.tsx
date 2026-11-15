@@ -3,9 +3,7 @@ import { useTranslation } from "react-i18next";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
-import {
-  TRANSACTION_TYPE_LABEL,
-} from "@/constants/enums";
+import { TRANSACTION_TYPE_LABEL } from "@/constants/enums";
 import { formatVnd } from "@/shared/utils/currency";
 import { formatDateTime } from "@/shared/utils/date";
 import { useTransactions } from "../hooks/useWallet";
@@ -25,8 +23,12 @@ export function TransactionTable() {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loaderRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (observerRef.current) observerRef.current.disconnect();
-      if (!node) return;
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+      if (!node) {
+        return;
+      }
       observerRef.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           void fetchNextPage();
@@ -42,10 +44,7 @@ export function TransactionTable() {
   return (
     <section className="rounded-2xl border border-border bg-surface p-4">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <h2 className="text-lg font-bold text-text">
-          {t("wallet.transactionHistory")}
-        </h2>
-
+        <h2 className="text-lg font-bold text-text">{t("wallet.transactionHistory")}</h2>
       </div>
 
       {isLoading ? (
@@ -82,10 +81,7 @@ export function TransactionTable() {
                       {formatVnd(tx.amount)}
                     </td>
                     <td>
-                      <StatusBadge
-                        kind="transaction"
-                        status={tx.transactionStatus}
-                      />
+                      <StatusBadge kind="transaction" status={tx.transactionStatus} />
                     </td>
                   </tr>
                 ))}
