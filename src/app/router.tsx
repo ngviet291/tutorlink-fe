@@ -103,6 +103,10 @@ export const router = createBrowserRouter([
             element: page(() => import("@/pages/MyPostsPage")),
           },
           {
+            path: ROUTES.MY_APPLICATIONS,
+            element: page(() => import("@/pages/MyApplicationsPage")),
+          },
+          {
             path: ROUTES.CHAT_INBOX,
             element: page(() => import("@/pages/ChatInboxPage")),
           },
@@ -137,10 +141,6 @@ export const router = createBrowserRouter([
               {
                 path: ROUTES.TUTOR_PROFILE,
                 element: page(() => import("@/pages/TutorProfilePage")),
-              },
-              {
-                path: ROUTES.MY_APPLICATIONS,
-                element: page(() => import("@/pages/MyApplicationsPage")),
               },
               {
                 path: "/wallet/top-up/result",

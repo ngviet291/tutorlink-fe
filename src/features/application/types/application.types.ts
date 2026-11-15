@@ -20,6 +20,8 @@ export interface ApplicationResponse {
   message?: string;
   proposedFee?: number;
   appliedAt: string;
+  /** Hạn cuối bước đang chờ do BE tính (W1 chờ thanh toán / W2 chờ applicant confirm). */
+  expiresAt?: string;
   processedByAdminId?: string;
   transactionId?: string;
   transactionStatus?: string;
@@ -57,7 +59,7 @@ export interface AiSuggestionResponse {
 export interface ApplyPayload {
   postId: string;
   message?: string;
-  proposedFee: number;
+  proposedFee?: number;
 }
 
 /** Minimal user được lấy từ public-profile để ghép Application DTO. */

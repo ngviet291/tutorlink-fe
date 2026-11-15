@@ -50,6 +50,14 @@ export class HttpApplicationGateway implements ApplicationGateway {
     return this.http.post<ApplicationResponse>(`${BASE}/${id}/select`);
   }
 
+  unselect(id: string) {
+    return this.http.post<ApplicationResponse>(`${BASE}/${id}/unselect`);
+  }
+
+  reject(id: string) {
+    return this.http.post<ApplicationResponse>(`${BASE}/${id}/reject`);
+  }
+
   confirm(id: string) {
     return this.http.post<ApplicationResponse>(`${BASE}/${id}/confirm`);
   }

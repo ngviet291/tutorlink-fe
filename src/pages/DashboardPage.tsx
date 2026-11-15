@@ -126,7 +126,6 @@ export default function DashboardPage() {
   if (!user) return null;
 
   const myPosts = posts.data?.pages.flatMap((p) => p.content) ?? [];
-  const received = myPosts.reduce((s, p) => s + (p.applicationCount ?? 0), 0);
   const unread = notifications.data?.filter((n) => !n.isRead).length ?? 0;
   const recentPosts = myPosts.slice(0, 4);
 
@@ -171,17 +170,9 @@ export default function DashboardPage() {
         />
         <Stat
           icon={Users}
-          label={isTutor ? "Đơn đã ứng tuyển" : "Lượt ứng tuyển nhận được"}
-          value={
-            isTutor
-              ? apps.data
-                ? apps.data.length
-                : undefined
-              : posts.data
-                ? received
-                : undefined
-          }
-          to={isTutor ? ROUTES.MY_APPLICATIONS : ROUTES.MY_POSTS}
+          label="Đơn đã ứng tuyển"
+          value={apps.data ? apps.data.length : undefined}
+          to={ROUTES.MY_APPLICATIONS}
         />
 
         {isTutor ? (

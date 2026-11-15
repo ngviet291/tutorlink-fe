@@ -130,9 +130,10 @@ export class ApplicationService {
       message: dto.message,
       proposedFee: dto.proposedFee,
       appliedAt: dto.appliedAt,
+      expiresAt: dto.expiresAt,
       processedByAdminId: dto.processedByAdminId,
       transactionId: dto.transactionId,
-      transactionStatus: dto.transactionStatus,
+      paid: dto.transactionStatus === "SUCCESS",
     };
   }
 
@@ -250,6 +251,12 @@ export class ApplicationService {
 
   selectApplicant = async (id: string): Promise<ApplicationResponse> =>
     this.enrich(await this.gateway.select(id));
+
+  unselectApplicant = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.unselect(id));
+
+  rejectApplicant = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.reject(id));
 
   /** POST /v1/payments/applications/{id}/pay rồi đọc lại đơn. */
   confirmAndPayFee = async (id: string): Promise<ApplicationResponse> => {
