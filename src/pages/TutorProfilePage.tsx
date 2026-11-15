@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
+import { MyCertificates } from "@/features/tutor/components/MyCertificates";
 import { CheckCircle2, Clock, Plus, Trash2, XCircle } from "lucide-react";
 import {
   DAY_LABEL,
@@ -37,10 +38,10 @@ function parseAreas(text: string): string[] {
   const seen = new Set<string>();
   return text
     .split(/[,\n]/)
-    .map((area) => area.trim())
-    .filter((area) => {
-      const key = area.toLowerCase();
-      if (!area || seen.has(key)) return false;
+    .map((a) => a.trim())
+    .filter((a) => {
+      const key = a.toLowerCase();
+      if (!a || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
@@ -143,23 +144,26 @@ export default function TutorProfilePage() {
   if (isLoading) return <Skeleton className="mx-auto h-96 max-w-3xl" />;
   if (isError || !data) return <ErrorState onRetry={() => void refetch()} />;
 
-  const submit = handleSubmit(({ teachingAreasText, educationLevels, ...rest }) =>
-    save.mutate(
-      {
-        ...rest,
-        educationLevels: Array.isArray(educationLevels) ? educationLevels : [],
-        teachingAreas: parseAreas(teachingAreasText),
-      },
-      {
-        onSuccess: () =>
-          toast.success(
-            data.verificationStatus === "APPROVED"
-              ? "Đã cập nhật hồ sơ"
-              : "Đã gửi hồ sơ, vui lòng chờ Admin duyệt",
-          ),
-        onError: (e) => toast.error(getErrorMessage(e)),
-      },
-    ),
+  const submit = handleSubmit(
+    ({ teachingAreasText, educationLevels, ...rest }) =>
+      save.mutate(
+        {
+          ...rest,
+          educationLevels: Array.isArray(educationLevels)
+            ? educationLevels
+            : [],
+          teachingAreas: parseAreas(teachingAreasText),
+        },
+        {
+          onSuccess: () =>
+            toast.success(
+              data.verificationStatus === "APPROVED"
+                ? "Đã cập nhật hồ sơ"
+                : "Đã gửi hồ sơ, vui lòng chờ Admin duyệt",
+            ),
+          onError: (e) => toast.error(getErrorMessage(e)),
+        },
+      ),
   );
 
   return (
@@ -316,6 +320,7 @@ export default function TutorProfilePage() {
             <Plus className="size-4" /> Thêm ca rảnh
           </Button>
         </fieldset>
+        <MyCertificates />
 
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-1 text-sm font-medium text-text">

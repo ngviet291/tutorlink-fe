@@ -16,6 +16,7 @@ export const queryKeys = {
     list: (params: object) => ["tutors", "list", params] as const,
     detail: (id: string) => ["tutors", "detail", id] as const,
     me: ["tutors", "me"] as const,
+    certificates: ["tutors", "me", "certificates"] as const,
   },
   applications: {
     all: ["applications"] as const,

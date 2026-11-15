@@ -14,7 +14,25 @@ async function fetchFavoriteIds(): Promise<string[]> {
   const res = await http.get<FavoriteResponse[]>("/v1/favorites");
   return (res.data ?? []).map((f) => f.tutorId);
 }
-
+function favoriteToTutor(f: FavoriteResponse): TutorResponse {
+  const subjects = f.subjects ?? [];
+  return {
+    id: f.tutorId,
+    fullName: f.fullName ?? "",
+    avatarUrl: f.avatarUrl ?? undefined,
+    bio: f.bio ?? undefined,
+    experienceYears: f.experienceYears ?? 0,
+    hourlyRate: f.hourlyRate ?? 0,
+    averageRating: f.averageRating ?? 0,
+    verificationStatus: (f.verificationStatus ??
+      "APPROVED") as TutorResponse["verificationStatus"],
+    subject: subjects[0] as TutorResponse["subject"],
+    subjects,
+    address: f.province
+      ? ({ province: f.province } as TutorResponse["address"])
+      : undefined,
+  };
+}
 export const favoriteService = {
   /** Chỉ lấy danh sách id gia sư đã yêu thích (nhẹ, dùng để tô trái tim). */
   async getFavoriteIds(): Promise<string[]> {
@@ -41,15 +59,8 @@ export const favoriteService = {
         )
         .map((t) => ({ ...t, contact: undefined }));
     }
-    const ids = await fetchFavoriteIds();
-    const results = await Promise.allSettled(
-      ids.map((id) =>
-        http.get<TutorResponseDto>(`/v1/users/${id}/public-profile`),
-      ),
-    );
-    return results.flatMap((r) =>
-      r.status === "fulfilled" ? [toTutor(r.value.data)] : [],
-    );
+    const res = await http.get<FavoriteResponse[]>("/v1/favorites");
+    return (res.data ?? []).map(favoriteToTutor);
   },
 
   /**

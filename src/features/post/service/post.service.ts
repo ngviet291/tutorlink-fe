@@ -113,10 +113,6 @@ export class PostService {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // APPLICATIONS
-  // ─────────────────────────────────────────────────────────────────────────
-
   async getPostApplications(
     postId: string,
     cursor?: string,
@@ -128,10 +124,6 @@ export class PostService {
       limit,
     );
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // CREATE
-  // ─────────────────────────────────────────────────────────────────────────
 
   async createPost(
     payload: PostPayload,
@@ -147,10 +139,6 @@ export class PostService {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // UPDATE
-  // ─────────────────────────────────────────────────────────────────────────
-
   async updatePost(
     postId: string,
     payload: PostPayload,
@@ -163,10 +151,6 @@ export class PostService {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // PUBLISH
-  // ─────────────────────────────────────────────────────────────────────────
-
   async publishPost(
     postId: string,
   ): Promise<PostResponse> {
@@ -175,30 +159,17 @@ export class PostService {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // CLOSE
-  // ─────────────────────────────────────────────────────────────────────────
-
   async closePost(
     postId: string,
   ): Promise<void> {
     return this.gateway.close(postId);
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // DELETE
-  // ─────────────────────────────────────────────────────────────────────────
-
   async deletePost(
     postId: string,
   ): Promise<void> {
     return this.gateway.delete(postId);
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // ADMIN REMOVE
-  // ─────────────────────────────────────────────────────────────────────────
-
   async removePostByAdmin(
     postId: string,
     reason?: string,
@@ -208,11 +179,6 @@ export class PostService {
       reason,
     );
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // STATISTICS
-  // ─────────────────────────────────────────────────────────────────────────
-
   getStatistics(): Promise<PostStatistic[]> {
     return this.gateway.statisticsByStatus();
   }

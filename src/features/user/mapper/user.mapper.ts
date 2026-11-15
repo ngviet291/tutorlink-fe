@@ -89,7 +89,9 @@ function toSlotInstant(day: DayOfWeek, hourMinute: string): string {
   const date = new Date(SLOT_REFERENCE_MONDAY_UTC + DAY_INDEX[day] * MS_PER_DAY)
     .toISOString()
     .slice(0, 10);
-  return new Date(`${date}T${hourMinute}:00${VIETNAM_UTC_OFFSET}`).toISOString();
+  return new Date(
+    `${date}T${hourMinute}:00${VIETNAM_UTC_OFFSET}`,
+  ).toISOString();
 }
 
 /** Bỏ ô lịch chưa nhập đủ hoặc giờ kết thúc không sau giờ bắt đầu. */

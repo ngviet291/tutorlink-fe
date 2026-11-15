@@ -51,8 +51,8 @@ export default function FindClassPage() {
       keyword: debounced || undefined,
       subjectName: subjectName || undefined,
       province: filter.province || undefined,
+      ward: filter.ward || undefined,
       teachingMode: filter.teachingMode || undefined,
-      // BE nhận single educationLevel — lấy giá trị đầu tiên nếu có
       educationLevel: filter.educationLevels[0] || undefined,
       minBudget: filter.min > 0 ? filter.min : undefined,
       maxBudget: filter.max < BUDGET_MAX ? filter.max : undefined,
@@ -78,6 +78,7 @@ export default function FindClassPage() {
     debounced ||
     filter.subjectId ||
     filter.province ||
+    filter.ward ||
     filter.teachingMode ||
     filter.educationLevels.length ||
     filter.min > 0 ||

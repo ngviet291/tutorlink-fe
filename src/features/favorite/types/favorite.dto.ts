@@ -1,8 +1,12 @@
-// AUTO-GENERATED từ DTO của BE (src/main/java/.../dto). Tên class + tên field giữ nguyên như BE.
-// Quy ước: Instant/LocalDate/UUID → string, BigDecimal/Integer/long/double → number, `?` = BE có thể không trả / request không bắt buộc.
-
-
-/** BE: favorite/dto/response/FavoriteResponse.java */
 export interface FavoriteResponse {
-  tutorId: string
+  tutorId: string;
+  fullName?: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  experienceYears?: number;
+  hourlyRate?: number;
+  averageRating?: number;
+  verificationStatus?: string;
+  province?: string | null;
+  subjects?: { id: string; name: string }[];
 }

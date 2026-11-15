@@ -45,7 +45,7 @@ export class HttpPostGateway implements PostGateway {
 
   list(filter: PostFilter) {
     return this.http.get<CursorResponse<PostResponse>>(BASE, {
-      params: toQueryParams(filter, LIST_KEYS), // province bị loại vì BE không nhận
+      params: toQueryParams(filter, LIST_KEYS),
     });
   }
 

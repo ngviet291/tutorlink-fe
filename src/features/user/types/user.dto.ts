@@ -1,6 +1,3 @@
-// AUTO-GENERATED từ DTO của BE (src/main/java/.../dto). Tên class + tên field giữ nguyên như BE.
-// Quy ước: Instant/LocalDate/UUID → string, BigDecimal/Integer/long/double → number, `?` = BE có thể không trả / request không bắt buộc.
-
 import type {
   DayOfWeek,
   EducationLevel,
@@ -98,12 +95,21 @@ export interface TutorResponse extends BaseUserResponse {
 
 export interface UpdateTutorProfileRequest {
   bio?: string;
-  experienceYears?: number; 
+  experienceYears?: number;
   education?: string;
-  hourlyRate?: number; 
+  hourlyRate?: number;
   teachingLevels?: EducationLevel[];
   teachingMode?: TeachingMode;
   teachingAreas?: string[];
   availableSlots?: AvailableSlotRequest[];
   subjectIds?: string[];
+}
+export interface CertificateResponse {
+  id: string;
+  name?: string;
+  issuedBy?: string;
+  issuedDate?: string;
+  expiryDate?: string;
+  fileUrl: string;
+  verified: boolean;
 }

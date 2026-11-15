@@ -52,6 +52,7 @@ export interface PostFilter {
   type?: PostType;
   subjectName?: string; // BE nhận subjectName (tên môn), không phải subjectId
   province?: string;
+  ward?: string;
   teachingMode?: TeachingMode | "";
   educationLevel?: EducationLevel | ""; // BE nhận single value
   minBudget?: number;
@@ -85,10 +86,7 @@ export interface PostPage<T = PostResponse> {
 }
 
 /** GET /v1/posts/me: không có authorId, thêm postStatus. */
-export interface MyPostFilter extends Omit<
-  PostFilter,
-  "authorId" | "province"
-> {
+export interface MyPostFilter extends Omit<PostFilter,"authorId" | "province" | "ward"> {
   postStatus?: PostStatus;
 }
 

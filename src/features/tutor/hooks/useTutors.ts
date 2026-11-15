@@ -7,7 +7,7 @@ import {
 import { queryKeys } from "@/constants/queryKeys";
 import { tutorService } from "../service/tutor.service";
 import type { TutorFilter, TutorProfilePayload } from "../types/tutor.types";
-
+const CERTIFICATE_POLL_MS = 5000;
 export function useTutors(params: Omit<TutorFilter, "cursor"> = {}) {
   return useInfiniteQuery({
     queryKey: queryKeys.tutors.list(params),
@@ -39,6 +39,33 @@ export function useMyTutorProfile(enabled = true) {
   });
 }
 
+export function useMyCertificates(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.tutors.certificates,
+    queryFn: tutorService.getMyCertificates,
+    enabled,
+    // còn chứng chỉ chờ AI duyệt thì tự làm mới, xong hết thì dừng
+    refetchInterval: (query) =>
+      query.state.data?.some((c) => !c.verified) ? CERTIFICATE_POLL_MS : false,
+  });
+}
+
+export function useUploadCertificates() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (files: File[]) => tutorService.uploadCertificates(files),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.tutors.all }),
+  });
+}
+
+export function useDeleteCertificate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tutorService.deleteCertificate(id),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: queryKeys.tutors.certificates }),
+  });
+}
 export function useSaveTutorProfile() {
   const qc = useQueryClient();
   return useMutation({

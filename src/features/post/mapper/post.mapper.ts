@@ -123,6 +123,6 @@ const COMMON = [
   "limit",
 ] as const;
 
-export const LIST_KEYS = [...COMMON, "authorId"] as const;
+export const LIST_KEYS = [...COMMON, "authorId", "province", "ward"] as const;
 export const ADMIN_KEYS = COMMON;
 export const MY_KEYS = [...COMMON, "postStatus"] as const;
