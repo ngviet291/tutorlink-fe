@@ -907,7 +907,7 @@ export const notifications: Record<string, NotificationResponse[]> = {
       title: "Có 6 lượt ứng tuyển mới",
       content:
         'Bài "Cần gia sư Toán 9 ôn thi vào lớp 10" đã có 6 gia sư đăng ký.',
-      isRead: false,
+      read: false,
       createdAt: ago(1 * HOUR),
     },
     {
@@ -915,7 +915,7 @@ export const notifications: Record<string, NotificationResponse[]> = {
       notificationType: "SYSTEM",
       title: "Bài đăng đã được đăng công khai",
       content: "Bài viết của bạn đang hiển thị với mọi người.",
-      isRead: true,
+      read: true,
       createdAt: ago(5 * DAY),
     },
   ],
@@ -926,7 +926,7 @@ export const notifications: Record<string, NotificationResponse[]> = {
       title: "Bạn được chọn nhận lớp!",
       content:
         'Trần Hoàng Nam đã chọn bạn cho bài "Gia sư Toán lớp 7 tại Quận 3".',
-      isRead: false,
+      read: false,
       createdAt: ago(2 * HOUR),
     },
     {
@@ -934,7 +934,7 @@ export const notifications: Record<string, NotificationResponse[]> = {
       notificationType: "SYSTEM",
       title: "Hồ sơ gia sư đã được duyệt",
       content: "Bạn có thể đăng ký nhận lớp ngay bây giờ.",
-      isRead: true,
+      read: true,
       createdAt: ago(88 * DAY),
     },
     {
@@ -942,7 +942,7 @@ export const notifications: Record<string, NotificationResponse[]> = {
       notificationType: "TRANSACTION",
       title: "Thanh toán phí nhận lớp thành công",
       content: "Thông tin liên hệ và kênh chat đã được mở.",
-      isRead: true,
+      read: true,
       createdAt: ago(15 * DAY),
     },
   ],
@@ -952,7 +952,7 @@ export const notifications: Record<string, NotificationResponse[]> = {
       notificationType: "SYSTEM",
       title: "Hồ sơ gia sư mới chờ duyệt",
       content: "Hoàng Gia Linh vừa gửi hồ sơ giảng dạy.",
-      isRead: false,
+      read: false,
       createdAt: ago(2 * DAY),
     },
   ],

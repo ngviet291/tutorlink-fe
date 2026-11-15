@@ -38,4 +38,8 @@ export const ROUTES = {
   ADMIN_FEE: "/admin/fee-rate",
   ADMIN_COMPLAINTS: "/admin/complaints",
   ADMIN_STATS: "/admin/stats",
+  GUIDE: "/guide",
+  FEE_POLICY: "/fee-policy",
+  PRIVACY: "/privacy",
+  TERMS: "/terms",
 } as const;

@@ -54,7 +54,7 @@ export default function RegisterStudentPage() {
         learningGoal: v.learningGoal,
       },
       {
-        onSuccess: () => navigate(ROUTES.DASHBOARD, { replace: true }),
+        onSuccess: () => navigate(ROUTES.HOME, { replace: true }),
       },
     );
   });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import {
   BookOpenCheck,
   FileText,
@@ -124,9 +124,9 @@ export default function DashboardPage() {
   const [offer, setOffer] = useState<ApplicationResponse | null>(null);
 
   if (!user) return null;
-
+  if (user?.role === "ADMIN") return <Navigate to={ROUTES.ADMIN} replace />;
   const myPosts = posts.data?.pages.flatMap((p) => p.content) ?? [];
-  const unread = notifications.data?.filter((n) => !n.isRead).length ?? 0;
+  const unread = notifications.data?.filter((n) => !n.read).length ?? 0;
   const recentPosts = myPosts.slice(0, 4);
 
   return (

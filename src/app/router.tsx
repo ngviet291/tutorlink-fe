@@ -52,6 +52,38 @@ export const router = createBrowserRouter([
         path: ROUTES.STUDENT_CORNER,
         element: page(() => import("@/pages/StudentCornerPage")),
       },
+      {
+        path: ROUTES.GUIDE,
+        element: page(() =>
+          import("@/pages/LegalPage").then((m) => ({
+            default: m.GuidePage,
+          })),
+        ),
+      },
+      {
+        path: ROUTES.FEE_POLICY,
+        element: page(() =>
+          import("@/pages/LegalPage").then((m) => ({
+            default: m.FeePolicyPage,
+          })),
+        ),
+      },
+      {
+        path: ROUTES.PRIVACY,
+        element: page(() =>
+          import("@/pages/LegalPage").then((m) => ({
+            default: m.PrivacyPage,
+          })),
+        ),
+      },
+      {
+        path: ROUTES.TERMS,
+        element: page(() =>
+          import("@/pages/LegalPage").then((m) => ({
+            default: m.TermsPage,
+          })),
+        ),
+      },
     ],
   },
   {

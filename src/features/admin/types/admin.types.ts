@@ -1,60 +1,61 @@
 export interface FeeRateConfig {
-  id: string
+  id: string;
   /** Tỉ lệ dạng 0..1, ví dụ 0.2 = 20% */
-  rate: number
-  effectiveFrom: string
-  createdBy: string
-  active: boolean
-  /** Phí cố định cộng thêm (VND) */
-  fixedFee?: number
+  rate: number;
+  effectiveFrom: string;
+  createdBy: string;
+  active: boolean;
   /** Ngày hết hiệu lực; rỗng nếu đang áp dụng */
-  effectiveTo?: string
+  effectiveTo?: string;
 }
 
 export interface FeeRatePayload {
-  ratePercent: number
-  effectiveFrom: string
-  fixedFee?: number
+  ratePercent: number;
+  effectiveFrom: string;
+  fixedFee?: number;
 }
 
 export interface RevenuePoint {
-  label: string
-  revenue: number
+  label: string;
+  revenue: number;
 }
 
 export interface TopTutorStat {
-  tutorId: string
-  fullName: string
-  matchCount: number
+  tutorId: string;
+  fullName: string;
+  matchCount: number;
 }
 
 export interface AdminStats {
-  revenueByMonth: RevenuePoint[]
-  postsByStatus: { status: 'DRAFT' | 'PUBLISHED' | 'CLOSED' | 'REMOVED'; count: number }[]
-  totalSuccessfulMatches: number
-  topTutors: TopTutorStat[]
+  revenueByMonth: RevenuePoint[];
+  postsByStatus: {
+    status: "DRAFT" | "PUBLISHED" | "CLOSED" | "REMOVED";
+    count: number;
+  }[];
+  totalSuccessfulMatches: number;
+  topTutors: TopTutorStat[];
 }
 
 export interface ReviewComplaint {
-  id: string
-  reviewId: string
-  tutorId: string
-  tutorName: string
-  rating: number
-  reviewComment: string
-  reason: string
-  status: 'OPEN' | 'RESOLVED'
-  decision?: 'KEPT' | 'REMOVED'
-  decisionNote?: string
-  createdAt: string
+  id: string;
+  reviewId: string;
+  tutorId: string;
+  tutorName: string;
+  rating: number;
+  reviewComment: string;
+  reason: string;
+  status: "OPEN" | "RESOLVED";
+  decision?: "KEPT" | "REMOVED";
+  decisionNote?: string;
+  createdAt: string;
 }
 
 export interface ComplaintDecisionPayload {
-  decision: 'KEPT' | 'REMOVED'
-  note: string
+  decision: "KEPT" | "REMOVED";
+  note: string;
 }
 
 export interface ProfileReviewPayload {
-  decision: 'APPROVED' | 'REJECTED'
-  note?: string
+  decision: "APPROVED" | "REJECTED";
+  note?: string;
 }

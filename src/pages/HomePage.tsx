@@ -57,7 +57,8 @@ const TESTIMONIALS = [
   },
 ];
 
-function Hero() {
+function Hero({ role }: { role?: string }) {
+  const isTutor = role === "TUTOR";
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary-light via-background to-background">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 lg:grid-cols-2 lg:py-20">
@@ -74,14 +75,15 @@ function Hero() {
             trả phí khi lớp học thực sự được kết nối.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link to={ROUTES.FIND_TUTOR}>
+            <Link to={isTutor ? ROUTES.FIND_CLASS : ROUTES.FIND_TUTOR}>
               <Button size="lg">
-                Tìm Gia Sư Ngay <ArrowRight className="size-5" />
+                {isTutor ? "Tìm Học Viên Ngay" : "Tìm Gia Sư Ngay"}{" "}
+                <ArrowRight className="size-5" />
               </Button>
             </Link>
             <Link to={ROUTES.POST_CREATE}>
               <Button size="lg" variant="outline">
-                Đăng Lớp Học
+                {isTutor ? "Đăng Tìm Học Viên" : "Đăng Lớp Học"}
               </Button>
             </Link>
           </div>
@@ -153,11 +155,18 @@ function SectionHead({
   title,
   to,
   sub,
+  onMore,
+  moreLabel = "Xem tất cả",
 }: {
   title: string;
   to?: string;
   sub?: string;
+  /** Nút bấm cùng kiểu với link "Xem tất cả" (dùng khi không có trang đích). */
+  onMore?: () => void;
+  moreLabel?: string;
 }) {
+  const moreClass =
+    "flex shrink-0 cursor-pointer items-center gap-1 text-sm font-semibold text-primary hover:underline";
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
       <div>
@@ -165,12 +174,14 @@ function SectionHead({
         {sub && <p className="mt-1 text-sm text-text-secondary">{sub}</p>}
       </div>
       {to && (
-        <Link
-          to={to}
-          className="flex shrink-0 items-center gap-1 text-sm font-semibold text-primary hover:underline"
-        >
+        <Link to={to} className={moreClass}>
           Xem tất cả <ArrowRight className="size-4" />
         </Link>
+      )}
+      {onMore && (
+        <button type="button" onClick={onMore} className={moreClass}>
+          {moreLabel} <ArrowRight className="size-4" />
+        </button>
       )}
     </div>
   );
@@ -225,27 +236,49 @@ function Testimonials() {
 
 export default function HomePage() {
   const user = useAppSelector((s) => s.auth.user);
+  const isTutor = user?.role === "TUTOR";
+  // Khách chưa đăng nhập được coi là học viên.
+  const isStudent = !user || user.role === "STUDENT";
   const subjects = useSubjects();
   const tutors = useTutors({ limit: 4 });
-  const posts = usePosts({ type: "FIND_TUTOR", limit: 6 });
+  const posts = usePosts({
+    type: isStudent ? "FIND_STUDENT" : "FIND_TUTOR",
+    limit: 6,
+  });
+  const subjectTarget = isTutor ? ROUTES.FIND_CLASS : ROUTES.FIND_TUTOR;
+  const [showAllSubjects, setShowAllSubjects] = useState(false);
+  const subjectList = subjects.data ?? [];
+  const visibleSubjects = showAllSubjects
+    ? subjectList
+    : subjectList.slice(0, 8);
 
   return (
     <>
-      <Hero />
+      <Hero role={user?.role} />
 
       <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 py-14">
         <section>
           <SectionHead
             title="Danh mục môn học"
-            sub="Chọn môn để xem gia sư và lớp học phù hợp"
+            sub={
+              isTutor
+                ? "Chọn môn để xem lớp đang cần gia sư"
+                : "Chọn môn để xem gia sư phù hợp"
+            }
+            onMore={
+              subjectList.length > 8
+                ? () => setShowAllSubjects((v) => !v)
+                : undefined
+            }
+            moreLabel={showAllSubjects ? "Thu gọn" : "Xem tất cả"}
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {(subjects.data ?? []).slice(0, 8).map((s) => {
+            {visibleSubjects.map((s) => {
               const Icon = SUBJECT_ICONS[s.id] ?? BookOpen;
               return (
                 <Link
                   key={s.id}
-                  to={`${ROUTES.FIND_TUTOR}?subject=${s.id}`}
+                  to={`${subjectTarget}?subject=${s.id}`}
                   className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
                 >
                   <span className="flex size-12 items-center justify-center rounded-xl bg-primary-light text-primary">
@@ -258,27 +291,33 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section>
-          <SectionHead
-            title="Gia Sư Được Đánh Giá Cao"
-            to={ROUTES.FIND_TUTOR}
-          />
-          {tutors.isLoading ? (
-            <CardGridSkeleton count={4} />
-          ) : tutors.isError ? (
-            <ErrorState onRetry={() => void tutors.refetch()} />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {tutors.data?.pages[0]?.content.map((t) => (
-                <TutorCard key={t.id} tutor={t} />
-              ))}
-            </div>
-          )}
-        </section>
+        {!isTutor && (
+          <section>
+            <SectionHead
+              title="Gia Sư Được Đánh Giá Cao"
+              to={ROUTES.FIND_TUTOR}
+            />
+            {tutors.isLoading ? (
+              <CardGridSkeleton count={4} />
+            ) : tutors.isError ? (
+              <ErrorState onRetry={() => void tutors.refetch()} />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {tutors.data?.pages[0]?.content.map((t) => (
+                  <TutorCard key={t.id} tutor={t} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         <section>
           <SectionHead
-            title="Lớp Học Đang Tuyển Gia Sư"
+            title={
+              isStudent
+                ? "Gia Sư Đang Tìm Học Viên"
+                : "Lớp Học Đang Tuyển Gia Sư"
+            }
             to={ROUTES.FIND_CLASS}
           />
           {posts.isLoading ? (
@@ -292,11 +331,6 @@ export default function HomePage() {
               ))}
             </div>
           )}
-          <div className="mt-6 text-center">
-            <Link to={ROUTES.FIND_CLASS}>
-              <Button variant="outline">Xem tất cả lớp học</Button>
-            </Link>
-          </div>
         </section>
 
         <section>
@@ -375,23 +409,22 @@ export default function HomePage() {
           <Testimonials />
         </section>
 
-        <section className="overflow-hidden rounded-3xl bg-primary px-6 py-12 text-center text-white">
-          <h2 className="text-2xl font-extrabold sm:text-3xl">
-            Bạn là gia sư? Đăng ký nhận lớp ngay hôm nay
-          </h2>
-          <p className="mx-auto mt-2 max-w-xl text-white/85">
-            Tạo hồ sơ giảng dạy, được duyệt và bắt đầu nhận lớp từ hàng nghìn
-            yêu cầu mới mỗi tuần.
-          </p>
-          <Link
-            to={user?.role === "TUTOR" ? ROUTES.TUTOR_PROFILE : ROUTES.REGISTER}
-            className="mt-6 inline-block"
-          >
-            <Button size="lg" variant="secondary">
-              Tạo hồ sơ gia sư
-            </Button>
-          </Link>
-        </section>
+        {user?.role !== "TUTOR" && (
+          <section className="overflow-hidden rounded-3xl bg-primary px-6 py-12 text-center text-white">
+            <h2 className="text-2xl font-extrabold sm:text-3xl">
+              Bạn là gia sư? Đăng ký nhận lớp ngay hôm nay
+            </h2>
+            <p className="mx-auto mt-2 max-w-xl text-white/85">
+              Tạo hồ sơ giảng dạy, được duyệt và bắt đầu nhận lớp từ hàng nghìn
+              yêu cầu mới mỗi tuần.
+            </p>
+            <Link to={ROUTES.REGISTER} className="mt-6 inline-block">
+              <Button size="lg" variant="secondary">
+                Tạo hồ sơ gia sư
+              </Button>
+            </Link>
+          </section>
+        )}
       </div>
     </>
   );

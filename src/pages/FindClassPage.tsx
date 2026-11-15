@@ -22,13 +22,17 @@ import { useSearchTracking } from "@/features/tracking/hooks";
 const BUDGET_MAX = 10_000_000;
 
 export default function FindClassPage() {
-  // Học viên → ưu tiên bài "Gia sư tìm học viên"; gia sư → ưu tiên "Lớp cần gia sư".
-  // Dùng `picked` để vẫn đúng khi thông tin đăng nhập tải xong sau lần render đầu.
   const role = useAppSelector((s) => s.auth.user?.role);
-  const defaultType: PostType =
-    role === "STUDENT" ? "FIND_STUDENT" : "FIND_TUTOR";
+  const isTutor = role === "TUTOR";
+  const isStudent = !role || role === "STUDENT";
+  const defaultType: PostType = isStudent ? "FIND_STUDENT" : "FIND_TUTOR";
   const [picked, setPicked] = useState<PostType | null>(null);
-  const type = picked ?? defaultType;
+  const lockedType: PostType | null = isTutor
+    ? "FIND_TUTOR"
+    : isStudent
+      ? "FIND_STUDENT"
+      : null;
+  const type: PostType = lockedType ?? picked ?? defaultType;
   const typeItems: { value: PostType; label: string }[] = [
     { value: "FIND_TUTOR", label: "Lớp cần gia sư" },
     { value: "FIND_STUDENT", label: "Gia sư tìm học viên" },
@@ -38,8 +42,6 @@ export default function FindClassPage() {
   const [keyword, setKeyword] = useState("");
   const debounced = useDebounce(keyword);
   const { data: subjects } = useSubjects();
-
-  // FilterSidebar lưu subjectId (cho UI dropdown), nhưng BE nhận subjectName
   const subjectName = useMemo(
     () => subjects?.find((s) => s.id === filter.subjectId)?.name,
     [subjects, filter.subjectId],
@@ -103,15 +105,19 @@ export default function FindClassPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="text-3xl font-extrabold text-text">Tìm Lớp</h1>
+      <h1 className="text-3xl font-extrabold text-text">
+        {isStudent ? "Bài Đăng Của Gia Sư" : "Tìm Lớp"}
+      </h1>
       <p className="mt-1 text-text-secondary">
         Các bài đăng đang tuyển. Thông tin liên hệ của người đăng được ẩn cho
         tới khi kết nối thành công.
       </p>
 
-      <div className="mt-5">
-        <Segmented value={type} onChange={setPicked} items={typeItems} />
-      </div>
+      {!lockedType && (
+        <div className="mt-5">
+          <Segmented value={type} onChange={setPicked} items={typeItems} />
+        </div>
+      )}
 
       <div className="mt-5 flex flex-col gap-4 lg:flex-row lg:items-start">
         <FilterSidebar

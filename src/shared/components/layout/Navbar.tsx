@@ -13,6 +13,7 @@ import { Logo } from '@/shared/components/ui/Logo'
 import { NotificationBell } from '@/features/notification/components/NotificationBell'
 import { useLogout } from '@/features/auth/hooks/useAuth'
 import { PUBLIC_NAV } from './navItems'
+import { getPublicNav } from './navItems'
 
 export function Navbar() {
   const { t } = useTranslation()
@@ -34,7 +35,7 @@ export function Navbar() {
         <Logo />
 
         <nav aria-label="Điều hướng chính" className="ml-6 hidden items-center gap-1 lg:flex">
-          {PUBLIC_NAV.map((item) => (
+          {getPublicNav(user?.role).map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === ROUTES.HOME} className={linkClass}>
               {t(item.labelKey)}
             </NavLink>
@@ -127,7 +128,7 @@ export function Navbar() {
       {mobileOpen && (
         <nav aria-label="Menu di động" className="animate-fade-in border-t border-border bg-surface px-4 py-3 lg:hidden">
           <div className="flex flex-col gap-1">
-            {PUBLIC_NAV.map((item) => (
+            {getPublicNav(user?.role).map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

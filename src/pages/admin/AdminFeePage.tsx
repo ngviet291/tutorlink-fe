@@ -12,7 +12,6 @@ import { Input } from "@/shared/components/ui/Input";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { formatDate } from "@/shared/utils/date";
-import { formatVnd } from "@/shared/utils/currency";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { useToast } from "@/shared/hooks/useToast";
 import {
@@ -20,7 +19,21 @@ import {
   useFeeRates,
 } from "@/features/admin/hooks/useAdminPayments";
 import type { FeeRatePayload } from "@/features/admin/types/admin.types";
+type FeeRate = NonNullable<ReturnType<typeof useFeeRates>["data"]>[number];
 
+function getFeeStatus(fee: FeeRate, now = Date.now()) {
+  const from = new Date(fee.effectiveFrom).getTime();
+  const to = fee.effectiveTo ? new Date(fee.effectiveTo).getTime() : null;
+  if (now < from) return "UPCOMING";
+  if (to !== null && now >= to) return "EXPIRED";
+  return "ACTIVE";
+}
+
+const FEE_STATUS = {
+  ACTIVE: { tone: "green", label: "Đang áp dụng" },
+  UPCOMING: { tone: "gray", label: "Chưa đến hiệu lực" },
+  EXPIRED: { tone: "gray", label: "Hết hiệu lực" },
+} as const;
 export default function AdminFeePage() {
   const toast = useToast();
   const { data, isLoading, isError, refetch } = useFeeRates();
@@ -77,34 +90,30 @@ export default function AdminFeePage() {
           })}
         />
         <Input
-          label="Phí cố định (VND)"
-          type="number"
-          min={0}
-          step={1000}
-          error={errors.fixedFee?.message}
-          {...register("fixedFee", {
-            valueAsNumber: true,
-            min: { value: 0, message: "Không âm" },
-          })}
-        />
-        <Input
           label="Ngày hiệu lực"
           type="date"
           required
           error={errors.effectiveFrom?.message}
           {...register("effectiveFrom", { required: "Bắt buộc" })}
         />
-        <Button type="submit" className="sm:mt-6" loading={createFeeRate.isPending}>
+        <Button
+          type="submit"
+          className="sm:mt-6"
+          loading={createFeeRate.isPending}
+        >
           Lưu
         </Button>
       </form>
       <p className="flex items-start gap-2 text-xs text-text-secondary">
-        <Info className="mt-0.5 size-4 shrink-0 text-primary" /> Các mức phí được lưu để
-        quản lý. Hệ thống hiện chưa áp dụng bảng cấu hình này khi tính phí nhận lớp.
+        <Info className="mt-0.5 size-4 shrink-0 text-primary" /> Các mức phí
+        được lưu để quản lý. Hệ thống hiện chưa áp dụng bảng cấu hình này khi
+        tính phí nhận lớp.
       </p>
 
       <section>
-        <h2 className="mb-3 text-lg font-bold text-text">Lịch sử các mức phí</h2>
+        <h2 className="mb-3 text-lg font-bold text-text">
+          Lịch sử các mức phí
+        </h2>
         {isLoading ? (
           <ListSkeleton rows={3} />
         ) : isError ? (
@@ -115,7 +124,6 @@ export default function AdminFeePage() {
               <thead className="bg-surface-hover text-xs uppercase text-text-secondary">
                 <tr>
                   <th className="p-3">Tỉ lệ</th>
-                  <th>Phí cố định</th>
                   <th>Hiệu lực từ</th>
                   <th>Đến</th>
                   <th>Người tạo</th>
@@ -128,20 +136,15 @@ export default function AdminFeePage() {
                     <td className="p-3 text-base font-extrabold text-primary">
                       {Number((f.rate * PERCENT_SCALE).toFixed(1))}%
                     </td>
-                    <td>{formatVnd(f.fixedFee ?? 0)}</td>
                     <td>{formatDate(f.effectiveFrom)}</td>
                     <td>{f.effectiveTo ? formatDate(f.effectiveTo) : "—"}</td>
                     <td>{f.createdBy}</td>
                     <td className="pr-3">
-                      {f.active ? (
-                        <Badge tone="green">Đang áp dụng</Badge>
-                      ) : (
-                        <Badge tone="gray">
-                          {f.effectiveFrom > new Date().toLocaleDateString("en-CA")
-                            ? "Chưa đến hiệu lực"
-                            : "Hết hiệu lực"}
+                      <td className="pr-3">
+                        <Badge tone={FEE_STATUS[getFeeStatus(f)].tone}>
+                          {FEE_STATUS[getFeeStatus(f)].label}
                         </Badge>
-                      )}
+                      </td>
                     </td>
                   </tr>
                 ))}
