@@ -16,4 +16,7 @@ export class NotificationService {
   markAllAsRead() {
     return this.gateway.markAllAsRead();
   }
+  getUnreadCount() {
+    return this.gateway.getUnreadCount();
+  }
 }

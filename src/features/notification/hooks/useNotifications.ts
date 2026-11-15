@@ -1,6 +1,7 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import type { NotificationResponse } from "../types/notification.types";
@@ -20,6 +21,18 @@ export function useNotifications() {
       last.hasNext ? (last.nextCursor ?? undefined) : undefined, // ĐỔI: field thật của CursorResponse
     // Làm phẳng để `data` là mảng như NotificationBell và NotificationsPage đang dùng
     select: (d): NotificationResponse[] => d.pages.flatMap((p) => p.content), // ĐỔI: tên field chứa danh sách
+  });
+}
+
+/**
+ * Số thông báo chưa đọc thật từ BE (không phụ thuộc số mục đã tải).
+ * Key nằm dưới NOTIFICATION_KEY nên realtime và các mutation invalidate là tự làm mới.
+ */
+export function useUnreadNotificationCount(enabled = true) {
+  return useQuery({
+    queryKey: [...NOTIFICATION_KEY, "unread"] as const,
+    queryFn: () => notificationService.getUnreadCount(),
+    enabled,
   });
 }
 
