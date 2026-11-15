@@ -1,4 +1,3 @@
-import { adminPaymentService } from "./admin.payment.service";
 import { adminStatsService } from "./admin.stats.service";
 import { http } from "@/config/axiosClient";
 import { mockConfig } from "@/config/env";
@@ -212,6 +211,5 @@ export const adminService = {
     await http.put<void>(`/v1/admin/posts/${postId}/remove`, { reason }); // TODO: nối API
   },
 
-  ...adminPaymentService,
   getStats: adminStatsService.getStats,
 };

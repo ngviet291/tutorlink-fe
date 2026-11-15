@@ -13,6 +13,8 @@ import { AiTop5Panel } from "./AiTop5Panel";
 import { ApplicantRow } from "./ApplicantRow";
 import type { ApplicationResponse } from "../types/application.types";
 import type { PostResponse } from "@/features/post/types/post.types";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/app/store";
 
 export function ApplicantList({ post }: { post: PostResponse }) {
   const { t } = useTranslation();
@@ -34,6 +36,8 @@ export function ApplicantList({ post }: { post: PostResponse }) {
   );
   const { select } = useApplicationMutations();
   const [target, setTarget] = useState<ApplicationResponse | null>(null);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isOwner = Boolean(user?.id) && post.author?.id === user?.id;
 
   const hasAccepted =
     data?.some((a) =>
@@ -45,12 +49,15 @@ export function ApplicantList({ post }: { post: PostResponse }) {
   const pending =
     data?.filter((a) => a.applicationStatus === "PENDING").length ?? 0;
 
+  const applicantName = (a: ApplicationResponse) =>
+    post.type === "FIND_TUTOR" ? a.tutor.fullName : a.student.fullName;
+
   const confirm = () => {
     if (!target) return;
     select.mutate(target.id, {
       onSuccess: () => {
         toast.success(
-          t("application.selected", { name: target.tutor.fullName }),
+          t("application.selected", { name: applicantName(target) }),
         );
         setTarget(null);
       },
@@ -65,6 +72,7 @@ export function ApplicantList({ post }: { post: PostResponse }) {
         canSelect={canSelect}
         onSelect={setTarget}
         pendingCount={pending}
+        isOwner={isOwner}
       />
 
       <section aria-labelledby="all-applicants">
@@ -85,6 +93,8 @@ export function ApplicantList({ post }: { post: PostResponse }) {
                 application={a}
                 canSelect={canSelect}
                 onSelect={setTarget}
+                isOwner={isOwner}
+                onExpire={() => void refetch()}
               />
             ))}
           </ul>
@@ -104,7 +114,7 @@ export function ApplicantList({ post }: { post: PostResponse }) {
         loading={select.isPending}
         onConfirm={confirm}
         description={t("application.confirmSelectDesc", {
-          name: target?.tutor.fullName,
+          name: target ? applicantName(target) : "",
         })}
       />
     </div>

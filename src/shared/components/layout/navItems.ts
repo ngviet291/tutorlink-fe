@@ -54,6 +54,7 @@ const studentItems: NavItem[] = [
   { to: ROUTES.DASHBOARD, label: 'Tổng quan', icon: LayoutDashboard, end: true },
   { to: ROUTES.POST_CREATE, label: 'Đăng bài mới', icon: PlusCircle },
   { to: ROUTES.MY_POSTS, label: 'Bài đăng của tôi', icon: FileText },
+  { to: ROUTES.MY_APPLICATIONS, label: 'Đơn đã ứng tuyển', icon: BookOpen },
   { to: ROUTES.FAVORITES, label: 'Gia sư yêu thích', icon: Heart },
 ]
 

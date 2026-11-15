@@ -17,6 +17,8 @@ export interface ApplicationGateway {
   ): Promise<CursorResponse<PostApplicationItem>>;
   ranked(postId: string): Promise<RankedApplicationsResponse>;
   select(id: string): Promise<ApplicationResponse>;
+  unselect(id: string): Promise<ApplicationResponse>;
+  reject(id: string): Promise<ApplicationResponse>;
   confirm(id: string): Promise<ApplicationResponse>;
   finish(id: string): Promise<ApplicationResponse>;
   cancel(id: string): Promise<ApplicationResponse>;

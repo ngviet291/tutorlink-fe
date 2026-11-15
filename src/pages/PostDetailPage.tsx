@@ -334,9 +334,10 @@ export default function PostDetailPage() {
             </p>
           )}
 
-          {alreadyApplied && myApplication?.applicationStatus === "PENDING" && (
+          {!isAuthor && alreadyApplied && myApplication?.applicationStatus === "PENDING" && (
             <Button
-              variant="ghost"
+              variant="outline"
+              size="lg"
               loading={cancel.isPending}
               onClick={() =>
                 cancel.mutate(myApplication.id, {

@@ -7,10 +7,8 @@ import {
 } from "@tanstack/react-query";
 import { adminService, type AdminUserFilter } from "../service/admin.service";
 import type { AdminPostFilter } from "@/features/post/types/post.types";
-import type { AdminTransactionFilter } from "@/features/wallet/types/wallet.types";
 import type { AccountStatus } from "@/shared/types/common.types";
 import type {
-  FeeRatePayload,
   ProfileReviewPayload,
 } from "../types/admin.types";
 import { postService } from "@/config/di/container";
@@ -77,40 +75,10 @@ export function useAdminPostDetail(id: string | undefined) {
   });
 }
 
-export function useAdminTransactions(params: Omit<AdminTransactionFilter, "cursor"> = {}) {
-  return useInfiniteQuery({
-    queryKey: [...adminKeys.transactions, "list", params],
-    queryFn: ({ pageParam }) => adminService.getTransactions({ ...params, cursor: pageParam }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: last => last.hasNext ? last.nextCursor : undefined,
-  });
-}
-export function useAdminTransaction(id: string | undefined) {
-  return useQuery({ queryKey: [...adminKeys.transactions, 'detail', id],
-    queryFn: () => adminService.getTransaction(id!), enabled: Boolean(id) });
-}
-
-export function useFeeRates() {
-  return useQuery({
-    queryKey: adminKeys.feeRates,
-    queryFn: () => adminService.getFeeRates(),
-  });
-}
-
 export function useComplaints(status?: ComplaintStatus) {
   return useQuery({
     queryKey: [...adminKeys.complaints, status],
     queryFn: () => adminComplaintsService.getComplaints(status),
-  });
-}
-
-export function useRevenueStatistics(
-  range: { from?: string; to?: string } = {},
-) {
-  return useQuery({
-    queryKey: [...adminKeys.transactions, "revenue", range],
-    queryFn: () => adminService.getRevenueStatistics(range),
-    enabled: (!range.from && !range.to) || Boolean(range.from && range.to && range.from <= range.to),
   });
 }
 
@@ -144,10 +112,6 @@ export function useAdminMutations() {
         void qc.invalidateQueries({ queryKey: ["tutors"] });
       },
     }),
-    refundTransaction: useMutation({
-      mutationFn: (id: string) => adminService.refundTransaction(id),
-      onSuccess: () => { void refresh(); void qc.invalidateQueries({ queryKey: ['wallet'] }); },
-    }),
     removePost: useMutation({
       mutationFn: ({ id, reason }: { id: string; reason: string }) =>
         postService.removePostByAdmin(id, reason),
@@ -156,11 +120,6 @@ export function useAdminMutations() {
         void qc.invalidateQueries({ queryKey: ["posts"] });
         void qc.invalidateQueries({ queryKey: ["subjects"] });
       },
-    }),
-    createFeeRate: useMutation({
-      mutationFn: (payload: FeeRatePayload) =>
-        adminService.createFeeRate(payload),
-      onSuccess: refresh,
     }),
     decideComplaint: useMutation({
       mutationFn: ({ complaintId, status }: { complaintId: string; status: 'APPROVED' | 'REJECTED' }) =>
@@ -173,3 +132,4 @@ export function useAdminMutations() {
     }),
   };
 }
+

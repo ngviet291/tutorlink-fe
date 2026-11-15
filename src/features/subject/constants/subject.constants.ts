@@ -1,0 +1,2 @@
+export const SUBJECT_PAGE_SIZE = 10;
+export const SUBJECT_FORM_NAME_MAX_LENGTH = 50;

@@ -23,7 +23,7 @@ export function ApplyModal({ postId, open, onClose }: Props) {
   const [fee, setFee] = useState('')
   const feeValue = Number(fee.replace(/\D/g, ''))
 
-  const handleSubmit = () => {
+  const submit = () => {
     if (!feeValue) {
       toast.error('Vui lòng nhập mức phí đề xuất')
       return
@@ -43,9 +43,15 @@ export function ApplyModal({ postId, open, onClose }: Props) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={t('application.applyTitle')}>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t('application.applyTitle')}
+    >
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-text-secondary">{t('application.applyDesc')}</p>
+        <p className="text-sm text-text-secondary">
+          {t('application.applyDesc')}
+        </p>
         <Input
           label="Mức phí đề xuất (VND/tháng)"
           inputMode="numeric"
@@ -66,7 +72,7 @@ export function ApplyModal({ postId, open, onClose }: Props) {
         <p className="text-right text-xs text-text-secondary">{message.length}/500</p>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button loading={apply.isPending} onClick={handleSubmit}>
+          <Button loading={apply.isPending} onClick={submit}>
             {t('application.submitApplication')}
           </Button>
         </div>

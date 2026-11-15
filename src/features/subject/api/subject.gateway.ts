@@ -1,13 +1,10 @@
 import type { CursorResponse } from "@/shared/types/common.dto";
 import type { SubjectRequest } from "../types/subject.dto";
-import type {
-  SubjectPageParams,
-  SubjectResponse,
-} from "../types/subject.types";
+import type { SubjectPageParams, SubjectResponse } from "../types/subject.types";
 
 /**
- * Các hợp đồng nhỏ (ISP) — consumer chỉ phụ thuộc phần mình cần.
- * Request dùng DTO của BE; response trả về model của FE (đã map).
+ * Tách hợp đồng theo trách nhiệm để nơi sử dụng chỉ phụ thuộc phần cần thiết.
+ * Yêu cầu dùng DTO của backend; kết quả trả về mô hình frontend đã chuyển đổi.
  */
 export interface SubjectQueryGateway {
   getPage(params?: SubjectPageParams): Promise<CursorResponse<SubjectResponse>>;
@@ -21,5 +18,4 @@ export interface SubjectAdminGateway {
   remove(id: string): Promise<void>;
 }
 
-export interface SubjectGateway
-  extends SubjectQueryGateway, SubjectAdminGateway {}
+export interface SubjectGateway extends SubjectQueryGateway, SubjectAdminGateway {}
