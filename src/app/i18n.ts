@@ -217,6 +217,7 @@ const vi = {
     },
     status: {
       DRAFT: "Bản nháp",
+      PENDING: "Chờ duyệt",
       PUBLISHED: "Đang tuyển",
       CLOSED: "Đã đóng",
       REMOVED: "Đã gỡ",
@@ -230,6 +231,9 @@ const vi = {
     applySuccess: "Ứng tuyển thành công",
     applyTitle: "Ứng tuyển nhận lớp",
     applyDesc: "Viết lời nhắn giới thiệu bản thân đến học sinh.",
+    appliedAgo: "Đã ứng tuyển {{time}}",
+    rank: "Hạng {{rank}}",
+    matchScore: "Phù hợp {{score}}%",
     messageLabel: "Lời nhắn (tuỳ chọn)",
     messagePlaceholder:
       "Giới thiệu bản thân và lý do bạn phù hợp với lớp này...",
@@ -712,6 +716,7 @@ const en = {
     },
     status: {
       DRAFT: "Draft",
+      PENDING: "Pending review",
       PUBLISHED: "Recruiting",
       CLOSED: "Filled",
       REMOVED: "Removed",
@@ -725,6 +730,9 @@ const en = {
     applySuccess: "Applied successfully",
     applyTitle: "Apply for class",
     applyDesc: "Write an introduction message to the student.",
+    appliedAgo: "Applied {{time}}",
+    rank: "Rank {{rank}}",
+    matchScore: "{{score}}% match",
     messageLabel: "Message (optional)",
     messagePlaceholder:
       "Introduce yourself and explain why you are a good fit...",

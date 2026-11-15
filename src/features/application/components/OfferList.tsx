@@ -56,8 +56,13 @@ export function OfferList({ onPay }: Props) {
                 {t('application.offeredBy', { name: a.student.fullName })} · {formatDate(a.appliedAt)}
               </p>
               {/* Hạn cuối do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
+              {a.paid && isFeePayer(a, user?.id) && (
+                <p className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  Đã thanh toán — chờ học viên xác nhận
+                </p>
+              )}
               {a.expiresAt && (
-                <ExpiryCountdown expiresAt={a.expiresAt} actionLabel={a.paid ? 'xác nhận' : 'thanh toán'} onExpire={() => void refetch()} className="mt-1" />
+                <ExpiryCountdown expiresAt={a.expiresAt} actionLabel={a.paid ? 'học viên xác nhận' : 'thanh toán'} onExpire={() => void refetch()} className="mt-1" />
               )}
               {a.post.minBudget != null && (
                 <Badge tone="green" className="mt-1">

@@ -18,7 +18,8 @@ export interface ReviewCountRow {
 export interface CreateApplicationRequest {
   postId: string;
   message?: string;
-  proposedFee: number;
+  /** Chỉ tutor ứng tuyển mới đề xuất phí; student để trống. */
+  proposedFee?: number;
 }
 
 /** BE: application/dto/response/ApplicationResponse.java */

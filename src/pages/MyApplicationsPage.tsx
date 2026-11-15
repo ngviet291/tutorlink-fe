@@ -27,8 +27,15 @@ export default function MyApplicationsPage() {
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
-      <PageHeader title="Đơn đã ứng tuyển" description="Theo dõi trạng thái các lớp bạn đăng ký và thanh toán phí nhận lớp khi được chọn." />
-      <OfferList onPay={setOffer} />
+      <PageHeader
+        title="Đơn đã ứng tuyển"
+        description={
+          user?.role === 'TUTOR'
+            ? 'Theo dõi trạng thái các lớp bạn đăng ký và thanh toán phí nhận lớp khi được chọn.'
+            : 'Theo dõi trạng thái các lớp bạn đã đăng ký.'
+        }
+      />
+      {user?.role === 'TUTOR' && <OfferList onPay={setOffer} />}
     
       {isLoading ? <ListSkeleton /> : isError ? <ErrorState onRetry={() => void refetch()} /> : !data?.length ? (
         <EmptyState title="Bạn chưa đăng ký lớp nào" action={<Link to={ROUTES.FIND_CLASS}><Button>Tìm lớp ngay</Button></Link>} />
@@ -44,7 +51,7 @@ export default function MyApplicationsPage() {
                 <StatusBadge kind="application" status={a.applicationStatus} />
                 {/* Đơn ACCEPTED có expiresAt do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
                 {a.applicationStatus === 'ACCEPTED' && a.expiresAt && (
-                  <ExpiryCountdown expiresAt={a.expiresAt} actionLabel={a.paid ? 'xác nhận' : 'thanh toán'} onExpire={() => void refetch()} />
+                  <ExpiryCountdown expiresAt={a.expiresAt} actionLabel={a.paid || !isFeePayer(a, user?.id) ? 'xác nhận' : 'thanh toán'} onExpire={() => void refetch()} />
                 )}
                 {a.applicationStatus === 'ACCEPTED' && !a.paid && isFeePayer(a, user?.id) && <Button size="sm" onClick={() => setOffer(a)}>Thanh toán phí</Button>}
                 {a.applicationStatus === 'ACCEPTED' && a.paid && isApplicant(a, user?.id) && <Button size="sm" loading={confirm.isPending && confirm.variables === a.id} onClick={() => confirm.mutate(a.id, { onSuccess: () => toast.success('Đã xác nhận'), onError: (e) => toast.error(getErrorMessage(e)) })}>Xác nhận</Button>}

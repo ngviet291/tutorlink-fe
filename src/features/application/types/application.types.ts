@@ -58,7 +58,7 @@ export interface AiSuggestionResponse {
 export interface ApplyPayload {
   postId: string;
   message?: string;
-  proposedFee: number;
+  proposedFee?: number;
 }
 
 /** Minimal user được lấy từ public-profile để ghép Application DTO. */
