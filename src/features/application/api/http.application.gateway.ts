@@ -34,8 +34,8 @@ export class HttpApplicationGateway implements ApplicationGateway {
   }
 
   listByPost(postId: string, limit = 100) {
-    return this.http.get<CursorResponse<PostApplicationItem>>(
-      `/v1/posts/${postId}/applications`,
+    return this.http.get<CursorResponse<ApplicationResponse>>(
+      `/v1/applications/post/${postId}`,
       { params: { limit } },
     );
   }

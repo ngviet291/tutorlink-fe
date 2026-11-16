@@ -82,6 +82,7 @@ export function toPost(dto: PostResponseDto): PostResponse {
     deadline: dto.deadline ?? "",
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
+    applicationCount: dto.applicationCount,
   };
 }
 

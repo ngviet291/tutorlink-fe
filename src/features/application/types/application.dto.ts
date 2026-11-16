@@ -27,6 +27,9 @@ export interface UserSummary {
   id: string;
   fullName: string;
   avatarUrl?: string | null;
+  // Thông tin thêm cho Tutor (null nếu là Student)
+  averageRating?: number | null;
+  totalReviews?: number | null;
 }
 
 export interface ApplicationResponse {
