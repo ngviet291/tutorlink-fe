@@ -11,11 +11,15 @@ export function fromBeTransaction(dto: TransactionDto): TransactionResponse {
     paymentMethod: dto.paymentMethod,
     createdAt: dto.transactionDate,
     tutorId: dto.tutorId,
+    tutorName: dto.tutorName,
     applicationId: dto.applicationId,
     providerOrderId: dto.providerOrderId,
     providerTransId: dto.providerTransId,
     paymentLink: dto.paymentLink,
     qrCodeUrl: dto.qrCodeUrl,
     deeplink: dto.deeplink,
+    bankAccountNumber: dto.bankAccountNumber,
+    bankName: dto.bankName,
+    accountHolderName: dto.accountHolderName,
   };
 }

@@ -45,6 +45,8 @@ export interface ApplicationResponse {
   processedByAdminId?: string;
   transactionId?: string;
   transactionStatus?: string;
+  /** true nếu transaction.status == SUCCESS */
+  paid?: boolean;
 }
 /** BE: application/dto/response/MatchBreakdown.java */
 export interface MatchBreakdown {

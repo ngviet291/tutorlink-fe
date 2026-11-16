@@ -133,7 +133,8 @@ export class ApplicationService {
       expiresAt: dto.expiresAt,
       processedByAdminId: dto.processedByAdminId,
       transactionId: dto.transactionId,
-      paid: dto.transactionStatus === "SUCCESS",
+      transactionStatus: dto.transactionStatus,
+      paid: dto.paid,
     };
   }
 

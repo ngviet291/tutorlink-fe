@@ -135,9 +135,9 @@ export default function AdminTransactionsPage() {
               <thead className="bg-surface-hover text-xs uppercase text-text-secondary">
                 <tr>
                   <th className="p-3">Thời gian</th>
-                  <th>Gia sư</th>
+                  <th>ID giao dịch</th>
                   <th>Loại</th>
-                  <th className="text-right">Số tiền</th>
+                  <th className="pr-4 text-right">Số tiền</th>
                   <th className="pr-3">Trạng thái</th>
                 </tr>
               </thead>
@@ -151,13 +151,23 @@ export default function AdminTransactionsPage() {
                     <td className="p-3 text-text-secondary">
                       {formatDateTime(t.createdAt)}
                     </td>
-                    <td className="font-medium text-text">{t.tutorId ?? "—"}</td>
+                    <td className="font-medium text-text">{t.id ?? "—"}</td>
                     <td>
                       {TRANSACTION_TYPE_LABEL[
                         t.transactionType as keyof typeof TRANSACTION_TYPE_LABEL
                       ] ?? t.transactionType}
                     </td>
-                    <td className="text-right font-semibold">{formatVnd(t.amount)}</td>
+                    <td
+                      className={`pr-4 text-right font-semibold ${
+                        t.transactionType === "TOP_UP"
+                          ? "text-success"
+                          : t.transactionType === "WITHDRAW"
+                            ? "text-danger"
+                            : ""
+                      }`}
+                    >
+                      {formatVnd(t.amount)}
+                    </td>
                     <td className="pr-3">
                       <StatusBadge kind="transaction" status={t.transactionStatus} />
                     </td>
@@ -186,6 +196,7 @@ export default function AdminTransactionsPage() {
           <dl className="divide-y divide-border text-sm">
             {[
               ["Mã giao dịch", detail.id],
+              ["Gia sư", detail.tutorName ?? detail.tutorId ?? "—"],
               [
                 "Loại",
                 TRANSACTION_TYPE_LABEL[
@@ -193,7 +204,6 @@ export default function AdminTransactionsPage() {
                 ] ?? detail.transactionType,
               ],
               ["Số tiền", formatVnd(detail.amount)],
-              ["Lượt đăng ký", detail.applicationId ?? "—"],
               ["Thời gian", formatDateTime(detail.createdAt)],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3 py-2">

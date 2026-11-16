@@ -221,6 +221,12 @@ export const router = createBrowserRouter([
                     ),
                   },
                   {
+                    path: "withdrawals",
+                    element: page(
+                      () => import("@/pages/admin/AdminWithdrawalRequestsPage"),
+                    ),
+                  },
+                  {
                     path: "fee-rate",
                     element: page(() => import("@/pages/admin/AdminFeePage")),
                   },

@@ -51,4 +51,12 @@ export class AdminPaymentService {
   getRevenueStatistics(range: RevenueRange = {}) {
     return this.gateway.getRevenueStatistics(range);
   }
+
+  approveWithdrawal(id: string) {
+    return this.gateway.approveWithdrawal(id);
+  }
+
+  rejectWithdrawal(id: string) {
+    return this.gateway.rejectWithdrawal(id);
+  }
 }

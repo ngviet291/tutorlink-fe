@@ -60,8 +60,8 @@ export function TransactionTable() {
               <thead className="text-xs uppercase text-text-secondary">
                 <tr>
                   <th className="py-2 pr-3">{t("wallet.time")}</th>
-                  <th className="pr-3">{t("wallet.type")}</th>
-                  <th className="pr-3 text-right">{t("wallet.amount")}</th>
+                  <th className="pr-5">{t("wallet.type")}</th>
+                  <th className="pr-5 text-right">{t("wallet.amount")}</th>
                   <th>{t("common.status")}</th>
                 </tr>
               </thead>
@@ -71,11 +71,17 @@ export function TransactionTable() {
                     <td className="py-2.5 pr-3 text-text-secondary">
                       {formatDateTime(tx.createdAt)}
                     </td>
-                    <td className="pr-3 font-medium text-text">
+                    <td className="pr-5 font-medium text-text">
                       {TRANSACTION_TYPE_LABEL[tx.transactionType]}
                     </td>
                     <td
-                      className={`pr-3 text-right font-semibold ${tx.transactionType === "TOP_UP" ? "text-success" : "text-text"}`}
+                      className={`pr-5 text-right font-semibold ${
+                        tx.transactionType === "TOP_UP" 
+                          ? "text-success" 
+                          : tx.transactionType === "WITHDRAW"
+                            ? "text-danger"
+                            : "text-text"
+                      }`}
                     >
                       {tx.transactionType === "TOP_UP" ? "+" : "−"}
                       {formatVnd(tx.amount)}

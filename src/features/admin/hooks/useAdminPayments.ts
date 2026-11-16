@@ -71,5 +71,26 @@ export function useAdminPaymentMutations() {
     onSuccess: refresh,
   });
 
-  return { refundTransaction, createFeeRate };
+  const approveWithdrawal = useMutation({
+    mutationFn: (id: string) => adminPaymentService.approveWithdrawal(id),
+    onSuccess: () => {
+      refresh();
+      void queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+    },
+  });
+
+  const rejectWithdrawal = useMutation({
+    mutationFn: (id: string) => adminPaymentService.rejectWithdrawal(id),
+    onSuccess: () => {
+      refresh();
+      void queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+    },
+  });
+
+  return { 
+    refundTransaction, 
+    createFeeRate, 
+    approveWithdrawal, 
+    rejectWithdrawal 
+  };
 }

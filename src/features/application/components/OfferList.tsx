@@ -26,14 +26,24 @@ export function OfferList({ onPay }: Props) {
   const user = useSelector((state: RootState) => state.auth.user)
 
   const offers = data?.filter((a) => {
-    if (a.applicationStatus !== 'ACCEPTED') {
-      return false
+    // Chỉ hiển thị đơn ACCEPTED và chưa thanh toán
+    // Check cả paid và transactionStatus để chắc chắn
+    const isPaid = a.paid || a.transactionStatus === 'SUCCESS';
+    const shouldShow = a.applicationStatus === 'ACCEPTED' && !isPaid;
+    
+    // Debug: log để kiểm tra
+    if (a.applicationStatus === 'ACCEPTED') {
+      console.log('Application:', a.id, {
+        status: a.applicationStatus,
+        paid: a.paid,
+        transactionStatus: a.transactionStatus,
+        isPaid,
+        shouldShow,
+      });
     }
-    if (a.transactionStatus === 'SUCCESS') {
-      return false
-    }
-    return true
-  }) ?? []
+    
+    return shouldShow;
+  }) ?? [];
 
   if (isLoading) return <Skeleton className="h-24 w-full" />
   if (!offers.length) return null

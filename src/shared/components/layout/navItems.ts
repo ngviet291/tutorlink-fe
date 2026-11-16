@@ -114,6 +114,7 @@ const adminItems: NavItem[] = [
   { to: ROUTES.ADMIN_SUBJECTS, label: "Môn học", icon: Tags },
   { to: ROUTES.ADMIN_POSTS, label: "Bài đăng & đăng ký", icon: FileText },
   { to: ROUTES.ADMIN_TRANSACTIONS, label: "Giao dịch", icon: Receipt },
+  { to: ROUTES.ADMIN_WITHDRAWALS, label: "Yêu cầu rút tiền", icon: Wallet },
   { to: ROUTES.ADMIN_FEE, label: "Tỉ lệ phí", icon: CircleDollarSign },
   { to: ROUTES.ADMIN_COMPLAINTS, label: "Khiếu nại đánh giá", icon: Flag },
 ];

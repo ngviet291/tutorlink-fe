@@ -178,6 +178,9 @@ export const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
   get REFUND() {
     return t("wallet.transactionType.REFUND");
   },
+  get WITHDRAW() {
+    return t("wallet.transactionType.WITHDRAW");
+  },
 };
 
 export const USER_STATUS_META: Record<

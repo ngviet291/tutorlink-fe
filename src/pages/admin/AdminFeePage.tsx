@@ -138,7 +138,7 @@ export default function AdminFeePage() {
                     </td>
                     <td>{formatDate(f.effectiveFrom)}</td>
                     <td>{f.effectiveTo ? formatDate(f.effectiveTo) : "—"}</td>
-                    <td>{f.createdBy}</td>
+                    <td>{f.createdByName ?? f.createdBy}</td>
                     <td className="pr-3">
                       <td className="pr-3">
                         <Badge tone={FEE_STATUS[getFeeStatus(f)].tone}>

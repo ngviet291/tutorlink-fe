@@ -20,4 +20,6 @@ export interface AdminPaymentGateway extends TransactionQueryGateway {
   createFeeRate(payload: FeeRatePayload): Promise<FeeRateConfig>;
   refundTransaction(id: string): Promise<TransactionResponse>;
   getRevenueStatistics(range?: RevenueRange): Promise<RevenueStatistics>;
+  approveWithdrawal(id: string): Promise<TransactionResponse>;
+  rejectWithdrawal(id: string): Promise<TransactionResponse>;
 }

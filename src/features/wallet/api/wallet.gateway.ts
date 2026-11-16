@@ -22,4 +22,10 @@ export interface WalletGateway extends TransactionQueryGateway {
   ): Promise<CursorResponse<TransactionResponse>>;
   getFeeQuote(applicationId: string): Promise<EnrollmentFeeQuote>;
   payCommission(applicationId: string): Promise<TransactionResponse>;
+  withdraw(payload: {
+    amount: number;
+    bankAccountNumber: string;
+    bankName: string;
+    accountHolderName: string;
+  }): Promise<TransactionResponse>;
 }

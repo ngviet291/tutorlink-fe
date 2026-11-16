@@ -1,11 +1,17 @@
-import { Info, Plus, Wallet } from "lucide-react";
+import { Info, Plus, Wallet, ArrowDownToLine } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
 import { formatVnd } from "@/shared/utils/currency";
 import { useWallet } from "../hooks/useWallet";
 
-export function WalletCard({ onTopUp }: { onTopUp: () => void }) {
+export function WalletCard({ 
+  onTopUp, 
+  onWithdraw 
+}: { 
+  onTopUp: () => void;
+  onWithdraw: () => void;
+}) {
   const { t } = useTranslation();
   const { data, isLoading, isError, refetch } = useWallet();
 
@@ -39,9 +45,14 @@ export function WalletCard({ onTopUp }: { onTopUp: () => void }) {
         >
           <Plus className="size-4" /> {t("wallet.topUp")}
         </Button>
-        <p className="flex items-center gap-1.5 text-xs text-white/85">
-          <Info className="size-4" /> {t("wallet.disclaimer")}
-        </p>
+        <Button
+          variant="secondary"
+          onClick={onWithdraw}
+          className="bg-white/10 text-white hover:bg-white/20"
+          disabled={!data || data.balance < 10000}
+        >
+          <ArrowDownToLine className="size-4" /> Rút tiền
+        </Button>
       </div>
     </section>
   );

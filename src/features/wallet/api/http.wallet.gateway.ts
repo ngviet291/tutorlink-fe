@@ -91,4 +91,17 @@ export class HttpWalletGateway implements WalletGateway {
     );
     return fromBeTransaction(dto);
   }
+
+  async withdraw(payload: {
+    amount: number;
+    bankAccountNumber: string;
+    bankName: string;
+    accountHolderName: string;
+  }): Promise<TransactionResponse> {
+    const dto = await this.http.post<TransactionDto>(
+      `${PAYMENT_API_PATH}/wallet/withdraw`,
+      payload,
+    );
+    return fromBeTransaction(dto);
+  }
 }

@@ -17,7 +17,7 @@ export type TransactionStatus =
   | "FAILED"
   | "CANCELLED"
   | "REFUNDED";
-export type TransactionType = "TOP_UP" | "COMMISSION" | "REFUND";
+export type TransactionType = "TOP_UP" | "COMMISSION" | "REFUND" | "WITHDRAW";
 export type NotificationType = "SYSTEM" | "APPLICATION" | "PAYMENT" | "CHAT" | "TRANSACTION" | "MESSAGE" | "REVIEW" | "POST" | "MATCHING";
 export type TeachingMode = "ONLINE" | "OFFLINE" | "BOTH";
 export type EducationLevel =

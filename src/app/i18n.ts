@@ -288,13 +288,11 @@ const vi = {
     willAdd: "Sẽ nạp {{amount}}",
     minTopUp: "Số tiền tối thiểu là 10,000đ",
     confirmTopUp: "Xác nhận nạp tiền",
-    disclaimer:
-      "Ví chỉ dùng để nạp tiền và trả phí nhận lớp — không hỗ trợ rút tiền.",
     amount: "Số tiền",
     history: "Lịch sử giao dịch",
     noTransactions: "Chưa có giao dịch",
     walletNote:
-      "Ví chỉ dùng để nạp tiền và trả phí nhận lớp — không hỗ trợ rút tiền.",
+      "",
     transferNote:
       "Chuyển khoản theo thông tin dưới đây, số dư sẽ được cộng sau khi xác nhận.",
     bankName: "Ngân hàng",
@@ -320,6 +318,7 @@ const vi = {
       TOP_UP: "Nạp tiền",
       COMMISSION: "Phí nhận lớp",
       REFUND: "Hoàn tiền",
+      WITHDRAW: "Rút tiền",
     },
     transactionStatus: {
       PENDING: "Đang xử lý",
@@ -787,13 +786,9 @@ const en = {
     willAdd: "Will add {{amount}}",
     minTopUp: "Minimum top-up is 10,000đ",
     confirmTopUp: "Confirm top-up",
-    disclaimer:
-      "Wallet is for enrollment fees only — withdrawals not supported.",
     amount: "Amount",
     history: "Transaction history",
     noTransactions: "No transactions yet",
-    walletNote:
-      "Wallet is for paying enrollment fees only — withdrawals not supported.",
     transferNote:
       "Transfer using the details below. Balance will be added after confirmation.",
     bankName: "Bank",
@@ -819,6 +814,7 @@ const en = {
       TOP_UP: "Top up",
       COMMISSION: "Enrollment fee",
       REFUND: "Refund",
+      WITHDRAW: "Withdraw",
     },
     transactionStatus: {
       PENDING: "Pending",

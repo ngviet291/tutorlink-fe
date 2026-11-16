@@ -44,4 +44,13 @@ export class WalletService {
   payCommission(applicationId: string) {
     return this.gateway.payCommission(applicationId);
   }
+
+  withdraw(payload: { 
+    amount: number; 
+    bankAccountNumber: string; 
+    bankName: string; 
+    accountHolderName: string 
+  }) {
+    return this.gateway.withdraw(payload);
+  }
 }

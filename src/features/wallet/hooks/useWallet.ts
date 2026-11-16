@@ -72,6 +72,15 @@ export function useWalletMutations() {
       mutationFn: (id: string) => walletService.confirmTopUp(id),
       onSuccess: refresh,
     }),
+    withdraw: useMutation({
+      mutationFn: (payload: {
+        amount: number;
+        bankAccountNumber: string;
+        bankName: string;
+        accountHolderName: string;
+      }) => walletService.withdraw(payload),
+      onSuccess: refresh,
+    }),
   };
 }
 
