@@ -8,6 +8,7 @@ import {
   Sparkles,
   UserPlus,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/utils/cn";
 import { timeAgo } from "@/shared/utils/date";
@@ -16,6 +17,7 @@ import type {
   NotificationType,
 } from "../types/notification.types";
 import { useNotificationMutations } from "../hooks/useNotifications";
+import { resolveNotificationRoute } from "../util/notificationRoute";
 
 const icons: Record<NotificationType, typeof Bell> = {
   SYSTEM: ShieldCheck,
@@ -38,6 +40,15 @@ interface Props {
 export function NotificationList({ items, onNavigate, compact }: Props) {
   const { t } = useTranslation();
   const { markOne } = useNotificationMutations();
+  const navigate = useNavigate();
+
+  const handleClick = (n: NotificationResponse) => {
+    if (!n.read) markOne.mutate(n.id);
+    onNavigate?.();
+    const route = resolveNotificationRoute(n);
+    console.log("NotificationList.handleClick", n, route);
+    if (route) navigate(route);
+  };
 
   return (
     <ul className="divide-y divide-border">
@@ -47,10 +58,7 @@ export function NotificationList({ items, onNavigate, compact }: Props) {
           <li key={n.id}>
             <button
               type="button"
-              onClick={() => {
-                if (!n.read) markOne.mutate(n.id);
-                onNavigate?.();
-              }}
+              onClick={() => handleClick(n)}
               className={cn(
                 "flex w-full cursor-pointer items-start gap-3 px-4 py-3 text-left hover:bg-surface-hover",
                 !n.read && "bg-primary-light/50",

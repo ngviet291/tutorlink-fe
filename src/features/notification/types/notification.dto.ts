@@ -3,6 +3,16 @@
 
 import type { NotificationType } from "@/shared/types/common.types";
 
+/** BE: notification/enums/NotificationTarget.java */
+export type NotificationTarget =
+  | "POST"
+  | "MY_POSTS"
+  | "MY_APPLICATIONS"
+  | "TUTOR_PROFILE"
+  | "WALLET"
+  | "CHAT"
+  | "NONE";
+
 /** BE: notification/dto/response/NotificationResponse.java */
 export interface NotificationResponse {
   id: string;
@@ -11,4 +21,7 @@ export interface NotificationResponse {
   notificationType: NotificationType;
   read: boolean;
   createdAt: string;
+  /** Đích đến khi click. Thông báo cũ (trước khi có tính năng) sẽ không có. */
+  targetType?: NotificationTarget | null;
+  targetId?: string | null;
 }
