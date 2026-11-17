@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
-import { tutorService } from "../service/tutor.service";
+import { tutorService } from "@/config/di/container";
 import type { TutorFilter, TutorProfilePayload } from "../types/tutor.types";
 const CERTIFICATE_POLL_MS = 5000;
 export function useTutors(params: Omit<TutorFilter, "cursor"> = {}) {
@@ -34,7 +34,7 @@ export function useTutor(id: string | undefined) {
 export function useMyTutorProfile(enabled = true) {
   return useQuery({
     queryKey: queryKeys.tutors.me,
-    queryFn: tutorService.getMyProfile,
+    queryFn: () => tutorService.getMyProfile(),
     enabled,
   });
 }
@@ -42,7 +42,7 @@ export function useMyTutorProfile(enabled = true) {
 export function useMyCertificates(enabled = true) {
   return useQuery({
     queryKey: queryKeys.tutors.certificates,
-    queryFn: tutorService.getMyCertificates,
+    queryFn: () => tutorService.getMyCertificates(),
     enabled,
     // còn chứng chỉ chờ AI duyệt thì tự làm mới, xong hết thì dừng
     refetchInterval: (query) =>

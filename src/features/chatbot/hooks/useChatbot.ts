@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useMutation } from "@tanstack/react-query";
 import { getErrorMessage } from "@/shared/utils/errors";
-import { chatbotService } from "../service/chatbot.service";
+import { chatbotService } from "@/config/di/container";
 import type {
   ChatbotConversation,
   ChatbotMessage,
@@ -170,8 +170,6 @@ export function useChatbot() {
     },
     [key, sendMutation.isPending, userId],
   );
-
-  /** Bắt đầu chat mới nhưng không xóa hội thoại cũ trên server. */
   const newConversation = useCallback(() => {
     if (sendMutation.isPending) return;
     conversationId.current = undefined;

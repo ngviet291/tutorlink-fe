@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { userService } from '../service/user.service'
+import { userService } from '@/config/di/container'
 import type { ChangePasswordPayload, UpdateProfilePayload } from '../types/user.types'
 
 export function useUpdateProfile() {
