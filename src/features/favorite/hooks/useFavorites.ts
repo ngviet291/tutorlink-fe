@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
 import { track } from "@/features/tracking/tracker";
-import { favoriteService } from "../service/favorite.service";
+import { favoriteService } from "@/config/di/container";
 
 export function useFavorites(enabled = true) {
   return useQuery({
@@ -22,7 +22,6 @@ export function useFavoriteIds(enabled = true) {
 export function useToggleFavorite(source: string = "unknown") {
   const qc = useQueryClient();
   return useMutation({
-    // Dùng danh sách id đã có trong cache để khỏi gọi thêm GET /v1/favorites mỗi lần bấm tim
     mutationFn: (tutorId: string) =>
       favoriteService.toggleFavorite(
         tutorId,
