@@ -1,18 +1,22 @@
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'node:path'
-import { defineConfig } from 'vitest/config'
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "node:path";
+import { defineConfig } from "vitest/config";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    alias: { '@': path.resolve(import.meta.dirname, 'src') },
+    alias: { "@": path.resolve(import.meta.dirname, "src") },
   },
   // sockjs-client tham chiếu biến `global` của Node
-  define: { global: 'globalThis' },
+  define: { global: "globalThis" },
   test: {
-    environment: 'jsdom',
-    include: ['src/**/*.test.{ts,tsx}'],
+    environment: "jsdom",
+    include: ["src/**/*.test.{ts,tsx}"],
   },
-})
+  server: {
+    host: "0.0.0.0",
+    allowedHosts: true,
+  },
+});
