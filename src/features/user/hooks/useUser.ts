@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { userService } from "../service/user.service";
+import { userService, authService } from "@/config/di/container";
 import { clearUser, updateUser } from "@/features/auth/store/authSlice";
-import { authService } from "@/config/di/container";
 import { useAppDispatch } from "@/shared/hooks/useAppStore";
 import type {
   ChangePasswordPayload,

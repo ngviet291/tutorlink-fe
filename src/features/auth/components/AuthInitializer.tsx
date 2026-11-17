@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useAppDispatch } from "@/shared/hooks/useAppStore";
 import { PageSpinner } from "@/shared/components/ui/Spinner";
-import { userService } from "@/features/user/service/user.service";
+import { userService, tokenStorage } from "@/config/di/container";
 import { setUser, clearUser } from "../store/authSlice";
-import { tokenStorage } from "@/config/di/container";
 import { unauthorizedEvent } from "@/config/events/emitter";
 
 export function AuthInitializer({ children }: { children: ReactNode }) {
