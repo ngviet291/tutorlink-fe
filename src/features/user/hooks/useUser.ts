@@ -21,6 +21,15 @@ export function useUpdateProfile() {
       ),
   });
 }
+
+export function useUploadAvatar() {
+  const dispatch = useAppDispatch();
+  return useMutation({
+    mutationFn: (file: File) => userService.uploadAvatar(file),
+    onSuccess: (user) => dispatch(updateUser({ avatarUrl: user.avatarUrl })),
+  });
+}
+
 export function useChangePassword() {
   const dispatch = useAppDispatch();
   const qc = useQueryClient();

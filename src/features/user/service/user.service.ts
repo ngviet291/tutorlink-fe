@@ -19,6 +19,10 @@ export class UserService {
     return this.gateway.updateProfile(payload);
   }
 
+  uploadAvatar(file: File): Promise<AuthUser> {
+    return this.gateway.uploadAvatar(file);
+  }
+
   changePassword(payload: ChangePasswordPayload): Promise<void> {
     return this.gateway.changePassword(payload);
   }

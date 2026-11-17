@@ -25,7 +25,7 @@ const authSlice = createSlice({
     setLoading(state, action: PayloadAction<boolean>) {
       state.isLoading = action.payload
     },
-    updateUser(state, action: PayloadAction<{ fullName?: string; phone?: string; address?: Address }>) {
+    updateUser(state, action: PayloadAction<{ fullName?: string; phone?: string; address?: Address; avatarUrl?: string }>) {
       if (state.user) {
         Object.assign(state.user, action.payload)
       }

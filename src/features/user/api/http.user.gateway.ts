@@ -25,6 +25,15 @@ export class HttpUserGateway implements UserGateway {
       await this.http.put<BaseUserDto>(`${USERS}/me`, payload),
     );
   }
+  async uploadAvatar(file: File): Promise<AuthUser> {
+    const form = new FormData();
+    form.append("avatar", file);
+    return toBaseUser(
+      await this.http.post<BaseUserDto>(`${USERS}/me/avatar`, form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      }),
+    );
+  }
 
   async changePassword(payload: ChangePasswordPayload): Promise<void> {
     await this.http.put<void>("/v1/auth/change-password", payload);

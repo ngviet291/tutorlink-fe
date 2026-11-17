@@ -124,5 +124,5 @@ const COMMON = [
 ] as const;
 
 export const LIST_KEYS = [...COMMON, "authorId", "province", "ward"] as const;
-export const ADMIN_KEYS = COMMON;
+export const ADMIN_KEYS = [...COMMON, "status"] as const;
 export const MY_KEYS = [...COMMON, "postStatus"] as const;

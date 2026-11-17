@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ChangeEvent } from "react";
+import { Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
@@ -13,8 +14,11 @@ import { rules } from "@/features/auth/validation/auth.validation";
 import {
   useChangePassword,
   useUpdateProfile,
+  useUploadAvatar,
 } from "@/features/user/hooks/useUser";
 import type { UpdateProfilePayload } from "@/features/user/types/user.types";
+
+const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 
 interface PwForm {
   currentPassword: string;
@@ -27,6 +31,26 @@ export default function ProfilePage() {
   const toast = useToast();
   const update = useUpdateProfile();
   const change = useChangePassword();
+  const uploadAvatar = useUploadAvatar();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onPickAvatar = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // cho phép chọn lại cùng một file
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn file ảnh");
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      toast.error("Ảnh tối đa 5MB");
+      return;
+    }
+    uploadAvatar.mutate(file, {
+      onSuccess: () => toast.success("Đã cập nhật ảnh đại diện"),
+      onError: (er) => toast.error(getErrorMessage(er)),
+    });
+  };
 
   const info = useForm<UpdateProfilePayload>({
     defaultValues: {
@@ -88,7 +112,24 @@ export default function ProfilePage() {
 
       <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-3">
-          <Avatar name={user.fullName} src={user.avatarUrl} size="lg" />
+          <button
+            type="button"
+            aria-label="Đổi ảnh đại diện"
+            disabled={uploadAvatar.isPending}
+            onClick={() => fileRef.current?.click()}
+            className="group relative shrink-0 rounded-full disabled:opacity-60">
+            <Avatar name={user.fullName} src={user.avatarUrl} size="xl" />
+            <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+              <Camera className="size-5" />
+            </span>
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onPickAvatar}
+          />
           <div>
             <p className="font-bold text-text">{user.fullName}</p>
             <p className="text-sm text-text-secondary">{user.email}</p>
