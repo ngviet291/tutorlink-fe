@@ -17,6 +17,13 @@ import { delay, requireUser } from "@/mocks/session";
 
 const USE_MOCK = mockConfig.review;
 
+// BE: NONE/PENDING/APPROVED/REJECTED -> FE: NONE/OPEN/RESOLVED
+function toComplaintStatus(s?: string): "NONE" | "OPEN" | "RESOLVED" {
+  if (!s || s === "NONE") return "NONE";
+  if (s === "PENDING") return "OPEN";
+  return "RESOLVED";
+}
+
 export function recomputeRating(tutorId: string): void {
   const t = tutors.find((x) => x.id === tutorId);
   if (!t) return;
@@ -44,26 +51,22 @@ export const reviewService = {
       })
       .then((res) => res.data);
 
-    return Promise.all(
-      page.content.map(async (r) => {
-        const student = await http
-          .get<BaseUserResponse>(`/v1/users/${r.studentId}/public-profile`)
-          .then((res) => res.data);
-        return {
-          id: r.id,
-          tutorId: r.tutorId,
-          rating: r.rating,
-          comment: r.comment ?? "",
-          student: { id: student.id, fullName: student.fullName, avatarUrl: student.avatarUrl },
-          createdAt: r.createdAt,
-          complaintStatus: "NONE" as const,
-        };
-      }),
-    );
+    // BE trả sẵn studentName — không fetch public-profile từng review (1 request lỗi làm hỏng cả list)
+    return page.content.map((r) => ({
+      id: r.id,
+      applicationId: r.applicationId,
+      tutorId: r.tutorId,
+      rating: r.rating,
+      comment: r.comment ?? "",
+      student: { id: r.studentId, fullName: r.studentName ?? "" },
+      createdAt: r.createdAt,
+      complaintStatus: toComplaintStatus(r.complaintStatus),
+    }));
   },
 
   /** Học viên đánh giá gia sư sau khi lớp kết nối (đã thanh toán). Mỗi lớp 1 đánh giá. */
   async createReview(payload: ReviewPayload): Promise<ReviewResponse> {
+    console.log("[DEBUG] createReview called", { USE_MOCK, payload });
     if (USE_MOCK) {
       await delay();
       const me = requireUser();
@@ -99,6 +102,7 @@ export const reviewService = {
       recomputeRating(tutorId);
       return review;
     }
+    console.log("[DEBUG] createReview -> POST /v1/reviews", payload);
     return http
       .post<ReviewResponse>("/v1/reviews", payload)
       .then((res) => res.data); // TODO: nối API
@@ -144,5 +148,27 @@ export const reviewService = {
     return http
       .post<ReviewComplaintResponse>(`/v1/reviews/${reviewId}/complaints`, { reason })
       .then((res) => res.data);
+  },
+
+  /** Chi tiết 1 đánh giá (admin xem khiếu nại). */
+  async getReviewById(reviewId: string): Promise<ReviewResponse> {
+    if (USE_MOCK) {
+      await delay();
+      const r = reviews.find((x) => x.id === reviewId);
+      if (!r) throw new ApiError(ERROR_MESSAGES.NOT_FOUND, "NOT_FOUND", 404);
+      return r;
+    }
+    return http
+      .get<ReviewDto>(`/v1/reviews/${reviewId}`)
+      .then((res) => ({
+        id: res.data.id,
+        applicationId: res.data.applicationId,
+        tutorId: res.data.tutorId,
+        rating: res.data.rating,
+        comment: res.data.comment ?? "",
+        student: { id: res.data.studentId, fullName: res.data.studentName ?? "" },
+        createdAt: res.data.createdAt,
+        complaintStatus: toComplaintStatus(res.data.complaintStatus),
+      }));
   },
 };
