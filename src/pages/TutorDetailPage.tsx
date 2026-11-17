@@ -36,7 +36,7 @@ import {
   useToggleFavorite,
 } from "@/features/favorite/hooks/useFavorites";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
-import { useTutorProfileTracking } from "@/features/tracking/hooks";
+import { useTutorProfileTracking, track } from "@/features/tracking/hooks";
 
 type Tab = "about" | "certs" | "reviews" | "schedule" | "posts";
 
@@ -105,10 +105,16 @@ export default function TutorDetailPage() {
       return;
     }
     toggle.mutate(tutor.id, {
-      onSuccess: (r) =>
+      onSuccess: (r) => {
         toast.success(
           r.favorited ? "Đã lưu vào yêu thích" : "Đã bỏ khỏi yêu thích",
-        ),
+        );
+        // Track: tutor favorited
+        track("tutor_favorited", {
+          tutorId: tutor.id,
+          source: "profile",
+        });
+      },
     });
   };
 

@@ -8,7 +8,13 @@ export interface TrackingPropsMap {
     dwellMs: number
   }
   tutor_favorited: { tutorId: string; source: string }
-  search_performed: { query: string; filters: Record<string, unknown>; resultCount: number }
+  search_performed: {
+    query: string
+    filters: Record<string, unknown>
+    resultCount: number
+    resultCountScope: 'LOADED'
+    hasMore: boolean
+  }
   post_form_step: { step: number; status: 'COMPLETED' | 'ABANDONED' }
   client_error: { message: string; path: string }
 }
@@ -16,6 +22,7 @@ export interface TrackingPropsMap {
 export type TrackingEventName = keyof TrackingPropsMap
 
 export interface TrackingEvent {
+  id: string
   name: TrackingEventName
   ts: string
   props: Record<string, unknown>

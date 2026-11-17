@@ -45,9 +45,8 @@ export function useRevenueStatistics(range: { from?: string; to?: string } = {})
   return useQuery({
     queryKey: [...adminPaymentKeys.transactions, "revenue", range],
     queryFn: () => adminPaymentService.getRevenueStatistics(range),
-    enabled:
-      (!range.from && !range.to) ||
-      Boolean(range.from && range.to && range.from <= range.to),
+    // Chỉ gọi API khi CẢ HAI ngày đều có giá trị
+    enabled: Boolean(range.from && range.to && range.from <= range.to),
   });
 }
 

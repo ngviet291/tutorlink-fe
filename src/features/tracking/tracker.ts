@@ -1,5 +1,7 @@
 import type { createBrowserRouter } from 'react-router-dom'
-import { trackingService } from './service/tracking.service'
+import { trackingService } from './tracking.container'
+import type { TrackingIdentity } from './service/tracking.service'
+import { TRACKING } from './constants'
 import type { TrackingEvent, TrackingEventName, TrackingPropsMap } from './types/tracking.types'
 
 type AppRouter = ReturnType<typeof createBrowserRouter>
@@ -15,10 +17,9 @@ const ENABLED = import.meta.env.VITE_TRACKING_ENABLED === 'true'
 const GA_ID = import.meta.env.VITE_GA_ID
 const FLUSH_SECONDS = Number(import.meta.env.VITE_TRACKING_FLUSH_SECONDS) || 300
 const FLUSH_MS = FLUSH_SECONDS * 1000
-const MAX_BATCH = 50
-const MAX_ERRORS_PER_SESSION = 20
 
-let queue: TrackingEvent[] = []
+let queue: QueuedEvent[] = []
+let sending: Promise<void> | null = null
 let timer: ReturnType<typeof setTimeout> | null = null
 let anonId = ''
 let sessionId = ''
@@ -88,45 +89,130 @@ function mirrorToGa(e: TrackingEvent) {
   }
 }
 
-export async function flush() {
+interface QueuedEvent {
+  event: TrackingEvent
+  identity: Promise<TrackingIdentity>
+  attempts: number
+}
+
+function scheduleFlush(delay: number) {
+  if (!timer) {
+    timer = setTimeout(() => { void flush() }, delay)
+  }
+}
+
+async function sendQueuedEvents() {
+  while (queue.length && queue[0]!.attempts < TRACKING.maxAttempts) {
+    const identity = await queue[0]!.identity
+    const batch: QueuedEvent[] = []
+    for (const entry of queue.slice(0, TRACKING.maxBatch)) {
+      const owner = await entry.identity
+      if (owner.subject !== identity.subject) {
+        break
+      }
+      const payload = {
+        anonId: getAnonId(),
+        sessionId: getSessionId(),
+        events: [...batch.map((item) => item.event), entry.event],
+      }
+      if (new TextEncoder().encode(JSON.stringify(payload)).length > TRACKING.maxBodyBytes) {
+        break
+      }
+      batch.push(entry)
+    }
+    if (!batch.length) {
+      queue.shift()
+      continue
+    }
+    queue.splice(0, batch.length)
+    try {
+      await trackingService.sendEvents({
+        anonId: getAnonId(),
+        sessionId: getSessionId(),
+        events: batch.map((entry) => entry.event),
+      }, identity)
+    } catch {
+      batch.forEach((entry) => { entry.attempts++ })
+      queue = [...batch, ...queue].slice(0, TRACKING.maxQueue)
+      break
+    }
+  }
+}
+
+/** Gửi tuần tự; giữ batch bị lỗi và giới hạn số lần tự động gửi lại. */
+export function flush(): Promise<void> {
   if (timer) {
     clearTimeout(timer)
     timer = null
   }
-  if (!queue.length) return
-  const events = queue
-  queue = []
-  try {
-    await trackingService.sendEvents({ anonId: getAnonId(), sessionId: getSessionId(), events })
-  } catch {
-    /* tracking lỗi thì bỏ qua, không làm phiền người dùng */
+  if (sending) {
+    return sending
   }
+  sending = sendQueuedEvents().finally(() => {
+    sending = null
+    if (queue.length && queue[0]!.attempts < TRACKING.maxAttempts) {
+      scheduleFlush(TRACKING.retryDelayMs)
+    }
+  })
+  return sending
 }
 
 export function track<K extends TrackingEventName>(name: K, props: TrackingPropsMap[K]) {
-  if (!ENABLED) return
-  const event: TrackingEvent = { name, ts: new Date().toISOString(), props: props as Record<string, unknown> }
+  if (!ENABLED || queue.length >= TRACKING.maxQueue) {
+    return
+  }
+  const event: TrackingEvent = {
+    id: crypto.randomUUID(),
+    name,
+    ts: new Date().toISOString(),
+    props: JSON.parse(JSON.stringify(props)),
+  }
   mirrorToGa(event)
-  queue.push(event)
-  if (queue.length >= MAX_BATCH) void flush()
-  else if (!timer) timer = setTimeout(() => void flush(), FLUSH_MS)
+  queue.push({ event, identity: trackingService.captureIdentity(), attempts: 0 })
+  if (queue.length >= TRACKING.maxBatch) {
+    void flush()
+  } else {
+    scheduleFlush(FLUSH_MS)
+  }
 }
+
+const reportedErrors = new Set<string>()
 
 export function trackClientError(message: string) {
-  if (errorCount >= MAX_ERRORS_PER_SESSION) return // tránh spam khi lỗi lặp
+  const path = window.location.pathname
+  const key = JSON.stringify([path, message])
+  if (!ENABLED || errorCount >= TRACKING.maxErrors || reportedErrors.has(key)) {
+    return
+  }
+  reportedErrors.add(key)
   errorCount++
-  track('client_error', { message: message.slice(0, 300), path: window.location.pathname })
+  track('client_error', { message: message.slice(0, TRACKING.maxErrorLength), path })
 }
 
-/** Gọi một lần ở main.tsx. */
+let initialized = false
+
 export function initTracking(router: AppRouter) {
-  if (!ENABLED) return
+  if (!ENABLED || initialized) {
+    return
+  }
+  initialized = true
   initGa()
 
   let lastPath = ''
+  const seenRouteErrors = new WeakSet<object>()
   const onNavigate = () => {
-    const { location, navigation } = router.state
-    if (navigation.state !== 'idle' || location.pathname === lastPath) return
+    const { location, navigation, errors } = router.state
+    if (errors) {
+      Object.values(errors).forEach((error) => {
+        if (error && typeof error === 'object' && !seenRouteErrors.has(error)) {
+          seenRouteErrors.add(error)
+          trackClientError(error instanceof Error ? error.message : 'Route rendering failed')
+        }
+      })
+    }
+    if (navigation.state !== 'idle' || location.pathname === lastPath) {
+      return
+    }
     const referrer = lastPath || document.referrer
     lastPath = location.pathname
     track('page_view', { path: location.pathname, referrer })
@@ -134,14 +220,23 @@ export function initTracking(router: AppRouter) {
   onNavigate()
   router.subscribe(onNavigate)
 
-  window.addEventListener('error', (e) => {
-    if (e.message) trackClientError(e.message)
+  window.addEventListener('error', (event) => {
+    if (event.message) {
+      trackClientError(event.message)
+    }
   })
-  window.addEventListener('unhandledrejection', (e) => {
-    const r = e.reason
-    trackClientError(r instanceof Error ? r.message : String(r))
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason
+    trackClientError(reason instanceof Error ? reason.message : String(reason))
+  })
+  window.addEventListener('pagehide', () => { void flush() })
+  window.addEventListener('online', () => {
+    queue.forEach((entry) => { entry.attempts = 0 })
+    void flush()
   })
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') void flush()
+    if (document.visibilityState === 'hidden') {
+      void flush()
+    }
   })
 }

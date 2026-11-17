@@ -35,8 +35,21 @@ export default function AdminTransactionsPage() {
   const [detailId, setDetailId] = useState<string>();
   const detailQuery = useAdminTransaction(detailId);
   const detail = detailQuery.data;
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  
+  // Mặc định: 30 ngày gần nhất
+  const getDefaultDates = () => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    return {
+      from: thirtyDaysAgo.toISOString().split('T')[0],
+      to: today.toISOString().split('T')[0],
+    };
+  };
+  
+  const defaultDates = getDefaultDates();
+  const [from, setFrom] = useState(defaultDates.from);
+  const [to, setTo] = useState(defaultDates.to);
   const toast = useToast();
   const revenue = useRevenueStatistics({ from: from || undefined, to: to || undefined });
   const { refundTransaction } = useAdminPaymentMutations();
@@ -80,6 +93,10 @@ export default function AdminTransactionsPage() {
         {rangeInvalid ? (
           <p role="alert" className="text-sm text-danger">
             Chọn đủ hai ngày, ngày bắt đầu không sau ngày kết thúc.
+          </p>
+        ) : !from || !to ? (
+          <p className="text-sm text-text-secondary">
+            Vui lòng chọn khoảng thời gian để xem thống kê doanh thu.
           </p>
         ) : revenue.isError ? (
           <ErrorState onRetry={() => void revenue.refetch()} />

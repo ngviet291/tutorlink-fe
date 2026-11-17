@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
@@ -9,6 +9,7 @@ import {
   useApplicationMutations,
   useMyApplicationsForPost,
 } from "../hooks/useApplications";
+import { track } from "@/features/tracking/hooks";
 import { AiTop5Panel } from "./AiTop5Panel";
 import { ApplicantRow } from "./ApplicantRow";
 import type { ApplicationResponse } from "../types/application.types";
@@ -48,6 +49,17 @@ export function ApplicantList({ post }: { post: PostResponse }) {
   const canSelect = post.status === "PUBLISHED" && !hasAccepted;
   const pending =
     data?.filter((a) => a.applicationStatus === "PENDING").length ?? 0;
+
+  // Track: application_list_opened when data loads successfully
+  useEffect(() => {
+    if (!isLoading && !isError && data) {
+      track("application_list_opened", {
+        postId: post.id,
+        applicantCount: data.length,
+        ranked: Boolean(data.some((a) => a.aiRank !== undefined)),
+      });
+    }
+  }, [isLoading, isError, data, post.id]);
 
   const applicantName = (a: ApplicationResponse) =>
     post.type === "FIND_TUTOR" ? a.tutor.fullName : a.student.fullName;

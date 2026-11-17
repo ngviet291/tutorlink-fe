@@ -1,0 +1,15 @@
+export const TRACKING = {
+  endpoint: '/v1/tracking/events',
+  maxBatch: 50,
+  maxQueue: 500,
+  maxBodyBytes: 48_000,
+  retryDelayMs: 5_000,
+  maxAttempts: 3,
+  timeoutMs: 10_000,
+  tokenExpirySkewSeconds: 30,
+  maxErrors: 20,
+  maxErrorLength: 300,
+  minDwellMs: 300,
+  formStep: 1,
+  resultCountScope: 'LOADED',
+} as const
