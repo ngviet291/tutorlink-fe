@@ -4,7 +4,6 @@ import { AuthService } from "@/features/auth/service/auth.service";
 import { createPublicClient } from "../http/publicClient";
 import { createPrivateClient } from "../http/privateClient";
 import { env } from "../env";
-import { mockConfig } from "../env";
 import { HttpUserGateway } from "@/features/user/api/http.user.gateway";
 import { UserService } from "@/features/user/service/user.service";
 import { HttpTutorGateway } from "@/features/tutor/api/http.tutor.gateway";
