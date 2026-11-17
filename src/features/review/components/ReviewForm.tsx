@@ -24,6 +24,7 @@ export function ReviewForm({ applicationId, tutorName, open, onClose }: Props) {
   const [hovered, setHovered] = useState(0)
 
   const handleSubmit = () => {
+    console.log("[DEBUG] ReviewForm submit", { applicationId, rating, comment });
     submit.mutate(
       { applicationId, rating, comment: comment.trim() || undefined },
       {

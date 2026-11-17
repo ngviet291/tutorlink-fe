@@ -4,6 +4,7 @@ export type ComplaintStatus = 'NONE' | 'OPEN' | 'RESOLVED'
 
 export interface ReviewResponse {
   id: string
+  applicationId?: string
   tutorId: string
   rating: number
   comment: string

@@ -18,7 +18,7 @@ export const env = {
     adminUser: false,
     application: true,
     favorite: false,
-    review: true,
+    review: false,
     wallet: false,
 
     tracking: false, // false = Gọi API thật
