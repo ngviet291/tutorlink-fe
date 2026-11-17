@@ -6,17 +6,12 @@ import { createPrivateClient } from "../http/privateClient";
 import { env } from "../env";
 import { mockConfig } from "../env";
 import { HttpUserGateway } from "@/features/user/api/http.user.gateway";
-import { MockUserGateway } from "@/features/user/api/mock.user.gateway";
 import { UserService } from "@/features/user/service/user.service";
 import { HttpTutorGateway } from "@/features/tutor/api/http.tutor.gateway";
-import { MockTutorGateway } from "@/features/tutor/api/mock.tutor.gateway";
-import { CompositeTutorGateway } from "@/features/tutor/api/composite.tutor.gateway";
 import { TutorService } from "@/features/tutor/service/tutor.service";
 import { HttpFavoriteGateway } from "@/features/favorite/api/http.favorite.gateway";
-import { MockFavoriteGateway } from "@/features/favorite/api/mock.favorite.gateway";
 import { FavoriteService } from "@/features/favorite/service/favorite.service";
 import { HttpStudentGateway } from "@/features/student/api/http.student.gateway";
-import { MockStudentGateway } from "@/features/student/api/mock.student.gateway";
 import { StudentService } from "@/features/student/service/student.service";
 import { HttpChatbotGateway } from "@/features/chatbot/api/http.chatbot.gateway";
 import { ChatbotService } from "@/features/chatbot/service/chatbot.service";
@@ -97,31 +92,17 @@ export const notificationService = new NotificationService(
   new HttpNotificationGateway(privateHttpClient),
 );
 export const userService = new UserService(
-  mockConfig.user ? new MockUserGateway() : new HttpUserGateway(privateHttpClient),
+  new HttpUserGateway(privateHttpClient),
 );
 export const tutorService = new TutorService(
-  new CompositeTutorGateway(
-    mockConfig.tutor
-      ? new MockTutorGateway()
-      : new HttpTutorGateway(publicHttpClient, privateHttpClient),
-    mockConfig.tutorProfile
-      ? new MockTutorGateway()
-      : new HttpTutorGateway(publicHttpClient, privateHttpClient),
-  ),
+  new HttpTutorGateway(publicHttpClient, privateHttpClient),
 );
-
 export const favoriteService = new FavoriteService(
-  mockConfig.favorite
-    ? new MockFavoriteGateway()
-    : new HttpFavoriteGateway(privateHttpClient),
+  new HttpFavoriteGateway(privateHttpClient),
 );
-
 export const studentService = new StudentService(
-  mockConfig.user
-    ? new MockStudentGateway()
-    : new HttpStudentGateway(publicHttpClient),
+  new HttpStudentGateway(publicHttpClient),
 );
-
 export const chatbotService = new ChatbotService(
   new HttpChatbotGateway(privateHttpClient, {
     url: env.chatbotApiUrl,
