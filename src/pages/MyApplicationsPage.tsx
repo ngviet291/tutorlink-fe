@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
+import { Star } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import { Button } from '@/shared/components/ui/Button'
 import { EmptyState, ErrorState } from '@/shared/components/ui/EmptyState'
@@ -17,6 +18,10 @@ import { isApplicant, isFeePayer } from '@/features/application/util/applicant'
 import type { RootState } from '@/app/store'
 import type { ApplicationResponse } from '@/features/application/types/application.types'
 import { PayFeeModal } from '@/features/wallet/components/PayFeeModal'
+import { ReviewForm } from '@/features/review/components/ReviewForm'
+import { ReviewDetailModal } from '@/features/review/components/ReviewDetailModal'
+import { reviewService } from '@/features/review/service/review.service'
+import { useHasReviewed } from '@/features/review/hooks/useReviews'
 
 export default function MyApplicationsPage() {
   const { data, isLoading, isError, refetch } = useMyApplications()
@@ -24,6 +29,26 @@ export default function MyApplicationsPage() {
   const user = useSelector((state: RootState) => state.auth.user)
   const { finish, confirm } = useApplicationMutations()
   const [offer, setOffer] = useState<ApplicationResponse | null>(null)
+  const [reviewTarget, setReviewTarget] = useState<ApplicationResponse | null>(null)
+
+  // Finish xong: học viên của đơn được mở modal đánh giá gia sư (nếu chưa review)
+  const handleFinish = (a: ApplicationResponse) => {
+    finish.mutate(a.id, {
+      onSuccess: () => {
+        toast.success('Đã đánh dấu hoàn thành')
+        if (user?.role === 'STUDENT' && a.student?.id === user.id) {
+          void reviewService.hasReviewed(a.id)
+            .then((reviewed) => { if (!reviewed) setReviewTarget(a) })
+            .catch(() => setReviewTarget(a))
+        }
+      },
+      onError: (e) => toast.error(getErrorMessage(e)),
+    })
+  }
+
+  const reviewTutorName = reviewTarget
+    ? (reviewTarget.post.type === 'FIND_TUTOR' ? reviewTarget.tutor?.fullName : reviewTarget.post.author?.fullName) ?? ''
+    : ''
 
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-6">
@@ -55,14 +80,70 @@ export default function MyApplicationsPage() {
                 )}
                 {a.applicationStatus === 'ACCEPTED' && !a.paid && isFeePayer(a, user?.id) && <Button size="sm" onClick={() => setOffer(a)}>Thanh toán phí</Button>}
                 {a.applicationStatus === 'ACCEPTED' && a.paid && isApplicant(a, user?.id) && <Button size="sm" loading={confirm.isPending && confirm.variables === a.id} onClick={() => confirm.mutate(a.id, { onSuccess: () => toast.success('Đã xác nhận'), onError: (e) => toast.error(getErrorMessage(e)) })}>Xác nhận</Button>}
-                {a.applicationStatus === 'CONFIRMED' && <Button size="sm" variant="outline" loading={finish.isPending && finish.variables === a.id} onClick={() => finish.mutate(a.id, { onSuccess: () => toast.success('Đã đánh dấu hoàn thành'), onError: (e) => toast.error(getErrorMessage(e)) })}>Hoàn thành lớp</Button>}
+                {a.applicationStatus === 'CONFIRMED' && <Button size="sm" variant="outline" loading={finish.isPending && finish.variables === a.id} onClick={() => handleFinish(a)}>Hoàn thành lớp</Button>}
                 {a.applicationStatus === 'FINISHED' && <Link to={ROUTES.CHAT_WITH(a.post.author.id)}><Button size="sm" variant="secondary">Mở chat</Button></Link>}
+                {a.applicationStatus === 'FINISHED' && <FinishedReviewAction a={a} />}
               </div>
             </li>
           ))}
         </ul>
       )}
       <PayFeeModal application={offer} onClose={() => setOffer(null)} />
+      {reviewTarget && (
+        <ReviewForm
+          applicationId={reviewTarget.id}
+          tutorName={reviewTutorName}
+          open={Boolean(reviewTarget)}
+          onClose={() => setReviewTarget(null)}
+        />
+      )}
     </div>
+  )
+}
+
+// Đơn FINISHED: học viên của đơn chưa đánh giá -> nút mở ReviewForm;
+// đã đánh giá -> nút "Xem đánh giá" (cả học viên lẫn gia sư được xem).
+// Gia sư chưa có đánh giá -> không hiện gì.
+function FinishedReviewAction({ a }: { a: ApplicationResponse }) {
+  const user = useSelector((state: RootState) => state.auth.user)
+  const isStudent = user?.role === 'STUDENT' && a.student?.id === user.id
+  const isTutor = user?.role === 'TUTOR' && a.tutor?.id === user.id
+  const { data: reviewed, isLoading } = useHasReviewed(a.id)
+  const [open, setOpen] = useState(false)
+  const [viewOpen, setViewOpen] = useState(false)
+
+  if ((!isStudent && !isTutor) || isLoading) return null
+  if (reviewed) {
+    return (
+      <>
+        <Button size="sm" variant="outline" onClick={() => setViewOpen(true)}>
+          <Star className="size-4" /> Xem đánh giá
+        </Button>
+        <ReviewDetailModal
+          applicationId={a.id}
+          tutorId={a.tutor?.id}
+          open={viewOpen}
+          onClose={() => setViewOpen(false)}
+        />
+      </>
+    )
+  }
+
+  // Chỉ học viên mới được đánh giá; gia sư chưa có review -> không hiện gì
+  if (!isStudent) return null
+  const tutorName =
+    (a.post.type === 'FIND_TUTOR' ? a.tutor?.fullName : a.post.author?.fullName) ?? ''
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+        <Star className="size-4" /> Đánh giá
+      </Button>
+      <ReviewForm
+        applicationId={a.id}
+        tutorName={tutorName}
+        open={open}
+        onClose={() => setOpen(false)}
+      />
+    </>
   )
 }

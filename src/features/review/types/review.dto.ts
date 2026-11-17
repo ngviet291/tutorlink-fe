@@ -33,6 +33,7 @@ export interface ReviewComplaintResponse {
   reviewId: string
   tutorId: string
   adminId?: string
+  createdAt?: string
 }
 
 /** BE: review/dto/response/ReviewResponse.java */
@@ -41,7 +42,11 @@ export interface ReviewResponse {
   applicationId: string
   studentId: string
   tutorId: string
+  studentName?: string
+  tutorName?: string
   rating: number
   comment?: string
   createdAt: string
+  /** NONE / PENDING / APPROVED / REJECTED — null khi chưa khiếu nại */
+  complaintStatus?: string
 }

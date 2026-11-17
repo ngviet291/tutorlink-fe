@@ -117,7 +117,7 @@ export function ApplicantRow({
             {a.applicationStatus === "ACCEPTED" && a.expiresAt && (
               <ExpiryCountdown
                 expiresAt={a.expiresAt}
-                actionLabel={a.paid ? "xác nhận" : "thanh toán"}
+                actionLabel={a.paid ? "xác nhận" : isTutorPost ? "gia sư thanh toán" : "thanh toán"}
                 onExpire={onExpire}
                 className="mt-1"
               />

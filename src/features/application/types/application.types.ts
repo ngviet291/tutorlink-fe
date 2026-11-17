@@ -20,6 +20,11 @@ export interface ApplicationResponse {
   message?: string;
   proposedFee?: number;
   appliedAt: string;
+  /** Thoi diem duoc chon (ACCEPTED). */
+  selectedAt?: string;
+  /** Thoi diem thanh toan thanh cong. */
+  paidAt?: string;
+
   /** Hạn cuối bước đang chờ do BE tính (W1 chờ thanh toán / W2 chờ applicant confirm). */
   expiresAt?: string;
   processedByAdminId?: string;
