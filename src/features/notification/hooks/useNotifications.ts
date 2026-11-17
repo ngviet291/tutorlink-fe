@@ -3,6 +3,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type InfiniteData,
 } from "@tanstack/react-query";
 import type { NotificationResponse } from "../types/notification.types";
 import type { CursorResponse } from "@/shared/types/common.dto";
@@ -35,20 +36,51 @@ export function useUnreadNotificationCount(enabled = true) {
     enabled,
   });
 }
-
 export function useNotificationMutations() {
   const queryClient = useQueryClient();
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEY });
 
   const markOne = useMutation({
     mutationFn: (id: string) => notificationService.markAsRead(id),
-    onSuccess: invalidate,
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<
+        InfiniteData<CursorResponse<NotificationResponse>>
+      >(
+        NOTIFICATION_KEY,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((p) => ({
+              ...p,
+              content: p.content.map((n) =>
+                n.id === id ? { ...n, read: true } : n,
+              ),
+            })),
+          },
+      );
+      queryClient.invalidateQueries({
+        queryKey: [...NOTIFICATION_KEY, "unread"],
+      });
+    },
   });
 
   const markAll = useMutation({
     mutationFn: () => notificationService.markAllAsRead(),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      queryClient.setQueryData<
+        InfiniteData<CursorResponse<NotificationResponse>>
+      >(
+        NOTIFICATION_KEY,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((p) => ({
+              ...p,
+              content: p.content.map((n) => ({ ...n, read: true })),
+            })),
+          },
+      );
+      queryClient.setQueryData([...NOTIFICATION_KEY, "unread"], 0); // chỉnh nếu getUnreadCount trả object
+    },
   });
 
   return { markOne, markAll };
