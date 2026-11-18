@@ -27,6 +27,9 @@ export interface UserSummary {
   id: string;
   fullName: string;
   avatarUrl?: string | null;
+  // Thông tin thêm cho Tutor (null nếu là Student)
+  averageRating?: number | null;
+  totalReviews?: number | null;
 }
 
 export interface ApplicationResponse {
@@ -45,7 +48,8 @@ export interface ApplicationResponse {
   processedByAdminId?: string;
   transactionId?: string;
   transactionStatus?: string;
-  paidAt?: string;
+  /** true nếu transaction.status == SUCCESS */
+  paid?: boolean;
 }
 /** BE: application/dto/response/MatchBreakdown.java */
 export interface MatchBreakdown {

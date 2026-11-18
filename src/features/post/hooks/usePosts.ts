@@ -61,30 +61,16 @@ export function usePostDetail(
   isAdmin = false,
 ) {
   const admin = usePostForAdmin(isAdmin ? id : undefined);
+  const pub = usePost(!isAdmin ? id : undefined);
 
-  const me = usePostForMe(isLoggedIn && !isAdmin ? id : undefined);
+  // Bản công khai lỗi (bài nháp / đã đóng / chưa public) thì thử endpoint của tác giả.
+  const needMe = isLoggedIn && !isAdmin && pub.isError;
+  const me = usePostForMe(needMe ? id : undefined);
 
-  const needPublic = !isLoggedIn || (!isAdmin && me.isError);
-
-  const pub = usePost(needPublic ? id : undefined);
-
-  if (isAdmin) {
-    return admin;
-  }
-
-  if (!isLoggedIn) {
-    return pub;
-  }
-
-  if (me.data) {
-    return me;
-  }
-
-  if (me.isError) {
-    return pub;
-  }
-
-  return me;
+  if (isAdmin) return admin;
+  if (pub.data || !isLoggedIn) return pub;
+  if (needMe) return me;
+  return pub;
 }
 
 /** Chi tiết một bài đăng public. */

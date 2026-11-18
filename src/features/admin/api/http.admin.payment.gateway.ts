@@ -29,6 +29,7 @@ export class HttpAdminPaymentGateway implements AdminPaymentGateway {
     const page = await this.http.get<CursorResponse<TransactionDto>>(PAYMENT_API_PATH, {
       params: {
         status: params.status || undefined,
+        type: params.type || undefined,
         cursor: params.cursor,
         limit: params.limit ?? PAYMENT_PAGE_SIZE,
       },
@@ -69,5 +70,19 @@ export class HttpAdminPaymentGateway implements AdminPaymentGateway {
     return this.http.get<RevenueStatistics>(`${PAYMENT_API_PATH}/statistics/revenue`, {
       params: range,
     });
+  }
+
+  async approveWithdrawal(id: string) {
+    const dto = await this.http.post<TransactionDto>(
+      `${PAYMENT_API_PATH}/${id}/approve-withdrawal`,
+    );
+    return fromBeTransaction(dto);
+  }
+
+  async rejectWithdrawal(id: string) {
+    const dto = await this.http.post<TransactionDto>(
+      `${PAYMENT_API_PATH}/${id}/reject-withdrawal`,
+    );
+    return fromBeTransaction(dto);
   }
 }

@@ -49,7 +49,9 @@ export default function AdminComplaintsPage() {
     {isLoading ? <ListSkeleton /> : isError ? <ErrorState onRetry={() => void refetch()} /> : !data?.length ? <EmptyState title="Không có khiếu nại" /> :
       <ul className="flex flex-col gap-3">{data.map(c => <li key={c.id} className="rounded-2xl border border-border bg-surface p-4">
         <p className="font-bold">{labels[c.status]}</p>
-        <Link to={ROUTES.TUTOR_DETAIL(c.tutorId)} className="text-primary">Gia sư: {c.tutorId}</Link>
+        <Link to={ROUTES.TUTOR_DETAIL(c.tutorId)} className="text-primary">
+          Gia sư: {c.tutorName ?? c.tutorId}
+        </Link>
         <p className="text-sm">Mã đánh giá: {c.reviewId}</p>
         <p className="my-2">Lý do: {c.reason}</p>
         {c.status === 'PENDING' && <Button size="sm" onClick={() => setTarget(c)}>Xem xét</Button>}

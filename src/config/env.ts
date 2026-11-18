@@ -10,15 +10,16 @@ export const env = {
     tutor: false,
     tutorProfile: false,
     subject: false,
-    student: true,
-    notify: true,
-    booking: true,
-    chatbot: true,
-    admin: true, // posts/transactions/fee/stats/complaints — chưa nối
+    student: false,
+    notify: false,
+    booking: false,
+    chatbot: false,
+    admin: false, // posts/transactions/fee/stats/complaints — chưa nối
     adminUser: false,
-    application: true,
+    application: false,
     favorite: false,
     review: false,
+    post: false,
     wallet: false,
 
     tracking: false, // false = Gọi API thật
@@ -53,6 +54,3 @@ export const mockConfig = {
   wallet: env.features.wallet,
   tracking: env.features.tracking,
 };
-
-
-

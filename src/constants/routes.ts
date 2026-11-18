@@ -35,6 +35,7 @@ export const ROUTES = {
   ADMIN_SUBJECTS: "/admin/subjects",
   ADMIN_POSTS: "/admin/posts",
   ADMIN_TRANSACTIONS: "/admin/transactions",
+  ADMIN_WITHDRAWALS: "/admin/withdrawals",
   ADMIN_FEE: "/admin/fee-rate",
   ADMIN_COMPLAINTS: "/admin/complaints",
   ADMIN_STATS: "/admin/stats",

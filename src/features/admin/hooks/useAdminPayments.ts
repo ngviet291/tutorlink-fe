@@ -45,9 +45,8 @@ export function useRevenueStatistics(range: { from?: string; to?: string } = {})
   return useQuery({
     queryKey: [...adminPaymentKeys.transactions, "revenue", range],
     queryFn: () => adminPaymentService.getRevenueStatistics(range),
-    enabled:
-      (!range.from && !range.to) ||
-      Boolean(range.from && range.to && range.from <= range.to),
+    // Chỉ gọi API khi CẢ HAI ngày đều có giá trị
+    enabled: Boolean(range.from && range.to && range.from <= range.to),
   });
 }
 
@@ -71,5 +70,26 @@ export function useAdminPaymentMutations() {
     onSuccess: refresh,
   });
 
-  return { refundTransaction, createFeeRate };
+  const approveWithdrawal = useMutation({
+    mutationFn: (id: string) => adminPaymentService.approveWithdrawal(id),
+    onSuccess: () => {
+      refresh();
+      void queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+    },
+  });
+
+  const rejectWithdrawal = useMutation({
+    mutationFn: (id: string) => adminPaymentService.rejectWithdrawal(id),
+    onSuccess: () => {
+      refresh();
+      void queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all });
+    },
+  });
+
+  return { 
+    refundTransaction, 
+    createFeeRate, 
+    approveWithdrawal, 
+    rejectWithdrawal 
+  };
 }

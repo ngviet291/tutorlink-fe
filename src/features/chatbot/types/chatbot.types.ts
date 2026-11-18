@@ -11,6 +11,7 @@ export interface ChatbotPost {
   budgetUnit?: string | null;
   authorName: string;
   authorAvatarUrl?: string | null;
+  distanceKm?: number | null;
 }
 
 export interface ChatbotMessage {

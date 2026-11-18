@@ -63,6 +63,9 @@ export interface BaseUserResponse {
   address?: AddressResponse;
   userStatus: UserStatus;
   role: string;
+  // Thông tin thêm từ UserSummary (cho Tutor)
+  averageRating?: number;
+  totalReviews?: number;
 }
 
 /** BE: user/dto/response/StudentResponse.java */

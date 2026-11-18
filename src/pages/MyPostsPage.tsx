@@ -53,6 +53,7 @@ export default function MyPostsPage() {
           { value: "ALL", label: "Tất cả" },
           { value: "DRAFT", label: "Bản nháp" },
           { value: "PUBLISHED", label: "Đang tuyển" },
+          { value: "PENDING", label: "Chờ duyệt" },
           { value: "CLOSED", label: "Đã đóng" },
         ]}
       />

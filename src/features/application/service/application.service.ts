@@ -20,12 +20,14 @@ import { describeWarnings } from "../util/matchwarning";
 
 const CONNECTED_STATUSES: string[] = ["CONFIRMED"];
 
-/** BE chỉ trả id/fullName/avatarUrl; các field còn lại của public-profile để trống. */
+/** BE chỉ trả id/fullName/avatarUrl/averageRating/totalReviews; các field còn lại của public-profile để trống. */
 function fromSummary(u: UserSummary): BaseUserResponse {
   return {
     id: u.id,
     fullName: u.fullName,
     avatarUrl: u.avatarUrl,
+    averageRating: u.averageRating,
+    totalReviews: u.totalReviews,
   } as BaseUserResponse;
 }
 
@@ -53,7 +55,8 @@ function asTutor(user: BaseUserResponse): TutorResponse {
     avatarUrl: user.avatarUrl,
     experienceYears: 0,
     hourlyRate: 0,
-    averageRating: 0,
+    averageRating: user.averageRating ?? 0,
+    reviewCount: user.totalReviews ?? 0,
     verificationStatus: "PENDING",
     address: user.address,
   };
@@ -135,7 +138,8 @@ export class ApplicationService {
       expiresAt: dto.expiresAt,
       processedByAdminId: dto.processedByAdminId,
       transactionId: dto.transactionId,
-      paid: dto.transactionStatus === "SUCCESS",
+      transactionStatus: dto.transactionStatus,
+      paid: dto.paid,
     };
   }
 
@@ -152,7 +156,18 @@ export class ApplicationService {
     postId: string,
     items: PostApplicationItem[],
   ): Promise<ApplicationResponse[]> {
-    const post = await this.postService.getPostById(postId);
+    // Try multiple endpoints: public → admin → mine
+    let post: PostResponse;
+    try {
+      post = await this.postService.getPostById(postId);
+    } catch {
+      try {
+        post = await this.postService.getPostByIdForAdmin(postId);
+      } catch {
+        post = await this.postService.getPostByIdForMe(postId);
+      }
+    }
+    
     const postOwner = await this.loadUser(post.author.id);
 
     return Promise.all(
@@ -209,13 +224,39 @@ export class ApplicationService {
     return mine.filter((a) => CONNECTED_STATUSES.includes(a.applicationStatus));
   };
 
-  /** BE trả PostApplicationResponse, không phải ApplicationResponse. */
+  /** BE trả ApplicationResponse với UserSummary đã có đầy đủ thông tin. */
   getApplicationsByPost = async (
     postId: string,
   ): Promise<ApplicationResponse[]> => {
     const page = await this.gateway.listByPost(postId, 100);
-    return this.enrichPostApplicants(postId, page.content);
+    // Admin đang xem, có thể cần lấy post detail qua admin endpoint
+    // Nhưng response BE đã có đủ thông tin student/tutor từ UserSummary
+    // Chỉ cần enrich để lấy post, nếu post không lấy được thì vẫn trả về ứng tuyển
+    return this.enrichManyForAdmin(page.content, postId);
   };
+
+  /**
+   * Enrich applications cho admin, dùng admin endpoint để lấy post
+   */
+  private async enrichManyForAdmin(
+    items: ApplicationDto[],
+    postId: string,
+  ): Promise<ApplicationResponse[]> {
+    // Lấy post detail qua admin endpoint
+    let post: PostResponse | null = null;
+    try {
+      post = await this.postService.getPostByIdForAdmin(postId);
+    } catch {
+      // Nếu không lấy được post (đã xóa/không tồn tại), vẫn trả về applications
+      // với post object tối thiểu
+      console.warn(`Could not fetch post ${postId} for admin, using minimal post object`);
+    }
+
+    // Nếu không lấy được post, tạo object tối thiểu
+    const postObj = post ?? ({ id: postId, title: "N/A" } as PostResponse);
+
+    return items.map((dto) => this.build(dto, postObj));
+  }
 
   /** GET /v1/applications/post/{postId}/ranked: chỉ lấy top 5 khi BE đã chấm điểm. */
   getAiTop5 = async (postId: string): Promise<AiSuggestionResponse> => {

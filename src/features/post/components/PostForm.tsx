@@ -21,6 +21,7 @@ import type { PostType } from "@/shared/types/common.types";
 
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
+import { markPostFormCompleted, usePostFormAbandonTracking } from "@/features/tracking/hooks";
 
 // Dữ liệu test khi DEV + tạo mới.
 const TEST_DEFAULTS: Record<PostType, Partial<PostPayload>> = {
@@ -108,7 +109,7 @@ export function PostForm({
     getValues,
     setError,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<PostPayload>({
     defaultValues: {
       type: postType,
@@ -258,8 +259,14 @@ export function PostForm({
             message,
           });
         });
+      } else if (!asDraft) {
+        // Track: form submission completed successfully
+        markPostFormCompleted();
       }
     })();
+
+  // Track: form abandoned when leaving with unsaved changes
+  usePostFormAbandonTracking(isDirty);
 
   const requiredIfOffline = {
     validate: (value?: string) =>

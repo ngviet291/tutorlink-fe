@@ -96,6 +96,7 @@ export interface PostResponse {
   author: AuthorResponse;
   createdAt: string;
   updatedAt?: string;
+  applicationCount?: number;
 }
 
 /** BE: post/dto/response/PostApplicationResponse.java */

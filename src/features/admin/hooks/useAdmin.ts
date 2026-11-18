@@ -64,6 +64,7 @@ export function useAdminPosts(filter: Omit<AdminPostFilter, "cursor"> = {}) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) =>
       last.hasNext ? (last.nextCursor ?? undefined) : undefined,
+    staleTime: 0, // Luôn fetch mới, không dùng cache
   });
 }
 

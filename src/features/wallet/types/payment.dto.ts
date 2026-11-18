@@ -27,6 +27,7 @@ export interface FeeConfigResponse {
   effectiveFrom: string;
   effectiveTo?: string;
   createdByAdminId?: string;
+  createdByAdminName?: string;
   createdAt: string;
 }
 
@@ -53,12 +54,16 @@ export interface TransactionResponse {
   paymentMethod?: PaymentMethod;
   transactionDate: string;
   tutorId?: string;
+  tutorName?: string;
   applicationId?: string;
   providerOrderId?: string;
   providerTransId?: string;
   paymentLink?: string;
   qrCodeUrl?: string;
   deeplink?: string;
+  bankAccountNumber?: string;
+  bankName?: string;
+  accountHolderName?: string;
 }
 
 /** BE: payment/dto/response/WalletBalanceResponse.java */

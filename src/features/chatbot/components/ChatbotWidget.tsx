@@ -50,10 +50,15 @@ function formatBudget(
   const unit = unitLabel(budgetUnit, t);
   return unit ? `${range}/${unit}` : range;
 }
-
+function distanceLabel(km?: number | null): string | null {
+  if (km === null || km === undefined) return null;
+  if (km === 0) return "Cùng phường/xã";
+  return `Cách ~${km.toLocaleString("vi-VN")} km`;
+}
 function PostCard({ post }: { post: ChatbotPost }) {
   const { t } = useTranslation();
   const budget = formatBudget(post, t);
+  const distance = distanceLabel(post.distanceKm);
   return (
     <Link
       to={ROUTES.POST_DETAIL(post.id)}
@@ -81,9 +86,15 @@ function PostCard({ post }: { post: ChatbotPost }) {
           <span className="font-medium text-primary">{post.subjectName}</span>
           {budget && <span>{budget}</span>}
         </span>
+
         {post.location && (
           <span className="block truncate text-xs text-text-secondary">
             {post.location}
+          </span>
+        )}
+        {distance && (
+          <span className="mt-0.5 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+            {distance}
           </span>
         )}
       </span>

@@ -14,7 +14,7 @@ export interface ApplicationGateway {
   listByPost(
     postId: string,
     limit?: number,
-  ): Promise<CursorResponse<PostApplicationItem>>;
+  ): Promise<CursorResponse<ApplicationResponse>>;
   ranked(postId: string): Promise<RankedApplicationsResponse>;
   select(id: string): Promise<ApplicationResponse>;
   unselect(id: string): Promise<ApplicationResponse>;

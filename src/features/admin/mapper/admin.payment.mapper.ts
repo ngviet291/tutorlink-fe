@@ -16,6 +16,7 @@ export function mapFeeConfig(
     effectiveFrom: dto.effectiveFrom,
     effectiveTo: dto.effectiveTo,
     createdBy: dto.createdByAdminId ?? "—",
+    createdByName: dto.createdByAdminName,
     active: dto.effectiveFrom <= today && (!dto.effectiveTo || dto.effectiveTo >= today),
   };
 }

@@ -20,8 +20,12 @@ export interface TransactionResponse {
   deeplink?: string;
   applicationId?: string;
   tutorId?: string;
+  tutorName?: string;
   paymentMethod?: PaymentMethod;
   createdAt: string;
+  bankAccountNumber?: string;
+  bankName?: string;
+  accountHolderName?: string;
 }
 
 export interface EnrollmentFeeQuote {
@@ -39,6 +43,7 @@ export interface TransactionFilter {
 
 export interface AdminTransactionFilter {
   status?: TransactionStatus | "";
+  type?: TransactionType | "";
   cursor?: string;
   limit?: number;
 }

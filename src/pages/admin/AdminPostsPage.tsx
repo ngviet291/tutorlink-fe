@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Ban, Users } from "lucide-react";
+import { Ban, Users, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { POST_STATUS_META } from "@/constants/enums";
+import { ROUTES } from "@/constants/routes";
 import { Button } from "@/shared/components/ui/Button";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import {
@@ -12,9 +14,8 @@ import { Modal } from "@/shared/components/ui/Modal";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { Select } from "@/shared/components/ui/Select";
-import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { Textarea } from "@/shared/components/ui/Textarea";
-import { formatDate } from "@/shared/utils/date";
+import { timeAgo } from "@/shared/utils/date";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { useToast } from "@/shared/hooks/useToast";
 import {
@@ -53,25 +54,64 @@ function ApplicationsModal({
       ) : !data?.length ? (
         <EmptyState title="Chưa có lượt đăng ký" />
       ) : (
-        <ul className="divide-y divide-border">
-          {data.map((a) => (
-            <li
-              key={a.id}
-              className="flex items-center justify-between gap-3 py-2.5 text-sm"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-semibold text-text">
-                  {a.tutor.fullName}
-                </p>
-                <p className="text-xs text-text-secondary">
-                  {formatDate(a.appliedAt)}
-                </p>
-              </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {data.map((a) => {
+            const avatarUrl = a.tutor.avatarUrl || "/default-avatar.png";
+            const rating = a.tutor.averageRating?.toFixed(1) ?? "0.0";
+            const reviewCount = a.tutor.reviewCount ?? a.tutor.totalReviews ?? 0;
 
-              <StatusBadge kind="application" status={a.applicationStatus} />
-            </li>
-          ))}
-        </ul>
+            return (
+              <Link
+                key={a.id}
+                to={ROUTES.TUTOR_DETAIL(a.tutor.id)}
+                className="group flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 transition-all hover:border-primary hover:shadow-md"
+              >
+                {/* Header: Avatar + Name + Rating */}
+                <div className="flex items-start gap-3">
+                  <img
+                    src={avatarUrl}
+                    alt={a.tutor.fullName}
+                    className="size-14 rounded-full object-cover ring-2 ring-border group-hover:ring-primary transition-all flex-shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-text group-hover:text-primary transition-colors line-clamp-1">
+                      {a.tutor.fullName}
+                    </p>
+                    {/* Rating */}
+                    <div className="mt-1 flex items-center gap-1.5 text-sm text-text-secondary">
+                      <span className="flex items-center gap-1">
+                        ⭐{" "}
+                        <span className="font-medium text-text">
+                          {rating}
+                        </span>
+                      </span>
+                      <span>•</span>
+                      <span>{reviewCount} đánh giá</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Proposed Fee */}
+                {a.proposedFee && (
+                  <div className="flex items-center justify-between rounded-md bg-primary/10 px-3 py-2">
+                    <span className="text-xs font-medium text-text-secondary">
+                      Đề xuất phí
+                    </span>
+                    <span className="text-base font-bold text-primary">
+                      {a.proposedFee.toLocaleString()} đ
+                    </span>
+                  </div>
+                )}
+
+                {/* Applied Time */}
+                <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                  <Clock className="size-3.5" />
+                  <span>Đã ứng tuyển {timeAgo(a.appliedAt)}</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       )}
     </Modal>
   );
@@ -119,6 +159,20 @@ export default function AdminPostsPage() {
       filter.educationLevels.length <= 1 ||
       filter.educationLevels.includes(post.educationLevel),
   );
+
+  // DEBUG LOG
+  console.log("=== DEBUG Posts Data ===");
+  console.log("Total posts:", posts.length);
+  console.log("Status filter:", status);
+  posts.forEach((post, idx) => {
+    console.log(`Post ${idx + 1}:`, {
+      id: post.id,
+      title: post.title,
+      status: post.status,
+      applicationCount: post.applicationCount,
+    });
+  });
+  console.log("========================");
 
   // Infinite scroll
   const sentinelRef = useRef<HTMLDivElement>(null);

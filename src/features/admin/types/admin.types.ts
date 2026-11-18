@@ -2,8 +2,10 @@ export interface FeeRateConfig {
   id: string;
   /** Tỉ lệ dạng 0..1, ví dụ 0.2 = 20% */
   rate: number;
+  fixedFee: number;
   effectiveFrom: string;
   createdBy: string;
+  createdByName?: string;
   active: boolean;
   /** Ngày hết hiệu lực; rỗng nếu đang áp dụng */
   effectiveTo?: string;
