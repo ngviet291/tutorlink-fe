@@ -1,4 +1,4 @@
-import { Info, Plus, Wallet, ArrowDownToLine } from "lucide-react";
+import {  Plus, Wallet, ArrowDownToLine } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { Skeleton } from "@/shared/components/ui/Skeleton";

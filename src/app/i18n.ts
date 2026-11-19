@@ -291,8 +291,7 @@ const vi = {
     amount: "Số tiền",
     history: "Lịch sử giao dịch",
     noTransactions: "Chưa có giao dịch",
-    walletNote:
-      "",
+    walletNote: "",
     transferNote:
       "Chuyển khoản theo thông tin dưới đây, số dư sẽ được cộng sau khi xác nhận.",
     bankName: "Ngân hàng",
@@ -329,6 +328,8 @@ const vi = {
     },
   },
   notification: {
+    typeReview: "Đánh giá",
+    typePost: "Bài đăng",
     title: "Thông báo",
     markAllRead: "Đánh dấu tất cả đã đọc",
     noNotifications: "Chưa có thông báo",
@@ -825,6 +826,8 @@ const en = {
     },
   },
   notification: {
+    typeReview: "Reviews",
+    typePost: "Posts",
     title: "Notifications",
     markAllRead: "Mark all as read",
     noNotifications: "No notifications",

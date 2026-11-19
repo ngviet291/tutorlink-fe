@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { TRANSACTION_STATUS_META } from "@/constants/enums";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { Modal } from "@/shared/components/ui/Modal";
 import { PageHeader } from "@/shared/components/ui/PageHeader";

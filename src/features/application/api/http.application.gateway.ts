@@ -5,7 +5,6 @@ import type {
   CreateApplicationRequest,
   RankedApplicationsResponse,
 } from "../types/application.dto";
-import type { PostApplicationItem } from "../types/application.types";
 import type { BaseUserResponse } from "@/features/user/types/user.dto";
 import type { ApplicationGateway } from "./application.gateway";
 

@@ -2,7 +2,6 @@ import type {
   ApplicationResponse,
   AiSuggestionResponse,
   ApplyPayload,
-  PostApplicationItem,
   AiRankedApplication,
 } from "../types/application.types";
 import type {
@@ -67,23 +66,23 @@ export class ApplicationService {
   private readonly postService: PostService;
 
   /** Cache public-profile dùng chung giữa các lần gọi (mine, by-post, ranked). */
-  private readonly userCache = new Map<
-    string,
-    { at: number; promise: Promise<BaseUserResponse> }
-  >();
-  private static readonly USER_TTL_MS = 5 * 60 * 1000;
+  // private readonly userCache = new Map<
+  //   string,
+  //   { at: number; promise: Promise<BaseUserResponse> }
+  // >();
+  // private static readonly USER_TTL_MS = 5 * 60 * 1000;
 
-  private loadUser(id: string): Promise<BaseUserResponse> {
-    const hit = this.userCache.get(id);
-    if (hit && Date.now() - hit.at < ApplicationService.USER_TTL_MS) {
-      return hit.promise;
-    }
-    const promise = this.gateway.getPublicUser(id);
-    this.userCache.set(id, { at: Date.now(), promise });
-    // Lỗi thì bỏ khỏi cache để lần sau gọi lại.
-    promise.catch(() => this.userCache.delete(id));
-    return promise;
-  }
+  // private loadUser(id: string): Promise<BaseUserResponse> {
+  //   const hit = this.userCache.get(id);
+  //   if (hit && Date.now() - hit.at < ApplicationService.USER_TTL_MS) {
+  //     return hit.promise;
+  //   }
+  //   const promise = this.gateway.getPublicUser(id);
+  //   this.userCache.set(id, { at: Date.now(), promise });
+  //   // Lỗi thì bỏ khỏi cache để lần sau gọi lại.
+  //   promise.catch(() => this.userCache.delete(id));
+  //   return promise;
+  // }
 
   constructor(gateway: ApplicationGateway, postService: PostService) {
     this.gateway = gateway;
@@ -152,45 +151,6 @@ export class ApplicationService {
     return app ?? this.build(dto, { id: dto.postId } as PostResponse);
   }
 
-  private async enrichPostApplicants(
-    postId: string,
-    items: PostApplicationItem[],
-  ): Promise<ApplicationResponse[]> {
-    // Try multiple endpoints: public → admin → mine
-    let post: PostResponse;
-    try {
-      post = await this.postService.getPostById(postId);
-    } catch {
-      try {
-        post = await this.postService.getPostByIdForAdmin(postId);
-      } catch {
-        post = await this.postService.getPostByIdForMe(postId);
-      }
-    }
-    
-    const postOwner = await this.loadUser(post.author.id);
-
-    return Promise.all(
-      items.map(async (item) => {
-        const applicant = await this.loadUser(item.userId);
-        const isTutorApplicant = post.type === "FIND_TUTOR";
-
-        return {
-          id: item.applicationId,
-          post,
-          tutor: isTutorApplicant ? asTutor(applicant) : asTutor(postOwner),
-          student: isTutorApplicant
-            ? asStudent(postOwner)
-            : asStudent(applicant),
-          applicationStatus: item.status,
-          appliedAt: item.appliedAt,
-        };
-      }),
-    );
-  }
-
-  // Arrow property: truyền thẳng làm queryFn/mutationFn không mất `this`.
-
   applyToPost = async (payload: ApplyPayload): Promise<ApplicationResponse> =>
     this.enrich(await this.gateway.apply(payload));
 
@@ -249,7 +209,9 @@ export class ApplicationService {
     } catch {
       // Nếu không lấy được post (đã xóa/không tồn tại), vẫn trả về applications
       // với post object tối thiểu
-      console.warn(`Could not fetch post ${postId} for admin, using minimal post object`);
+      console.warn(
+        `Could not fetch post ${postId} for admin, using minimal post object`,
+      );
     }
 
     // Nếu không lấy được post, tạo object tối thiểu

@@ -1,7 +1,6 @@
 import { http } from "@/config/axiosClient";
 import type { CursorResponse } from "@/shared/types/api.types";
 import type { ReviewComplaintResponse, ReviewResponse as ReviewDto } from "../types/review.dto";
-import type { BaseUserResponse } from "@/features/user/types/user.dto";
 import { mockConfig } from "@/config/env";
 import { ApiError } from "@/shared/types/api.types";
 import { ERROR_MESSAGES } from "@/constants/errorMessage";

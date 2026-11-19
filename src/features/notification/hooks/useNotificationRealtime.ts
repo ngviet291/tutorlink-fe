@@ -3,8 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/shared/hooks/useToast";
 import { isNotificationNew } from "../realtime/notification.realtime";
 import { realtimeClient } from "@/config/di/container";
-
-const NOTIFICATION_KEY = ["notifications"]; // ĐỔI: query key thật
+import { NOTIFICATION_KEY } from "./useNotifications";
 
 export function useNotificationRealtime() {
   const queryClient = useQueryClient();
@@ -29,4 +28,3 @@ export function useNotificationRealtime() {
     };
   }, [queryClient, toast]);
 }
-

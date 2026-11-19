@@ -235,10 +235,10 @@ export const NOTIFICATION_TYPE_LABEL: Record<NotificationType, string> = {
     return t("chat.open");
   },
   get REVIEW() {
-    return "Đánh giá";
+    return t("notification.typeReview");
   },
   get POST() {
-    return "Bài đăng";
+    return t("notification.typePost");
   },
   get MATCHING() {
     return t("ai.top5Title");

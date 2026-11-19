@@ -962,6 +962,7 @@ export const feeRates: FeeRateConfig[] = [
   {
     id: "fr-1",
     rate: 0.15,
+    fixedFee: 0,
     effectiveFrom: "2025-01-01",
     createdBy: "Quản trị viên",
     active: false,
@@ -969,6 +970,7 @@ export const feeRates: FeeRateConfig[] = [
   {
     id: "fr-2",
     rate: 0.2,
+    fixedFee: 0,
     effectiveFrom: "2025-06-01",
     createdBy: "Quản trị viên",
     active: true,

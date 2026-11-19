@@ -17,7 +17,7 @@ import type {
   NotificationType,
 } from "../types/notification.types";
 import { useNotificationMutations } from "../hooks/useNotifications";
-import { resolveNotificationRoute } from "../util/notificationRoute";
+import { resolveNotificationRoute } from "../utils/notificationRoute";
 
 const icons: Record<NotificationType, typeof Bell> = {
   SYSTEM: ShieldCheck,
@@ -46,7 +46,7 @@ export function NotificationList({ items, onNavigate, compact }: Props) {
     if (!n.read) markOne.mutate(n.id);
     onNavigate?.();
     const route = resolveNotificationRoute(n);
-    console.log("NotificationList.handleClick", n, route);
+    // console.log("NotificationList.handleClick", n, route);
     if (route) navigate(route);
   };
 
@@ -62,7 +62,8 @@ export function NotificationList({ items, onNavigate, compact }: Props) {
               className={cn(
                 "flex w-full cursor-pointer items-start gap-3 px-4 py-3 text-left hover:bg-surface-hover",
                 !n.read && "bg-primary-light/50",
-              )}>
+              )}
+            >
               <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-light text-primary">
                 <Icon className="size-4" />
               </span>
@@ -71,14 +72,16 @@ export function NotificationList({ items, onNavigate, compact }: Props) {
                   className={cn(
                     "block text-sm text-text",
                     !n.read && "font-semibold",
-                  )}>
+                  )}
+                >
                   {n.title}
                 </span>
                 <span
                   className={cn(
                     "block text-xs text-text-secondary",
                     compact && "line-clamp-2",
-                  )}>
+                  )}
+                >
                   {n.content}
                 </span>
                 <span className="mt-1 block text-[11px] text-text-secondary">

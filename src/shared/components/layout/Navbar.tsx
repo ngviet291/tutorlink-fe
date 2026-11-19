@@ -12,7 +12,6 @@ import { Dropdown, dropdownItemClass } from '@/shared/components/ui/Dropdown'
 import { Logo } from '@/shared/components/ui/Logo'
 import { NotificationBell } from '@/features/notification/components/NotificationBell'
 import { useLogout } from '@/features/auth/hooks/useAuth'
-import { PUBLIC_NAV } from './navItems'
 import { getPublicNav } from './navItems'
 
 export function Navbar() {
