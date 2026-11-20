@@ -1,9 +1,18 @@
 export type Role = "STUDENT" | "TUTOR" | "ADMIN";
-export type Gender = "MALE" | "FEMALE" ;
-export type UserStatus = "ACTIVE" | "BANNED"|"INACTIVE" | "PENDING_VERIFICATION";
+export type Gender = "MALE" | "FEMALE";
+export type UserStatus =
+  | "ACTIVE"
+  | "BANNED"
+  | "INACTIVE"
+  | "PENDING_VERIFICATION";
 export type VerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type PostType = "FIND_TUTOR" | "FIND_STUDENT";
-export type PostStatus = "DRAFT" | "PUBLISHED" |"PENDING" | "CLOSED" | "REMOVED";
+export type PostStatus =
+  | "DRAFT"
+  | "PUBLISHED"
+  | "PENDING"
+  | "CLOSED"
+  | "REMOVED";
 export type ApplicationStatus =
   | "PENDING"
   | "ACCEPTED"
@@ -18,7 +27,16 @@ export type TransactionStatus =
   | "CANCELLED"
   | "REFUNDED";
 export type TransactionType = "TOP_UP" | "COMMISSION" | "REFUND" | "WITHDRAW";
-export type NotificationType = "SYSTEM" | "APPLICATION" | "PAYMENT" | "CHAT" | "TRANSACTION" | "MESSAGE" | "REVIEW" | "POST" | "MATCHING";
+export type NotificationType =
+  | "SYSTEM"
+  | "APPLICATION"
+  | "PAYMENT"
+  | "CHAT"
+  | "TRANSACTION"
+  | "MESSAGE"
+  | "REVIEW"
+  | "POST"
+  | "MATCHING";
 export type TeachingMode = "ONLINE" | "OFFLINE" | "BOTH";
 export type EducationLevel =
   | "PRIMARY"
@@ -34,11 +52,23 @@ export interface Address {
   province?: string;
 }
 
-export type PaymentMethod = "BANK_TRANSFER" | "WALLET" | "MOMO" | "ZALOPAY";
+export type PaymentMethod =
+  | "BANK_TRANSFER"
+  | "WALLET"
+  | "MOMO"
+  | "ZALOPAY"
+  | "VIETQR";
 
 /** Tên cũ của UserStatus, giữ lại cho code admin. */
 export type AccountStatus = UserStatus;
-export type DayOfWeek = "MONDAY" | "TUESDAY" | "WEDNESDAY" | "THURSDAY" | "FRIDAY" | "SATURDAY" | "SUNDAY";
+export type DayOfWeek =
+  | "MONDAY"
+  | "TUESDAY"
+  | "WEDNESDAY"
+  | "THURSDAY"
+  | "FRIDAY"
+  | "SATURDAY"
+  | "SUNDAY";
 
 export type MediaType = "IMAGE" | "VIDEO" | "FILE" | "AUDIO";
 export type MatchWarning =

@@ -295,6 +295,7 @@ export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
   WALLET: "Ví TutorLink",
   MOMO: "MoMo",
   ZALOPAY: "ZaloPay",
+  VIETQR: "VietQR",
 };
 
 export const ACCOUNT_STATUS_META = USER_STATUS_META;

@@ -11,5 +11,11 @@ export const TOP_UP_PRESETS = [50_000, 100_000, 200_000, 500_000];
 export const TOP_UP_MIN_AMOUNT = 10_000;
 export const TOP_UP_MAX_AMOUNT = 50_000_000;
 export const TOP_UP_DEFAULT_AMOUNT = 100_000;
-export const TOP_UP_METHODS = [{ value: "MOMO", label: "MoMo" }] as const;
+export const TOP_UP_METHODS = [
+  { value: "MOMO", label: "MoMo" },
+  { value: "VIETQR", label: "VietQR (chuyển khoản)" },
+] as const;
+export type TopUpMethod = (typeof TOP_UP_METHODS)[number]["value"];
+/** Quá thời gian này mà giao dịch vẫn PENDING thì FE ngừng tự kiểm tra (người dùng có thể bấm kiểm tra lại). */
+export const TOP_UP_PENDING_TIMEOUT_MS = 15 * 60_000;
 export const DEMO_ORDER_PREFIX = "MOCK";

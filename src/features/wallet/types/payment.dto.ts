@@ -17,6 +17,7 @@ export interface CreateFeeConfigRequest {
 /** BE: payment/dto/request/TopUpRequest.java */
 export interface TopUpRequest {
   amount: number;
+  paymentMethod: "MOMO" | "VIETQR";
 }
 
 /** BE: payment/dto/response/FeeConfigResponse.java */

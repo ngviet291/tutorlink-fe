@@ -50,12 +50,13 @@ export interface AdminTransactionFilter {
 
 export interface TopUpPayload {
   amount: number;
-  paymentMethod?: PaymentMethod;
+  /** BE bắt buộc: MOMO hoặc VIETQR. */
+  paymentMethod: Extract<PaymentMethod, "MOMO" | "VIETQR">;
 }
 
 export interface TopUpResponse {
   transaction: TransactionResponse;
-  /** Cổng MoMo/ZaloPay trả về để chuyển hướng người dùng đi thanh toán */
+  /** MoMo: liên kết thanh toán. VietQR: paymentLink là ảnh QR, qrCodeUrl là nội dung QR để tự vẽ. */
   paymentLink?: string;
   qrCodeUrl?: string;
   deeplink?: string;

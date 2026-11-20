@@ -32,14 +32,16 @@ export class HttpWalletGateway implements WalletGateway {
   }
 
   async getWallet(): Promise<WalletResponse> {
-    const dto = await this.http.get<WalletResponse>(`${PAYMENT_API_PATH}/wallet/balance`);
+    const dto = await this.http.get<WalletResponse>(
+      `${PAYMENT_API_PATH}/wallet/balance`,
+    );
     return { balance: Number(dto.balance) };
   }
 
   async topUp(payload: TopUpPayload): Promise<TopUpResponse> {
     const dto = await this.http.post<TransactionDto>(
       `${PAYMENT_API_PATH}/wallet/top-up`,
-      { amount: payload.amount },
+      { amount: payload.amount, paymentMethod: payload.paymentMethod },
       { timeout: PAYMENT_REQUEST_TIMEOUT_MS },
     );
     return {
@@ -51,7 +53,9 @@ export class HttpWalletGateway implements WalletGateway {
   }
 
   async getTransaction(id: string): Promise<TransactionResponse> {
-    const dto = await this.http.get<TransactionDto>(`${PAYMENT_API_PATH}/${id}`);
+    const dto = await this.http.get<TransactionDto>(
+      `${PAYMENT_API_PATH}/${id}`,
+    );
     return fromBeTransaction(dto);
   }
 
