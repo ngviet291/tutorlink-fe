@@ -9,12 +9,17 @@ import { formatVnd } from '@/shared/utils/currency'
 import { useAdminStats } from '@/features/admin/hooks/useAdmin'
 import type { RevenuePoint } from '@/features/admin/types/admin.types'
 
+function formatMonthYear(periodStart: string): string {
+  const [year, month] = periodStart.split('-')
+  return `${month}/${year}`
+}
+
 /** Biểu đồ cột tự dựng bằng SVG. */
 function RevenueChart({ points }: { points: RevenuePoint[] }) {
   const W = 560, H = 220, PAD = { l: 8, r: 8, t: 24, b: 28 }
   const max = Math.max(...points.map((p) => p.revenue), 1)
   const bw = (W - PAD.l - PAD.r) / Math.max(points.length, 1)
-  const summary = points.map((p) => `${p.label}: ${formatVnd(p.revenue)}`).join('; ')
+  const summary = points.map((p) => `${formatMonthYear(p.label)}: ${formatVnd(p.revenue)}`).join('; ')
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Doanh thu phí nhận lớp theo tháng. ${summary}`} className="w-full">
       {[0.25, 0.5, 0.75, 1].map((g) => (
@@ -28,7 +33,7 @@ function RevenueChart({ points }: { points: RevenuePoint[] }) {
           <g key={p.label}>
             <rect x={x} y={y} width={bw * 0.64} height={h} rx={6} fill="var(--color-primary)" />
             <text x={x + bw * 0.32} y={y - 6} textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--color-text)">{(p.revenue / 1_000_000).toFixed(1)}tr</text>
-            <text x={x + bw * 0.32} y={H - 8} textAnchor="middle" fontSize="12" fill="var(--color-text-secondary)">{p.label}</text>
+            <text x={x + bw * 0.32} y={H - 8} textAnchor="middle" fontSize="12" fill="var(--color-text-secondary)">{formatMonthYear(p.label)}</text>
           </g>
         )
       })}
@@ -50,7 +55,7 @@ export default function AdminStatsPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         {[
           { icon: CircleDollarSign, label: 'Doanh thu 6 tháng', value: totalRevenue === undefined ? undefined : formatVnd(totalRevenue) },
-          { icon: Handshake, label: 'Đơn được chấp nhận trong 6 tháng', value: data?.totalSuccessfulMatches },
+          { icon: Handshake, label: 'Lớp đã xác nhận trong 6 tháng', value: data?.totalSuccessfulMatches },
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
             <span className="flex size-11 items-center justify-center rounded-xl bg-primary-light text-primary"><Icon className="size-5" /></span>
@@ -66,7 +71,7 @@ export default function AdminStatsPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
-          <h2 className="mb-3 text-lg font-bold text-text">Top gia sư nhận lớp nhiều nhất</h2>
+          <h2 className="mb-3 text-lg font-bold text-text">Top gia sư có lớp đã xác nhận</h2>
           {isLoading || !data ? <Skeleton className="h-40" /> : (
             <ol className="flex flex-col gap-2">
               {data.topTutors.map((t, i) => (
