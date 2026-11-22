@@ -12,8 +12,8 @@ export const TOP_UP_MIN_AMOUNT = 10_000;
 export const TOP_UP_MAX_AMOUNT = 50_000_000;
 export const TOP_UP_DEFAULT_AMOUNT = 100_000;
 export const TOP_UP_METHODS = [
-  { value: "MOMO", label: "MoMo" },
-  { value: "VIETQR", label: "VietQR (chuyển khoản)" },
+  // { value: "MOMO", label: "MoMo" },
+  { value: "VIETQR", label: "VietQR" },
 ] as const;
 export type TopUpMethod = (typeof TOP_UP_METHODS)[number]["value"];
 /** Quá thời gian này mà giao dịch vẫn PENDING thì FE ngừng tự kiểm tra (người dùng có thể bấm kiểm tra lại). */

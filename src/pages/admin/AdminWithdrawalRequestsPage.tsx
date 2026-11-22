@@ -25,14 +25,45 @@ export default function AdminWithdrawalRequestsPage() {
     hasNextPage,
     isFetchingNextPage,
   } = useAdminTransactions({ status: "PENDING", type: "WITHDRAW" });
-  
+
   const items = data?.pages.flatMap((p) => p.content) ?? [];
   const [detailId, setDetailId] = useState<string>();
   const detailQuery = useAdminTransaction(detailId);
   const detail = detailQuery.data;
   const toast = useToast();
   const { approveWithdrawal, rejectWithdrawal } = useAdminPaymentMutations();
-  const [confirmAction, setConfirmAction] = useState<"approve" | "reject" | null>(null);
+  const [confirmAction, setConfirmAction] = useState<
+    "approve" | "reject" | null
+  >(null);
+
+  const showQr =
+    detail?.transactionStatus === "PENDING" &&
+    Boolean(detail.bankAccountNumber);
+
+  const qrUrl =
+    detail && showQr
+      ? `https://img.vietqr.io/image/${encodeURIComponent(detail.bankName ?? "")}-${detail.bankAccountNumber}-compact2.png` +
+        `?amount=${detail.amount}` +
+        `&addInfo=${encodeURIComponent(`Thanh toan cho hoa don ${detail.id.slice(0, 8)}`)}` +
+        `&accountName=${encodeURIComponent(detail.accountHolderName ?? "")}`
+      : "";
+
+  // Thông tin đã in trong ảnh QR thì không hiện lại ở danh sách.
+  const rows: [string, string][] = detail
+    ? [
+        ["Mã giao dịch", detail.id],
+        ["Gia sư", detail.tutorName ?? detail.tutorId ?? "—"],
+        ...(showQr
+          ? []
+          : ([
+              ["Số tiền", formatVnd(detail.amount)],
+              ["Tên chủ tài khoản", detail.accountHolderName ?? "—"],
+              ["Số tài khoản", detail.bankAccountNumber ?? "—"],
+              ["Ngân hàng", detail.bankName ?? "—"],
+            ] as [string, string][])),
+        ["Thời gian yêu cầu", formatDateTime(detail.createdAt)],
+      ]
+    : [];
 
   const handleApprove = () => {
     if (!detail) {
@@ -93,20 +124,22 @@ export default function AdminWithdrawalRequestsPage() {
                   <tr
                     key={t.id}
                     className="cursor-pointer hover:bg-surface-hover"
-                    onClick={() => setDetailId(t.id)}
-                  >
+                    onClick={() => setDetailId(t.id)}>
                     <td className="p-3 text-text-secondary">
                       {formatDateTime(t.createdAt)}
                     </td>
-                    <td className="font-medium text-text">{t.tutorName ?? t.tutorId ?? "—"}</td>
+                    <td className="font-medium text-text">
+                      {t.tutorName ?? t.tutorId ?? "—"}
+                    </td>
                     <td className="pr-5 text-right font-semibold text-danger">
                       {formatVnd(t.amount)}
                     </td>
-                    <td className="text-text-secondary">
-                      {t.bankName ?? "—"}
-                    </td>
+                    <td className="text-text-secondary">{t.bankName ?? "—"}</td>
                     <td className="pr-3">
-                      <StatusBadge kind="transaction" status={t.transactionStatus} />
+                      <StatusBadge
+                        kind="transaction"
+                        status={t.transactionStatus}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -114,7 +147,9 @@ export default function AdminWithdrawalRequestsPage() {
             </table>
           </div>
           {hasNextPage && (
-            <Button loading={isFetchingNextPage} onClick={() => void fetchNextPage()}>
+            <Button
+              loading={isFetchingNextPage}
+              onClick={() => void fetchNextPage()}>
               Tải thêm yêu cầu
             </Button>
           )}
@@ -128,22 +163,16 @@ export default function AdminWithdrawalRequestsPage() {
           setConfirmAction(null);
         }}
         title="Chi tiết yêu cầu rút tiền"
-        size="sm"
-      >
+        size="md"
+        className="max-h-[96vh]! [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {detailQuery.isLoading && <ListSkeleton rows={2} />}
-        {detailQuery.isError && <ErrorState onRetry={() => void detailQuery.refetch()} />}
+        {detailQuery.isError && (
+          <ErrorState onRetry={() => void detailQuery.refetch()} />
+        )}
         {detail && (
           <>
             <dl className="divide-y divide-border text-sm">
-              {[
-                ["Mã giao dịch", detail.id],
-                ["Gia sư", detail.tutorName ?? detail.tutorId ?? "—"],
-                ["Số tiền", formatVnd(detail.amount)],
-                ["Tên chủ tài khoản", detail.accountHolderName ?? "—"],
-                ["Số tài khoản", detail.bankAccountNumber ?? "—"],
-                ["Ngân hàng", detail.bankName ?? "—"],
-                ["Thời gian yêu cầu", formatDateTime(detail.createdAt)],
-              ].map(([k, v]) => (
+              {rows.map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-3 py-2">
                   <dt className="text-text-secondary">{k}</dt>
                   <dd className="font-semibold text-text">{v}</dd>
@@ -152,11 +181,20 @@ export default function AdminWithdrawalRequestsPage() {
               <div className="flex justify-between py-2">
                 <dt className="text-text-secondary">Trạng thái</dt>
                 <dd>
-                  <StatusBadge kind="transaction" status={detail.transactionStatus} />
+                  <StatusBadge
+                    kind="transaction"
+                    status={detail.transactionStatus}
+                  />
                 </dd>
               </div>
             </dl>
-
+            {showQr && (
+              <img
+                src={qrUrl}
+                alt="Mã QR chuyển khoản cho gia sư"
+                className="mx-auto mt-4 w-full max-w-sm rounded-xl border border-border bg-white object-contain p-2"
+              />
+            )}
             {detail.transactionStatus === "PENDING" && (
               <>
                 {!confirmAction ? (
@@ -164,15 +202,13 @@ export default function AdminWithdrawalRequestsPage() {
                     <Button
                       variant="danger"
                       fullWidth
-                      onClick={() => setConfirmAction("reject")}
-                    >
+                      onClick={() => setConfirmAction("reject")}>
                       Từ chối
                     </Button>
                     <Button
                       variant="primary"
                       fullWidth
-                      onClick={() => setConfirmAction("approve")}
-                    >
+                      onClick={() => setConfirmAction("approve")}>
                       Duyệt
                     </Button>
                   </div>
@@ -187,20 +223,23 @@ export default function AdminWithdrawalRequestsPage() {
                       <Button
                         variant="secondary"
                         fullWidth
-                        onClick={() => setConfirmAction(null)}
-                      >
+                        onClick={() => setConfirmAction(null)}>
                         Hủy
                       </Button>
                       <Button
-                        variant={confirmAction === "approve" ? "primary" : "danger"}
+                        variant={
+                          confirmAction === "approve" ? "primary" : "danger"
+                        }
                         fullWidth
                         loading={
-                          approveWithdrawal.isPending || rejectWithdrawal.isPending
+                          approveWithdrawal.isPending ||
+                          rejectWithdrawal.isPending
                         }
                         onClick={
-                          confirmAction === "approve" ? handleApprove : handleReject
-                        }
-                      >
+                          confirmAction === "approve"
+                            ? handleApprove
+                            : handleReject
+                        }>
                         Xác nhận
                       </Button>
                     </div>
