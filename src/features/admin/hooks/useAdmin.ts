@@ -17,6 +17,7 @@ export const adminKeys = {
   all: ["admin"] as const,
   users: ["admin", "users"] as const,
   pendingTutors: ["admin", "tutors", "pending"] as const,
+  pendingCertificates: ["admin", "certificates", "pending"] as const,
   posts: ["admin", "posts"] as const,
   transactions: ["admin", "transactions"] as const,
   feeRates: ["admin", "fee-rates"] as const,
@@ -48,6 +49,13 @@ export function usePendingTutors() {
   return useQuery({
     queryKey: adminKeys.pendingTutors,
     queryFn: () => adminService.getPendingTutors(),
+  });
+}
+
+export function usePendingCertificates() {
+  return useQuery({
+    queryKey: adminKeys.pendingCertificates,
+    queryFn: () => adminService.getPendingCertificates(),
   });
 }
 
@@ -108,6 +116,21 @@ export function useAdminMutations() {
         id: string;
         payload: ProfileReviewPayload;
       }) => adminService.reviewTutor(id, payload),
+      onSuccess: () => {
+        void refresh();
+        void qc.invalidateQueries({ queryKey: ["tutors"] });
+      },
+    }),
+    reviewCertificate: useMutation({
+      mutationFn: ({
+        id,
+        approved,
+        reason,
+      }: {
+        id: string;
+        approved: boolean;
+        reason?: string;
+      }) => adminService.reviewCertificate(id, { approved, reason }),
       onSuccess: () => {
         void refresh();
         void qc.invalidateQueries({ queryKey: ["tutors"] });

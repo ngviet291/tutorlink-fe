@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Ban, Users, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { POST_STATUS_META } from "@/constants/enums";
 import { ROUTES } from "@/constants/routes";
@@ -281,33 +281,16 @@ export default function AdminPostsPage() {
             <>
               <ul className="grid gap-4 sm:grid-cols-2">
                 {posts.map((post) => (
-                  <li key={post.id} className="flex flex-col gap-2">
-                    <div className="flex-1">
-                      <PostCard post={post} />
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setViewing(post)}
-                      >
-                        <Users className="size-4" />
-                        Lượt đăng ký ({post.applicationCount ?? 0})
-                      </Button>
-
-                      {post.status !== "REMOVED" &&
-                        post.status !== "CLOSED" && (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => setTarget(post)}
-                          >
-                            <Ban className="size-4" />
-                            Gỡ bài
-                          </Button>
-                        )}
-                    </div>
+                  <li key={post.id}>
+                    <PostCard
+                      post={post}
+                      onViewApplications={() => setViewing(post)}
+                      onRemove={
+                        post.status !== "REMOVED" && post.status !== "CLOSED"
+                          ? () => setTarget(post)
+                          : undefined
+                      }
+                    />
                   </li>
                 ))}
               </ul>

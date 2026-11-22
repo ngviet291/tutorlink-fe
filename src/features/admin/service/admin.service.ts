@@ -12,7 +12,10 @@ import type {
 } from "@/features/user/types/user.dto";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 import type { BaseUserResponse } from "@/features/user/types/user.types";
-import type { ProfileReviewPayload } from "../types/admin.types";
+import type {
+  PendingCertificate,
+  ProfileReviewPayload,
+} from "../types/admin.types";
 import {
   nextId,
   notifications,
@@ -69,6 +72,21 @@ export const adminService = {
       cursor = page.nextCursor;
     }
     return all;
+  },
+
+  /** GET /v1/admin/certificates/pending — chứng chỉ AI không tự duyệt được. */
+  async getPendingCertificates(): Promise<PendingCertificate[]> {
+    return http
+      .get<PendingCertificate[]>("/v1/admin/certificates/pending")
+      .then((res) => res.data);
+  },
+
+  /** PATCH /v1/admin/certificates/{id}/review { approved, reason } */
+  async reviewCertificate(
+    certificateId: string,
+    payload: { approved: boolean; reason?: string },
+  ): Promise<void> {
+    await http.patch(`/v1/admin/certificates/${certificateId}/review`, payload);
   },
 
   /** PATCH /v1/users/{id}/approve { approved, reason } */

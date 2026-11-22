@@ -1,5 +1,6 @@
+import type { MouseEvent } from "react";
 import { Link } from "react-router-dom";
-import { CalendarDays, Clock, MapPin, Users, Wifi } from "lucide-react";
+import { Ban, CalendarDays, Clock, MapPin, Users, Wifi } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/constants/routes";
 import {
@@ -16,7 +17,28 @@ import { formatBudgetRange } from "@/shared/utils/currency";
 import { formatDate } from "@/shared/utils/date";
 import type { PostResponse } from "../types/post.types";
 
-export function PostCard({ post, mine = false }: { post: PostResponse;mine?: boolean; }) {
+interface PostCardProps {
+  post: PostResponse;
+  mine?: boolean;
+  /** Có truyền thì số lượt đăng ký bấm được (dùng ở trang admin). */
+  onViewApplications?: () => void;
+  /** Có truyền thì hiện nút Gỡ bài (dùng ở trang admin). */
+  onRemove?: () => void;
+}
+
+// Card là <Link>, nên bấm nút bên trong không được chuyển trang
+const handleClick = (action: () => void) => (e: MouseEvent) => {
+  e.preventDefault();
+  e.stopPropagation();
+  action();
+};
+
+export function PostCard({
+  post,
+  mine = false,
+  onViewApplications,
+  onRemove,
+}: PostCardProps) {
   const { t } = useTranslation();
 
   return (
@@ -91,10 +113,33 @@ export function PostCard({ post, mine = false }: { post: PostResponse;mine?: boo
           <Badge tone="gray">
             {EDUCATION_LEVEL_LABEL[post.educationLevel]}
           </Badge>
-          {post.applicationCount !== undefined && (
-            <span className="flex items-center gap-1">
-              <Users className="size-3.5" /> {post.applicationCount}
-            </span>
+
+          {post.applicationCount !== undefined &&
+            (onViewApplications ? (
+              <button
+                type="button"
+                title="Xem lượt đăng ký"
+                onClick={handleClick(onViewApplications)}
+                className="flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-primary/10 hover:text-primary"
+              >
+                <Users className="size-3.5" /> {post.applicationCount}
+              </button>
+            ) : (
+              <span className="flex items-center gap-1">
+                <Users className="size-3.5" /> {post.applicationCount}
+              </span>
+            ))}
+
+          {onRemove && (
+            <button
+              type="button"
+              title="Gỡ bài"
+              aria-label="Gỡ bài"
+              onClick={handleClick(onRemove)}
+              className="rounded-md p-1 text-red-600 hover:bg-red-50"
+            >
+              <Ban className="size-4" />
+            </button>
           )}
         </span>
       </div>

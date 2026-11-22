@@ -1,3 +1,17 @@
+/** Chứng chỉ AI không tự duyệt được, chờ admin (GET /v1/admin/certificates/pending). */
+export interface PendingCertificate {
+  id: string;
+  tutorId: string;
+  tutorName: string;
+  subjectId?: string;
+  subjectName?: string;
+  name?: string;
+  fileUrl: string;
+  /** Lý do AI không tự duyệt được */
+  reviewNote?: string;
+  submittedAt?: string;
+}
+
 export interface FeeRateConfig {
   id: string;
   /** Tỉ lệ dạng 0..1, ví dụ 0.2 = 20% */

@@ -3,7 +3,6 @@ import { SUBJECT_FORM_NAME_MAX_LENGTH } from "@/features/subject/constants/subje
 import { useForm } from "react-hook-form";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
-import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { ErrorState } from "@/shared/components/ui/EmptyState";
 import { Input } from "@/shared/components/ui/Input";
 import { Modal } from "@/shared/components/ui/Modal";
@@ -11,11 +10,16 @@ import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { useToast } from "@/shared/hooks/useToast";
-import { useSubjectMutations, useSubjects } from "@/features/subject/hooks/useSubjects";
+import {
+  useSubjectMutations,
+  useSubjects,
+} from "@/features/subject/hooks/useSubjects";
 import type {
   SubjectPayload,
   SubjectResponse,
 } from "@/features/subject/types/subject.types";
+
+const SUBJECT_IN_USE_MESSAGE = "Môn học đang được sử dụng nên không thể xóa.";
 
 export default function AdminSubjectsPage() {
   const toast = useToast();
@@ -23,7 +27,8 @@ export default function AdminSubjectsPage() {
   const { create, update, remove } = useSubjectMutations();
   const [editing, setEditing] = useState<SubjectResponse | "new" | null>(null);
   const [deleting, setDeleting] = useState<SubjectResponse | null>(null);
-  const [deleteError, setDeleteError] = useState("");
+  // Môn mà BE từ chối xóa vì đang được sử dụng: disable nút Xóa trong modal
+  const [inUseIds, setInUseIds] = useState<string[]>([]);
   const {
     register,
     handleSubmit,
@@ -47,6 +52,12 @@ export default function AdminSubjectsPage() {
           },
     );
   };
+
+  const isInUse = (s: SubjectResponse) =>
+    (s.usageCount ?? 0) > 0 || inUseIds.includes(s.id);
+
+  const deletingInUse = deleting ? isInUse(deleting) : false;
+
   const submit = handleSubmit((v) => {
     const opts = {
       onSuccess: () => {
@@ -66,13 +77,14 @@ export default function AdminSubjectsPage() {
     if (!deleting) {
       return;
     }
-    remove.mutate(deleting.id, {
+    const subject = deleting;
+    remove.mutate(subject.id, {
       onSuccess: () => {
         toast.success("Đã xóa môn học");
         setDeleting(null);
-        setDeleteError("");
       },
-      onError: (e) => setDeleteError(getErrorMessage(e)), // vd: đang được sử dụng → hiển thị ngay trong hộp thoại
+      // BE từ chối: giữ modal mở, lúc này deletingInUse = true nên nút Xóa bị disable
+      onError: () => setInUseIds((ids) => [...ids, subject.id]),
     });
   };
 
@@ -93,7 +105,10 @@ export default function AdminSubjectsPage() {
       ) : (
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
           {data?.map((s) => (
-            <li key={s.id} className="flex items-center justify-between gap-3 p-3">
+            <li
+              key={s.id}
+              className="flex items-center justify-between gap-3 p-3"
+            >
               <div>
                 <p className="font-semibold text-text">{s.name}</p>
                 <p className="text-xs text-text-secondary">
@@ -115,10 +130,7 @@ export default function AdminSubjectsPage() {
                   variant="ghost"
                   size="sm"
                   aria-label={`Xóa ${s.name}`}
-                  onClick={() => {
-                    setDeleteError("");
-                    setDeleting(s);
-                  }}
+                  onClick={() => setDeleting(s)}
                 >
                   <Trash2 className="size-4 text-danger" />
                 </Button>
@@ -170,31 +182,43 @@ export default function AdminSubjectsPage() {
         </form>
       </Modal>
 
-      <ConfirmDialog
+      <Modal
         open={Boolean(deleting)}
         onClose={() => setDeleting(null)}
         title="Xóa môn học?"
-        danger
-        confirmText="Xóa"
-        loading={remove.isPending}
-        onConfirm={confirmDelete}
-        description={
+        size="sm"
+        footer={
           <>
-            <p>
-              Xóa môn <strong>{deleting?.name}</strong>? Không thể xóa môn đang được sử
-              dụng.
-            </p>
-            {deleteError && (
-              <p
-                role="alert"
-                className="mt-2 rounded-lg bg-red-100 px-3 py-2 text-red-700 dark:bg-red-500/20 dark:text-red-300"
-              >
-                {deleteError}
-              </p>
-            )}
+            <Button
+              variant="ghost"
+              onClick={() => setDeleting(null)}
+              disabled={remove.isPending}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="danger"
+              loading={remove.isPending}
+              disabled={deletingInUse}
+              onClick={confirmDelete}
+            >
+              Xóa
+            </Button>
           </>
         }
-      />
+      >
+        <p className="text-sm text-text-secondary">
+          Xóa môn <strong>{deleting?.name}</strong>?
+        </p>
+        {deletingInUse && (
+          <p
+            role="alert"
+            className="mt-3 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300"
+          >
+            {SUBJECT_IN_USE_MESSAGE}
+          </p>
+        )}
+      </Modal>
     </div>
   );
 }

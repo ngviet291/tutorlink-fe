@@ -16,7 +16,11 @@ export interface TutorProfileGateway {
 
 export interface TutorCertificateGateway {
   getMyCertificates(): Promise<CertificateResponse[]>;
-  uploadCertificates(files: File[]): Promise<CertificateResponse[]>;
+  uploadCertificates(
+    subjectId: string,
+    files: File[],
+  ): Promise<CertificateResponse[]>;
+
   deleteCertificate(id: string): Promise<void>;
 }
 

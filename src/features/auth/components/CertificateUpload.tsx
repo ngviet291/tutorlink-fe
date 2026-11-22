@@ -7,6 +7,10 @@ interface CertificateUploadProps {
   error?: string;
   maxFiles?: number;
   maxSizeMB?: number;
+  /** Có truyền thì mỗi ảnh có ô chọn môn (mảng `fileSubjectIds` song song với `value`). */
+  subjectOptions?: { id: string; name: string }[];
+  fileSubjectIds?: string[];
+  onFileSubjectIdsChange?: (ids: string[]) => void;
 }
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
@@ -17,7 +21,11 @@ export function CertificateUpload({
   error,
   maxFiles = 5,
   maxSizeMB = 5,
+  subjectOptions,
+  fileSubjectIds = [],
+  onFileSubjectIdsChange,
 }: CertificateUploadProps) {
+  const pickSubject = !!subjectOptions && !!onFileSubjectIdsChange;
   const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState("");
 
@@ -50,12 +58,28 @@ export function CertificateUpload({
     if (valid.length > room) problems.push(`Tối đa ${maxFiles} ảnh`);
 
     setLocalError(problems.join(". "));
-    if (valid.length > 0) onChange([...value, ...valid.slice(0, room)]);
+    if (valid.length > 0) {
+      const added = valid.slice(0, room);
+      onChange([...value, ...added]);
+      if (pickSubject) {
+        // Chỉ có 1 môn để chọn thì gán luôn
+        const def = subjectOptions.length === 1 ? subjectOptions[0].id : "";
+        onFileSubjectIdsChange([
+          ...value.map((_, i) => fileSubjectIds[i] ?? ""),
+          ...added.map(() => def),
+        ]);
+      }
+    }
   };
 
   const remove = (index: number) => {
     setLocalError("");
     onChange(value.filter((_, i) => i !== index));
+    if (pickSubject) {
+      onFileSubjectIdsChange(
+        value.map((_, i) => fileSubjectIds[i] ?? "").filter((_, i) => i !== index),
+      );
+    }
   };
 
   const message = localError || error;
@@ -71,21 +95,41 @@ export function CertificateUpload({
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {previews.map((p, i) => (
-          <div
-            key={`${p.file.name}-${i}`}
-            className="relative aspect-square overflow-hidden rounded-lg border border-border">
-            <img
-              src={p.url}
-              alt={p.file.name}
-              className="h-full w-full object-cover"
-            />
-            <button
-              type="button"
-              onClick={() => remove(i)}
-              aria-label={`Xóa ${p.file.name}`}
-              className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80">
-              <X className="size-3" />
-            </button>
+          <div key={`${p.file.name}-${i}`} className="flex flex-col gap-1">
+            <div className="relative aspect-square overflow-hidden rounded-lg border border-border">
+              <img
+                src={p.url}
+                alt={p.file.name}
+                className="h-full w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                aria-label={`Xóa ${p.file.name}`}
+                className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80">
+                <X className="size-3" />
+              </button>
+            </div>
+            {pickSubject && (
+              <select
+                value={fileSubjectIds[i] ?? ""}
+                onChange={(e) =>
+                  onFileSubjectIdsChange(
+                    value.map((_, k) =>
+                      k === i ? e.target.value : (fileSubjectIds[k] ?? ""),
+                    ),
+                  )
+                }
+                aria-label={`Môn của ${p.file.name}`}
+                className="w-full rounded-md border border-border bg-transparent px-1 py-1 text-xs">
+                <option value="">Chọn môn</option>
+                {subjectOptions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         ))}
 

@@ -80,7 +80,7 @@ export default function TutorDetailPage() {
       </div>
     );
   }
-
+  const tutorSubjects = tutor.subjects ?? [];
   const onContact = () => {
     if (!user) {
       navigate(ROUTES.LOGIN, {
@@ -144,9 +144,9 @@ export default function TutorDetailPage() {
             />
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {tutor.subject && (
-              <SubjectTag key={tutor.subject.id} name={tutor.subject.name} />
-            )}
+            {tutorSubjects.map((s) => (
+              <SubjectTag key={s.id} name={s.name} />
+            ))}
           </div>
           <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-text-secondary">
             <li className="flex items-center gap-1.5">

@@ -33,8 +33,11 @@ export class TutorService {
     return this.gateway.getMyCertificates();
   }
 
-  uploadCertificates(files: File[]): Promise<CertificateResponse[]> {
-    return this.gateway.uploadCertificates(files);
+  uploadCertificates(
+    subjectId: string,
+    files: File[],
+  ): Promise<CertificateResponse[]> {
+    return this.gateway.uploadCertificates(subjectId, files);
   }
 
   deleteCertificate(id: string): Promise<void> {

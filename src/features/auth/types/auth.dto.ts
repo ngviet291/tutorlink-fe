@@ -59,6 +59,8 @@ export interface RegisterTutorRequest {
   experienceYears: number;
   education?: string;
   subjectIds: string[];
+  /** Phần tử i = môn của file chứng chỉ thứ i (bắt buộc khi chọn nhiều môn). */
+  certificateSubjectIds?: string[];
   certificates?: File[];
 }
 export interface RegisterTutorMultipart {

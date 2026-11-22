@@ -21,6 +21,7 @@ interface TutorFormValues extends CommonRegisterValues {
   education: string;
   subjectIds: string[];
   certificates: File[];
+  certificateSubjectIds: string[];
 }
 
 export default function RegisterTutorPage() {
@@ -35,16 +36,29 @@ export default function RegisterTutorPage() {
       education: "Trường Đai Học Công Nghiệp TPHCM",
       subjectIds: [],
       certificates: [],
+      certificateSubjectIds: [],
     },
   });
   const {
     register,
     control,
     handleSubmit,
+    setError,
+    watch,
     formState: { errors },
   } = methods;
+  const selectedSubjectIds = watch("subjectIds");
 
   const onSubmit = handleSubmit((v) => {
+    // Nhiều môn thì mỗi ảnh chứng chỉ phải thuộc một môn đã chọn
+    const multi = v.subjectIds.length > 1;
+    if (
+      multi &&
+      v.certificates.some((_, i) => !v.subjectIds.includes(v.certificateSubjectIds[i]))
+    ) {
+      setError("certificates", { message: "Chọn môn cho từng ảnh chứng chỉ" });
+      return;
+    }
     registerMutation.mutate(
       {
         ...buildBasePayload(v),
@@ -52,6 +66,7 @@ export default function RegisterTutorPage() {
         education: v.education,
         subjectIds: v.subjectIds,
         certificates: v.certificates,
+        certificateSubjectIds: multi ? v.certificateSubjectIds : undefined,
       },
       {
         onSuccess: () => {
@@ -161,6 +176,13 @@ export default function RegisterTutorPage() {
                   value={field.value}
                   onChange={field.onChange}
                   error={errors.certificates?.message}
+                  subjectOptions={subjects.filter((s) =>
+                    selectedSubjectIds.includes(s.id),
+                  )}
+                  fileSubjectIds={watch("certificateSubjectIds")}
+                  onFileSubjectIdsChange={(ids) =>
+                    methods.setValue("certificateSubjectIds", ids)
+                  }
                 />
               )}
             />

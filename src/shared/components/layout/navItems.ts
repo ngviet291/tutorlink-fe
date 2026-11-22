@@ -3,7 +3,6 @@ import {
   BookOpen,
   CircleDollarSign,
   FileText,
-  Gauge,
   GraduationCap,
   Heart,
   LayoutDashboard,
@@ -64,10 +63,13 @@ export function getPublicNav(role?: Role): PublicNavItem[] {
   return PUBLIC_NAV.filter((i) => !i.hideFor?.includes(effective));
 }
 
+// end: true vì /profile là tiền tố của /profile/tutor, không có end thì
+// đứng ở Hồ sơ giảng dạy nút Tài khoản vẫn sáng.
 const accountItem: NavItem = {
   to: ROUTES.PROFILE,
   label: "Tài khoản",
   icon: User,
+  end: true,
 };
 
 const common: NavItem[] = [
@@ -134,7 +136,7 @@ export function getBottomNav(role: Role): NavItem[] {
       adminItems[0]!,
       adminItems[1]!,
       adminItems[5]!,
-      { to: ROUTES.PROFILE, label: "Tài khoản", icon: Settings2 },
+      { to: ROUTES.PROFILE, label: "Tài khoản", icon: Settings2, end: true },
     ];
   }
   if (role === "TUTOR") {
@@ -142,15 +144,15 @@ export function getBottomNav(role: Role): NavItem[] {
       tutorItems[0]!,
       tutorItems[4]!,
       tutorItems[5]!,
-      { to: ROUTES.NOTIFICATIONS, label: "Thông báo", icon: MessageSquare },
-      { to: ROUTES.PROFILE, label: "Tài khoản", icon: UserCog },
+      { to: ROUTES.NOTIFICATIONS, label: "Thông báo", icon: Bell },
+      { to: ROUTES.PROFILE, label: "Tài khoản", icon: UserCog, end: true },
     ];
   }
   return [
     studentItems[0]!,
     studentItems[1]!,
     studentItems[2]!,
-    { to: ROUTES.NOTIFICATIONS, label: "Thông báo", icon: Gauge },
-    { to: ROUTES.PROFILE, label: "Tài khoản", icon: User },
+    { to: ROUTES.NOTIFICATIONS, label: "Thông báo", icon: Bell },
+    { to: ROUTES.PROFILE, label: "Tài khoản", icon: User, end: true },
   ];
 }
