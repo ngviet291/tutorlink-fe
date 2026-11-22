@@ -35,6 +35,8 @@ import { HttpWalletGateway } from "@/features/wallet/api/http.wallet.gateway";
 import { WalletService } from "@/features/wallet/service/wallet.service";
 import { HttpAdminPaymentGateway } from "@/features/admin/api/http.admin.payment.gateway";
 import { AdminPaymentService } from "@/features/admin/service/admin.payment.service";
+import { BankService } from "@/features/wallet/service/bank.service";
+import { HttpBankGateway } from "@/features/wallet/api/http.bank.gateway";
 
 // Toàn bộ bean được quản lí ở đây
 export const tokenStorage = new SecureTokenStorage();
@@ -107,4 +109,8 @@ export const chatbotService = new ChatbotService(
     url: env.chatbotApiUrl,
     apiKey: env.chatbotApiKey,
   }),
+);
+
+export const bankService = new BankService(
+  new HttpBankGateway(privateHttpClient),
 );

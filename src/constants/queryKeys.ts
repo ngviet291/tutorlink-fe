@@ -60,4 +60,7 @@ export const queryKeys = {
     mine: ["favorites", "mine"] as const,
     ids: ["favorites", "ids"] as const,
   },
+  banks: {
+    all: ["banks"] as const,
+  },
 };
