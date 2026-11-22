@@ -25,6 +25,11 @@ import {
   type TopUpMethod,
 } from "../constants/payment.constants";
 import type { TopUpResponse } from "../types/wallet.types";
+import {
+  VIETQR_SIMULATE_DELAY_MS,
+  isVietQrSimulationEnabled,
+  simulateVietQrPayment,
+} from "../api/vietqr.simulator";
 
 interface Props {
   open: boolean;
@@ -70,6 +75,33 @@ export function TopUpModal({ open, onClose }: Props) {
     return () => clearTimeout(timer);
   }, [sessionId, finalStatus, expired]);
 
+  // DEV: sau 3 giây tự giả lập VietQR báo tiền về (token_generate -> transaction-sync).
+  const simulateOrderId = session?.transaction.providerOrderId;
+  const simulateAmount = session?.transaction.amount;
+  const simulateIsVietQr = session?.transaction.paymentMethod === "VIETQR";
+  useEffect(() => {
+    if (
+      !isVietQrSimulationEnabled ||
+      !simulateIsVietQr ||
+      isDemo ||
+      !sessionId ||
+      !simulateOrderId ||
+      simulateAmount == null
+    ) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      simulateVietQrPayment({
+        orderId: simulateOrderId,
+        amount: simulateAmount,
+      })
+        .then(() => status.refetch())
+        .catch((e) => toast.error(getErrorMessage(e)));
+    }, VIETQR_SIMULATE_DELAY_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, simulateOrderId, simulateAmount, simulateIsVietQr, isDemo]);
+  
   const copy = (value: string) => {
     navigator.clipboard
       ?.writeText(value)
