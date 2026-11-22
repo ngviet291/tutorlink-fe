@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { QrCode, Wallet, type LucideIcon } from "lucide-react";
+import { QrCode, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { formatVnd } from "@/shared/utils/currency";

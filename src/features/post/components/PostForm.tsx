@@ -17,11 +17,14 @@ import { Textarea } from "@/shared/components/ui/Textarea";
 
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { PostPayload, PostResponse } from "../types/post.types";
-import type { PostType } from "@/shared/types/common.types";
+import type { BudgetUnit, PostType } from "@/shared/types/common.types";
 
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
-import { markPostFormCompleted, usePostFormAbandonTracking } from "@/features/tracking/hooks";
+import {
+  markPostFormCompleted,
+  usePostFormAbandonTracking,
+} from "@/features/tracking/hooks";
 
 // Dữ liệu test khi DEV + tạo mới.
 const TEST_DEFAULTS: Record<PostType, Partial<PostPayload>> = {
@@ -52,7 +55,14 @@ const TEST_DEFAULTS: Record<PostType, Partial<PostPayload>> = {
   },
 };
 
-const BUDGET_UNIT_OPTIONS = [
+const BUDGET_UNIT_OPTIONS: {
+  value: BudgetUnit;
+  label: string;
+}[] = [
+  {
+    value: "PER_HOUR",
+    label: "Theo giờ",
+  },
   {
     value: "PER_SESSION",
     label: "Theo buổi",
@@ -337,8 +347,7 @@ export function PostForm({
             label={t("post.subject")}
             error={errors.subjectId?.message}
             value={field.value}
-            onChange={field.onChange}
-          >
+            onChange={field.onChange}>
             <option value="">{t("tutor.selectSubject")}</option>
 
             {subjects.map((subject) => (
@@ -363,8 +372,7 @@ export function PostForm({
               label={t("post.educationLevel")}
               error={errors.educationLevel?.message}
               value={field.value}
-              onChange={field.onChange}
-            >
+              onChange={field.onChange}>
               {EDUCATION_LEVELS.map((level) => (
                 <option key={level} value={level}>
                   {EDUCATION_LEVEL_LABEL[level]}
@@ -385,8 +393,7 @@ export function PostForm({
               label={t("post.teachingMode")}
               error={errors.teachingMode?.message}
               value={field.value}
-              onChange={field.onChange}
-            >
+              onChange={field.onChange}>
               {TEACHING_MODES.map((mode) => (
                 <option key={mode} value={mode}>
                   {TEACHING_MODE_LABEL[mode]}
@@ -405,8 +412,7 @@ export function PostForm({
           <Select
             label="Đơn vị ngân sách"
             value={field.value ?? "PER_SESSION"}
-            onChange={field.onChange}
-          >
+            onChange={field.onChange}>
             {BUDGET_UNIT_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -523,8 +529,7 @@ export function PostForm({
                   error={errors.address?.province?.message}
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  disabled={isLoadingProvinces}
-                >
+                  disabled={isLoadingProvinces}>
                   <option value="">{t("common.selectProvince")}</option>
 
                   {provinceOptions
@@ -558,8 +563,7 @@ export function PostForm({
                     error={errors.address?.ward?.message}
                     value={field.value ?? ""}
                     onChange={field.onChange}
-                    disabled={!province || isLoadingWards}
-                  >
+                    disabled={!province || isLoadingWards}>
                     <option value="">
                       {province ? "Chọn phường / xã" : "Chọn tỉnh trước"}
                     </option>
@@ -595,8 +599,7 @@ export function PostForm({
               variant="secondary"
               onClick={() => submitAs(true)}
               loading={isSubmitting}
-              className="flex-1"
-            >
+              className="flex-1">
               {t("post.draftSaved")}
             </Button>
 
@@ -604,8 +607,7 @@ export function PostForm({
               type="button"
               onClick={() => submitAs(false)}
               loading={isSubmitting}
-              className="flex-1"
-            >
+              className="flex-1">
               {t("post.publishPost")}
             </Button>
           </>
@@ -614,8 +616,7 @@ export function PostForm({
             type="button"
             onClick={() => submitAs(false)}
             loading={isSubmitting}
-            className="w-full"
-          >
+            className="w-full">
             {t("post.saveChanges", {
               defaultValue: "Lưu thay đổi",
             })}
