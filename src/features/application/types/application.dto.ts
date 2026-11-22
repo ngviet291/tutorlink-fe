@@ -43,6 +43,7 @@ export interface ApplicationResponse {
   appliedAt: string;
   /** Thời điểm chủ bài chọn đơn (ACCEPTED); null nếu chưa select/đã revert. */
   selectedAt?: string;
+  paidAt?: string;
   /** Hạn cuối bước đang chờ (W1 thanh toán / W2 confirm); null nếu không ở bước chờ. */
   expiresAt?: string;
   processedByAdminId?: string;

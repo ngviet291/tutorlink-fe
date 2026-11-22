@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Clock, MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -5,6 +6,7 @@ import { ROUTES } from "@/constants/routes";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Button } from "@/shared/components/ui/Button";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { RatingStars } from "@/shared/components/ui/RatingStars";
@@ -40,16 +42,40 @@ export function ApplicantRow({
   const tutor = a.tutor;
   const toast = useToast();
   const user = useSelector((state: RootState) => state.auth.user);
-  const { confirm, unselect, reject } = useApplicationMutations();
+  const { confirm, unselect, reject, pay } = useApplicationMutations();
+  const [payOpen, setPayOpen] = useState(false);
   const isTutor = user?.role === "TUTOR";
   const isStudent = user?.role === "STUDENT";
   // Người apply: gia sư với bài FIND_TUTOR, học viên với bài FIND_STUDENT.
   const isTutorPost = a.post.type === "FIND_TUTOR";
   const applicant = isTutorPost ? tutor : a.student;
   // Người apply là bên xác nhận sau khi trả phí (BE check theo post.type).
+  // BE chỉ cho xác nhận khi đã trả phí nên chỉ hiện nút khi a.paid.
   const canConfirm =
     a.applicationStatus === "ACCEPTED" &&
+    Boolean(a.paid) &&
     (isTutorPost ? isTutor : isStudent);
+  // Gia sư của đơn luôn là người trả phí: bài FIND_TUTOR là gia sư ứng tuyển,
+  // bài FIND_STUDENT là gia sư đăng bài (BE gán a.tutor = tác giả bài).
+  const canPay =
+    a.applicationStatus === "ACCEPTED" &&
+    !a.paid &&
+    isTutor &&
+    Boolean(user?.id) &&
+    user?.id === a.tutor.id;
+
+  const onPay = () => {
+    pay.mutate(a.id, {
+      onSuccess: () => {
+        setPayOpen(false);
+        toast.success("Đã thanh toán phí nhận lớp");
+      },
+      onError: (e) => {
+        setPayOpen(false);
+        toast.error(getErrorMessage(e));
+      },
+    });
+  };
 
   return (
     <li className="rounded-2xl border border-border bg-surface p-4">
@@ -58,7 +84,8 @@ export function ApplicantRow({
           {showAi && a.aiRank !== undefined && (
             <span
               className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-white"
-              aria-label={t("application.rank", { rank: a.aiRank })}>
+              aria-label={t("application.rank", { rank: a.aiRank })}
+            >
               {a.aiRank}
             </span>
           )}
@@ -117,7 +144,13 @@ export function ApplicantRow({
             {a.applicationStatus === "ACCEPTED" && a.expiresAt && (
               <ExpiryCountdown
                 expiresAt={a.expiresAt}
-                actionLabel={a.paid ? "xác nhận" : isTutorPost ? "gia sư thanh toán" : "thanh toán"}
+                actionLabel={
+                  a.paid
+                    ? "xác nhận"
+                    : isTutorPost
+                      ? "gia sư thanh toán"
+                      : "thanh toán"
+                }
                 onExpire={onExpire}
                 className="mt-1"
               />
@@ -132,11 +165,17 @@ export function ApplicantRow({
                 ? ROUTES.TUTOR_DETAIL(applicant.id)
                 : ROUTES.STUDENT_DETAIL(applicant.id)
             }
-            state={{ section: showAi ? "TOP" : "OTHERS", rank: a.aiRank }}>
+            state={{ section: showAi ? "TOP" : "OTHERS", rank: a.aiRank }}
+          >
             <Button variant="outline" size="sm" fullWidth>
               {t("tutor.viewProfile")}
             </Button>
           </Link>
+          {canPay && (
+            <Button size="sm" onClick={() => setPayOpen(true)}>
+              Thanh toán phí nhận lớp
+            </Button>
+          )}
           {canConfirm && (
             <Button
               size="sm"
@@ -146,7 +185,8 @@ export function ApplicantRow({
                   onSuccess: () => toast.success("Đã xác nhận"),
                   onError: (e) => toast.error(getErrorMessage(e)),
                 })
-              }>
+              }
+            >
               {isTutorPost ? "Xác nhận gia sư" : "Xác nhận học viên"}
             </Button>
           )}
@@ -165,11 +205,13 @@ export function ApplicantRow({
                   onSuccess: () => toast.success("Đã từ chối ứng viên"),
                   onError: (e) => toast.error(getErrorMessage(e)),
                 })
-              }>
+              }
+            >
               Từ chối
             </Button>
           )}
-          {isOwner && a.applicationStatus === "ACCEPTED" && (
+          {/* BE không cho hủy chọn sau khi đã trả phí */}
+          {isOwner && a.applicationStatus === "ACCEPTED" && !a.paid && (
             <Button
               size="sm"
               variant="outline"
@@ -179,12 +221,23 @@ export function ApplicantRow({
                   onSuccess: () => toast.success("Đã hủy chọn ứng viên"),
                   onError: (e) => toast.error(getErrorMessage(e)),
                 })
-              }>
+              }
+            >
               Hủy chọn
             </Button>
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={payOpen}
+        onClose={() => setPayOpen(false)}
+        title="Thanh toán phí nhận lớp?"
+        confirmText="Thanh toán"
+        loading={pay.isPending}
+        onConfirm={onPay}
+        description="Phí nhận lớp sẽ được trừ từ ví của bạn. Nếu số dư không đủ, bạn cần nạp thêm tiền vào ví trước."
+      />
     </li>
   );
 }

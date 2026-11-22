@@ -11,8 +11,9 @@ export type NotificationTarget =
   | "TUTOR_PROFILE"
   | "WALLET"
   | "CHAT"
+  | "ADMIN_COMPLAINTS"
+  | "ADMIN_TUTORS"
   | "NONE";
-
 /** BE: notification/dto/response/NotificationResponse.java */
 export interface NotificationResponse {
   id: string;

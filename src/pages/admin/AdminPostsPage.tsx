@@ -58,7 +58,7 @@ function ApplicationsModal({
           {data.map((a) => {
             const avatarUrl = a.tutor.avatarUrl || "/default-avatar.png";
             const rating = a.tutor.averageRating?.toFixed(1) ?? "0.0";
-            const reviewCount = a.tutor.reviewCount ?? a.tutor.totalReviews ?? 0;
+            const reviewCount = a.tutor.reviewCount ?? 0;
 
             return (
               <Link
@@ -81,9 +81,7 @@ function ApplicationsModal({
                     <div className="mt-1 flex items-center gap-1.5 text-sm text-text-secondary">
                       <span className="flex items-center gap-1">
                         ⭐{" "}
-                        <span className="font-medium text-text">
-                          {rating}
-                        </span>
+                        <span className="font-medium text-text">{rating}</span>
                       </span>
                       <span>•</span>
                       <span>{reviewCount} đánh giá</span>
