@@ -67,8 +67,12 @@ export class HttpTutorGateway implements TutorGateway {
   getMyCertificates(): Promise<CertificateResponse[]> {
     return this.privateHttp.get<CertificateResponse[]>(CERTIFICATES);
   }
-  uploadCertificates(files: File[]): Promise<CertificateResponse[]> {
+  uploadCertificates(
+    subjectId: string,
+    files: File[],
+  ): Promise<CertificateResponse[]> {
     const form = new FormData();
+    form.append("subjectId", subjectId);
     files.forEach((file) => form.append("certificates", file));
     return this.privateHttp.post<CertificateResponse[]>(CERTIFICATES, form, {
       headers: { "Content-Type": "multipart/form-data" },

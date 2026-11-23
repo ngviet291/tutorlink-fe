@@ -183,6 +183,7 @@ export function ChatbotWidget() {
   const {
     messages,
     send,
+    retry,
     clear,
     isSending,
     isClearing,
@@ -396,12 +397,22 @@ export function ChatbotWidget() {
                         m.role === "user"
                           ? "bg-primary text-white"
                           : m.isError
-                            ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300"
+                            ? "bg-orange-50 text-text dark:bg-orange-500/10"
                             : "bg-surface-secondary text-text",
                       )}
                     >
                       {m.content}
                     </div>
+                    {m.retryText && (
+                      <button
+                        type="button"
+                        onClick={() => retry(m.id)}
+                        disabled={isSending}
+                        className="rounded-lg border border-border bg-surface px-3 py-1 text-xs font-medium text-text hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Thử lại
+                      </button>
+                    )}
                     {m.posts?.map((p) => (
                       <PostCard key={p.id} post={p} />
                     ))}

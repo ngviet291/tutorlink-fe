@@ -157,7 +157,11 @@ export class ApplicationService {
   /** GET /v1/applications/mine */
   getMyApplications = async (): Promise<ApplicationResponse[]> => {
     const page = await this.gateway.listMine(100);
-    return this.enrichMany(page.content);
+    // BE phân trang theo id; dữ liệu seed không có id theo thời gian nên sắp lại theo ngày đăng ký mới nhất.
+    const sorted = [...page.content].sort(
+      (a, b) => Date.parse(b.appliedAt) - Date.parse(a.appliedAt),
+    );
+    return this.enrichMany(sorted);
   };
 
   /**

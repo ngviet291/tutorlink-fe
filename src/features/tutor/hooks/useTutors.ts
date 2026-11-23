@@ -44,16 +44,19 @@ export function useMyCertificates(enabled = true) {
     queryKey: queryKeys.tutors.certificates,
     queryFn: () => tutorService.getMyCertificates(),
     enabled,
-    // còn chứng chỉ chờ AI duyệt thì tự làm mới, xong hết thì dừng
+    // còn chứng chỉ chờ AI duyệt thì tự làm mới; chờ admin duyệt thì không cần poll
     refetchInterval: (query) =>
-      query.state.data?.some((c) => !c.verified) ? CERTIFICATE_POLL_MS : false,
+      query.state.data?.some((c) => !c.verified && !c.pendingAdminReview)
+        ? CERTIFICATE_POLL_MS
+        : false,
   });
 }
 
 export function useUploadCertificates() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (files: File[]) => tutorService.uploadCertificates(files),
+    mutationFn: ({ subjectId, files }: { subjectId: string; files: File[] }) =>
+      tutorService.uploadCertificates(subjectId, files),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.tutors.all }),
   });
 }

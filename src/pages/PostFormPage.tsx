@@ -365,6 +365,9 @@ export default function PostDetailPage() {
 
       <ApplyModal
         postId={post.id}
+        minBudget={post.minBudget}
+        maxBudget={post.maxBudget}
+        budgetUnit={post.budgetUnit}
         open={applyOpen}
         onClose={() => setApplyOpen(false)}
       />

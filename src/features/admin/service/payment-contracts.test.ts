@@ -26,7 +26,7 @@ const tx = {
 beforeEach(() => vi.resetAllMocks());
 it("top-up sends amount only and maps links without fabricated bank fields", async () => {
   http.post.mockResolvedValue({ data: tx });
-  const r = await walletService.topUp({ amount: 50000, paymentMethod: "MOMO" });
+  const r = await walletService.topUp({ amount: 50000, paymentMethod: "VIETQR" });
   expect(http.post).toHaveBeenCalledWith(
     "/v1/payments/wallet/top-up",
     { amount: 50000 },

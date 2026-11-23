@@ -5,6 +5,7 @@ import type {
   RegisterStudentRequest,
   RegisterTutorRequest,
   ResetPasswordRequest,
+  SendVerificationCodeRequest,
 } from "../types/auth.dto";
 import type { AuthResponse } from "../types/auth.types";
 import type { AuthUser } from "@/features/user/types/user.types";
@@ -26,6 +27,10 @@ export class AuthService {
 
   login(req: LoginRequest): Promise<AuthUser> {
     return this.startSession(this.gateway.login(req));
+  }
+
+  sendVerificationCode(req: SendVerificationCodeRequest): Promise<void> {
+    return this.gateway.sendVerificationCode(req);
   }
 
   registerStudent(req: RegisterStudentRequest): Promise<AuthUser> {

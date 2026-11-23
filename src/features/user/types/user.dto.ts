@@ -80,11 +80,28 @@ export interface SubjectResponse {
   name: string;
 }
 
+/** BE: user/dto/response/SubjectProfileResponse.java */
+export interface SubjectProfileResponse {
+  subject: SubjectResponse;
+  experienceYears?: number;
+  hourlyRate?: number;
+  teachingMode?: TeachingMode;
+}
+
+/** BE: user/dto/request/SubjectProfileRequest.java */
+export interface SubjectProfileRequest {
+  subjectId: string;
+  experienceYears: number;
+  hourlyRate: number;
+  teachingMode: TeachingMode;
+}
+
 /** BE: user/dto/response/TutorResponse.java */
 export interface TutorResponse extends BaseUserResponse {
   experienceYears?: number;
   education?: string;
   subjects: SubjectResponse[];
+  subjectProfiles?: SubjectProfileResponse[];
   averageRating?: number;
   verificationStatus: VerificationStatus;
   verificationNote?: string;
@@ -106,6 +123,7 @@ export interface UpdateTutorProfileRequest {
   teachingAreas?: string[];
   availableSlots?: AvailableSlotRequest[];
   subjectIds?: string[];
+  subjectProfiles?: SubjectProfileRequest[];
 }
 export interface CertificateResponse {
   id: string;
@@ -115,4 +133,21 @@ export interface CertificateResponse {
   expiryDate?: string;
   fileUrl: string;
   verified: boolean;
+  /** AI không tự duyệt được, đang chờ admin duyệt tay */
+  pendingAdminReview?: boolean;
+  reviewNote?: string;
+  subjectId?: string;
+  subjectName?: string;
+}
+export interface SubjectProfileResponse {
+  subject: SubjectResponse;
+  experienceYears?: number;
+  hourlyRate?: number;
+  teachingMode?: TeachingMode;
+}
+export interface SubjectProfileRequest {
+  subjectId: string;
+  experienceYears: number;
+  hourlyRate: number;
+  teachingMode: TeachingMode;
 }

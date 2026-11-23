@@ -35,6 +35,7 @@ function toHourMinute(iso: string): string {
  * - `teachingLevels` (BE) → `educationLevels` (FE)
  * - `contact` KHÔNG map: FE chỉ cho phép hiện sau khi kết nối/thanh toán phí.
  * - `certificates`: BE không trả trong TutorResponse → để trống.
+ * - `subjectProfiles[]` (BE) → kinh nghiệm / giá / hình thức dạy riêng từng môn.
  */
 export function toTutor(dto: TutorResponseDto): TutorResponse {
   return {
@@ -65,6 +66,13 @@ export function toTutor(dto: TutorResponseDto): TutorResponse {
       day: s.dayOfWeek,
       from: toHourMinute(s.startTime),
       to: toHourMinute(s.endTime),
+    })),
+    subjectProfiles: (dto.subjectProfiles ?? []).map((p) => ({
+      subjectId: p.subject.id,
+      subjectName: p.subject.name,
+      experienceYears: p.experienceYears ?? 0,
+      hourlyRate: p.hourlyRate ?? 0,
+      teachingMode: p.teachingMode ?? dto.teachingMode ?? "BOTH",
     })),
   };
 }
@@ -107,24 +115,26 @@ function toAvailableSlots(schedule: ScheduleSlot[]): AvailableSlotRequest[] {
 
 /**
  * Form hồ sơ gia sư (FE) → body `PUT /v1/users/me/tutor-profile` (BE).
- * - `subjectId` → `subjectIds: [subjectId]`
- * - `educationLevels` → `teachingLevels`, `schedule` → `availableSlots`, `teachingAreas` gửi nguyên.
- *   Danh sách rỗng vẫn được gửi để gia sư có thể xóa hết.
+ * - Thông tin chung: `educationLevels` → `teachingLevels`, `schedule` → `availableSlots`,
+ *   `teachingAreas` gửi nguyên (danh sách rỗng vẫn được gửi để gia sư có thể xóa hết).
+ * - `subjectProfiles`: danh sách đầy đủ các môn, mỗi môn có kinh nghiệm / giá / hình thức dạy riêng.
+ *   BE tự tổng hợp `experienceYears`, `hourlyRate`, `teachingMode` chung nên FE không gửi.
  * - `address` không gửi: hồ sơ gia sư của BE không có địa chỉ (đổi qua `PUT /v1/users/me`).
- * - `certificates` bị bỏ: BE chưa có endpoint cập nhật chứng chỉ ở đây.
  */
 export function toUpdateTutorProfileRequest(
   p: TutorProfilePayload,
 ): UpdateTutorProfileRequest {
   return {
     bio: p.bio,
-    experienceYears: p.experienceYears,
     education: p.education,
-    hourlyRate: p.hourlyRate,
-    teachingMode: p.teachingMode,
-    subjectIds: p.subjectId ? [p.subjectId] : undefined,
     teachingLevels: p.educationLevels,
     teachingAreas: p.teachingAreas,
     availableSlots: toAvailableSlots(p.schedule),
+    subjectProfiles: p.subjectProfiles.map((s) => ({
+      subjectId: s.subjectId,
+      experienceYears: s.experienceYears,
+      hourlyRate: s.hourlyRate,
+      teachingMode: s.teachingMode,
+    })),
   };
 }

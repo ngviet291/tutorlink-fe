@@ -120,6 +120,7 @@ const COMMON = [
   "educationLevel",
   "minBudget",
   "maxBudget",
+  "budgetUnit",
   "cursor",
   "limit",
 ] as const;

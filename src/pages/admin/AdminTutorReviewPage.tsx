@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Check, X } from "lucide-react";
-import { ROUTES } from "@/constants/routes";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { Button } from "@/shared/components/ui/Button";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
@@ -17,6 +15,8 @@ import {
   useAdminMutations,
   usePendingTutors,
 } from "@/features/admin/hooks/useAdmin";
+import { TutorCertificateGallery } from "@/features/admin/components/TutorCertificateGallery";
+import { AdminCertificatesPanel } from "@/features/admin/components/AdminCertificatesPanel";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 
 export default function AdminTutorReviewPage() {
@@ -79,8 +79,10 @@ export default function AdminTutorReviewPage() {
                   {t.experienceYears} năm KN · {formatVnd(t.hourlyRate)}/giờ
                 </p>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {t.subject ? (
-                    <SubjectTag key={t.subject.id} name={t.subject.name} />
+                  {t.subjects?.length ? (
+                    t.subjects.map((s) => (
+                      <SubjectTag key={s.id} name={s.name} />
+                    ))
                   ) : (
                     <span className="text-xs text-text-secondary">
                       Chưa chọn môn
@@ -95,6 +97,8 @@ export default function AdminTutorReviewPage() {
           ))}
         </ul>
       )}
+
+      <AdminCertificatesPanel />
 
       <Modal
         open={Boolean(detail)}
@@ -153,30 +157,26 @@ export default function AdminTutorReviewPage() {
               </div>
             </dl>
             <div>
+              <div>
+                <p className="text-xs text-text-secondary">Môn dạy</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {detail.subjects?.length ? (
+                    detail.subjects.map((s) => (
+                      <SubjectTag key={s.id} name={s.name} />
+                    ))
+                  ) : (
+                    <p className="text-text">—</p>
+                  )}
+                </div>
+              </div>
               <p className="text-xs text-text-secondary">Giới thiệu</p>
               <p className="text-text">{detail.bio || "—"}</p>
             </div>
             <div>
               <p className="text-xs text-text-secondary">Chứng chỉ</p>
-              {detail.certificates?.length ? (
-                <ul className="list-disc pl-5 text-text">
-                  {detail.certificates.map((c, i) => (
-                    <li key={`${c.name}-${i}`}>
-                      {c.name} — {c.issuer} ({c.year})
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-text">Chưa có</p>
-              )}
+              <TutorCertificateGallery tutorId={detail.id} />
             </div>
-            <Link
-              to={ROUTES.TUTOR_DETAIL(detail.id)}
-              className="text-xs font-semibold text-primary hover:underline"
-              onClick={close}
-            >
-              Mở trang hồ sơ công khai
-            </Link>
+
             <Textarea
               label="Ghi chú cho gia sư"
               value={note}

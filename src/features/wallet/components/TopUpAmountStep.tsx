@@ -25,11 +25,6 @@ const METHOD_META: Record<
     logo: "/payment-logos/vietqr.png",
     description: "Quét mã QR bằng app ngân hàng",
   },
-  //   MOMO: {
-  //     icon: Wallet,
-  //     logo: "/payment-logos/momo.png",
-  //     description: "Thanh toán qua ví MoMo",
-  //   },
 };
 
 interface Props {

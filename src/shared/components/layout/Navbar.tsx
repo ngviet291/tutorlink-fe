@@ -92,7 +92,9 @@ export function Navbar() {
                       className={cn(dropdownItemClass, 'text-danger')}
                       onClick={() => {
                         close()
-                        logout.mutate()
+                        logout.mutate(undefined, {
+                          onSettled: () => navigate(ROUTES.HOME, { replace: true }),
+                        })
                       }}
                     >
                       <LogOut className="size-4" /> {t('nav.logout')}

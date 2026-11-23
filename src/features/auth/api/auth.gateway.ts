@@ -8,6 +8,7 @@ import type {
   RegisterStudentRequest,
   RegisterTutorRequest,
   ResetPasswordRequest,
+  SendVerificationCodeRequest,
 } from "../types/auth.dto";
 import type { AuthResponse, AuthTokens } from "../types/auth.types";
 
@@ -23,6 +24,7 @@ export interface SessionGateway {
 }
 
 export interface RegistrationGateway {
+  sendVerificationCode(req: SendVerificationCodeRequest): Promise<void>;
   registerStudent(req: RegisterStudentRequest): Promise<AuthResponse>;
   registerTutor(req: RegisterTutorRequest): Promise<AuthResponse>;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Ban, Users, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { POST_STATUS_META } from "@/constants/enums";
 import { ROUTES } from "@/constants/routes";
@@ -8,6 +8,7 @@ import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import {
   FilterSidebar,
   emptyFilter,
+  budgetQuery,
   type FilterValues,
 } from "@/shared/components/ui/FilterSidebar";
 import { Modal } from "@/shared/components/ui/Modal";
@@ -28,7 +29,7 @@ import type { PostResponse } from "@/features/post/types/post.types";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { PostStatus } from "@/shared/types/common.types";
 
-const RANGE_MAX = 1_000_000;
+const RANGE_MAX = 10_000_000;
 
 function ApplicationsModal({
   post,
@@ -147,9 +148,7 @@ export default function AdminPostsPage() {
         ? filter.educationLevels[0]
         : undefined,
 
-    minBudget: filter.min > 0 ? filter.min : undefined,
-
-    maxBudget: filter.max < RANGE_MAX ? filter.max : undefined,
+    ...budgetQuery(filter),
   });
 
   const posts = (data?.pages.flatMap((page) => page.content) ?? []).filter(
@@ -157,20 +156,6 @@ export default function AdminPostsPage() {
       filter.educationLevels.length <= 1 ||
       filter.educationLevels.includes(post.educationLevel),
   );
-
-  // DEBUG LOG
-  console.log("=== DEBUG Posts Data ===");
-  console.log("Total posts:", posts.length);
-  console.log("Status filter:", status);
-  posts.forEach((post, idx) => {
-    console.log(`Post ${idx + 1}:`, {
-      id: post.id,
-      title: post.title,
-      status: post.status,
-      applicationCount: post.applicationCount,
-    });
-  });
-  console.log("========================");
 
   // Infinite scroll
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -263,8 +248,9 @@ export default function AdminPostsPage() {
           <FilterSidebar
             value={filter}
             onChange={setFilter}
-            rangeLabel="Ngân sách"
+            rangeLabel="Học phí (VNĐ)"
             rangeMax={RANGE_MAX}
+            budgetUnitMode
             hideProvince
           />
         </div>
@@ -281,33 +267,16 @@ export default function AdminPostsPage() {
             <>
               <ul className="grid gap-4 sm:grid-cols-2">
                 {posts.map((post) => (
-                  <li key={post.id} className="flex flex-col gap-2">
-                    <div className="flex-1">
-                      <PostCard post={post} />
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setViewing(post)}
-                      >
-                        <Users className="size-4" />
-                        Lượt đăng ký ({post.applicationCount ?? 0})
-                      </Button>
-
-                      {post.status !== "REMOVED" &&
-                        post.status !== "CLOSED" && (
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => setTarget(post)}
-                          >
-                            <Ban className="size-4" />
-                            Gỡ bài
-                          </Button>
-                        )}
-                    </div>
+                  <li key={post.id}>
+                    <PostCard
+                      post={post}
+                      onViewApplications={() => setViewing(post)}
+                      onRemove={
+                        post.status !== "REMOVED" && post.status !== "CLOSED"
+                          ? () => setTarget(post)
+                          : undefined
+                      }
+                    />
                   </li>
                 ))}
               </ul>

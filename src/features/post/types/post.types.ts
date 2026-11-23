@@ -57,6 +57,8 @@ export interface PostFilter {
   educationLevel?: EducationLevel | ""; // BE nhận single value
   minBudget?: number;
   maxBudget?: number;
+  /** Đơn vị học phí cần lọc (khoảng giá chỉ có nghĩa khi cùng đơn vị). */
+  budgetUnit?: BudgetUnit;
   /** Chỉ lấy bài của một người đăng (BE: GET /v1/posts?authorId=) */
   authorId?: string;
   cursor?: string;

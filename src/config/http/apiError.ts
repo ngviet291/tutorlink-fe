@@ -21,11 +21,6 @@ export function toApiError(error: unknown): ApiError {
     const status = error.response?.status;
     const data = error.response?.data;
 
-    console.log("HTTP STATUS:", status);
-    console.log("HTTP RESPONSE:", data);
-    console.log("HTTP URL:", error.config?.url);
-    console.log("HTTP METHOD:", error.config?.method);
-
     const rawFieldErrors = data?.errors;
 
     const fieldErrors =

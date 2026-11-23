@@ -36,7 +36,8 @@ export default function FindTutorPage() {
 
   const query = useMemo<TutorFilter>(
     () => ({
-      subjectName: subjectName || debounced || undefined,
+      name: debounced || undefined,
+      subjectName: subjectName || undefined,
       province: filter.province || undefined,
       minRate: filter.min > 0 ? filter.min : undefined,
       maxRate: filter.max < RATE_MAX ? filter.max : undefined,
@@ -97,12 +98,15 @@ export default function FindTutorPage() {
           rangeLabel="Giá theo giờ (VNĐ)"
           rangeMax={RATE_MAX}
           rangeStep={10_000}
+          hideWard
+          hideTeachingMode
+          hideEducationLevels
         />
 
         <div className="min-w-0 flex-1">
           <Input
-            aria-label="Tìm kiếm gia sư"
-            placeholder="Tìm theo môn học..."
+            aria-label="Tìm gia sư theo tên"
+            placeholder="Tìm theo tên gia sư..."
             leftIcon={<Search className="size-4" />}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
@@ -138,7 +142,7 @@ export default function FindTutorPage() {
             ) : (
               <EmptyState
                 title="Không tìm thấy gia sư phù hợp"
-                description="Thử bỏ bớt bộ lọc hoặc đổi từ khóa tìm kiếm."
+                description="Thử bỏ bớt bộ lọc hoặc đổi tên gia sư cần tìm."
               />
             )}
           </div>

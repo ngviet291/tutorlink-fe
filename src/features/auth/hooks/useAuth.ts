@@ -8,6 +8,7 @@ import type {
   RegisterStudentRequest,
   RegisterTutorRequest,
   ResetPasswordRequest,
+  SendVerificationCodeRequest,
 } from "../types/auth.dto";
 import { authService } from "@/config/di/container";
 
@@ -51,6 +52,14 @@ export function useLogout() {
       dispatch(clearUser());
       qc.clear();
     },
+  });
+}
+
+/** Gửi mã xác minh email khi đăng ký. */
+export function useSendVerificationCode() {
+  return useMutation({
+    mutationFn: (req: SendVerificationCodeRequest) =>
+      authService.sendVerificationCode(req),
   });
 }
 

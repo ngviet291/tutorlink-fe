@@ -23,6 +23,15 @@ export interface ScheduleSlot {
   to: string;
 }
 
+/** Thông tin giảng dạy riêng của một môn. */
+export interface SubjectProfile {
+  subjectId: string;
+  subjectName: string;
+  experienceYears: number;
+  hourlyRate: number;
+  teachingMode: TeachingMode;
+}
+
 export interface TutorResponse {
   id: string;
   fullName: string;
@@ -45,12 +54,15 @@ export interface TutorResponse {
   certificates?: Certificate[];
   educationLevels?: EducationLevel[];
   subjects?: SubjectSummary[];
+  /** Kinh nghiệm / giá / hình thức dạy riêng từng môn */
+  subjectProfiles?: SubjectProfile[];
   teachingAreas?: string[];
   userStatus?: UserStatus;
   schedule?: ScheduleSlot[];
 }
 
 export interface TutorFilter {
+  name?: string;
   subjectName?: string;
   province?: string;
   teachingMode?: TeachingMode | "";
@@ -62,15 +74,19 @@ export interface TutorFilter {
 }
 
 export interface TutorProfilePayload {
-  subjectId: string;
-  experienceYears: number;
+  // Thông tin chung
   education: string;
-  hourlyRate: number;
   bio: string;
-  address?: Address;
-  teachingMode: TeachingMode;
-  educationLevels: EducationLevel[];
   teachingAreas: string[];
+  educationLevels: EducationLevel[];
   schedule: ScheduleSlot[];
-  certificates: Certificate[];
+  // Thông tin riêng từng môn
+  subjectProfiles: SubjectProfile[];
+}
+export interface SubjectProfile {
+  subjectId: string;
+  subjectName: string;
+  experienceYears: number;
+  hourlyRate: number;
+  teachingMode: TeachingMode;
 }

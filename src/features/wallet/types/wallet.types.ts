@@ -50,13 +50,13 @@ export interface AdminTransactionFilter {
 
 export interface TopUpPayload {
   amount: number;
-  /** BE bắt buộc: MOMO hoặc VIETQR. */
-  paymentMethod: Extract<PaymentMethod, "MOMO" | "VIETQR">;
+  /** BE bắt buộc: VIETQR. */
+  paymentMethod: Extract<PaymentMethod, "VIETQR">;
 }
 
 export interface TopUpResponse {
   transaction: TransactionResponse;
-  /** MoMo: liên kết thanh toán. VietQR: paymentLink là ảnh QR, qrCodeUrl là nội dung QR để tự vẽ. */
+  /** VietQR: paymentLink là ảnh QR, qrCodeUrl là nội dung QR để tự vẽ. */
   paymentLink?: string;
   qrCodeUrl?: string;
   deeplink?: string;

@@ -1,16 +1,16 @@
-import { Link } from 'react-router-dom'
-import { BadgeCheck, Briefcase, MapPin } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { ROUTES } from '@/constants/routes'
-import { Avatar } from '@/shared/components/ui/Avatar'
-import { RatingStars } from '@/shared/components/ui/RatingStars'
-import { SubjectTag } from '@/shared/components/ui/SubjectTag'
-import { formatVnd } from '@/shared/utils/currency'
-import type { TutorResponse } from '../types/tutor.types'
+import { Link } from "react-router-dom";
+import { BadgeCheck, Briefcase, MapPin } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { ROUTES } from "@/constants/routes";
+import { Avatar } from "@/shared/components/ui/Avatar";
+import { RatingStars } from "@/shared/components/ui/RatingStars";
+import { SubjectTag } from "@/shared/components/ui/SubjectTag";
+import { formatVnd } from "@/shared/utils/currency";
+import type { TutorResponse } from "../types/tutor.types";
 
 export function TutorCard({ tutor }: { tutor: TutorResponse }) {
-  const { t } = useTranslation()
-
+  const { t } = useTranslation();
+  const tutorSubjects = tutor.subjects ?? [];
   return (
     <Link
       to={ROUTES.TUTOR_DETAIL(tutor.id)}
@@ -21,26 +21,27 @@ export function TutorCard({ tutor }: { tutor: TutorResponse }) {
         <div className="min-w-0">
           <h3 className="flex items-center gap-1 truncate text-base font-bold text-text group-hover:text-primary">
             {tutor.fullName}
-            {tutor.verificationStatus === 'APPROVED' && (
-              <BadgeCheck className="size-4 shrink-0 text-info" aria-label={t('common.verified')} />
+            {tutor.verificationStatus === "APPROVED" && (
+              <BadgeCheck
+                className="size-4 shrink-0 text-info"
+                aria-label={t("common.verified")}
+              />
             )}
           </h3>
           <RatingStars value={tutor.averageRating} />
         </div>
       </div>
 
-      {tutor.subject && (
-        <div className="flex flex-wrap gap-1.5">
-          <SubjectTag name={tutor.subject.name} />
-        </div>
-      )}
+      {tutorSubjects.map((s) => (
+        <SubjectTag key={s.id} name={s.name} />
+      ))}
 
       <p className="line-clamp-2 text-sm text-text-secondary">{tutor.bio}</p>
 
       <div className="mt-auto flex flex-col gap-1.5 text-xs text-text-secondary">
         <span className="flex items-center gap-1.5">
           <Briefcase className="size-3.5" />
-          {tutor.experienceYears} {t('common.experience')}
+          {tutor.experienceYears} {t("common.experience")}
         </span>
         {tutor.address?.province && (
           <span className="flex items-center gap-1.5">
@@ -53,12 +54,14 @@ export function TutorCard({ tutor }: { tutor: TutorResponse }) {
       <div className="flex items-center justify-between border-t border-border pt-3">
         <span className="text-base font-bold text-primary">
           {formatVnd(tutor.hourlyRate)}
-          <span className="text-xs font-normal text-text-secondary">{t('common.perHour')}</span>
+          <span className="text-xs font-normal text-text-secondary">
+            {t("common.perHour")}
+          </span>
         </span>
         <span className="text-sm font-semibold text-primary group-hover:underline">
-          {t('tutor.viewProfile')}
+          {t("tutor.viewProfile")}
         </span>
       </div>
     </Link>
-  )
+  );
 }

@@ -21,20 +21,6 @@ export function createPrivateClient(
   client.interceptors.request.use(async (config) => {
     const token = await tokens.getAccessToken();
 
-    console.log("[API]", config.method?.toUpperCase(), config.url);
-    console.log("[JWT]", token ? "Token exists" : "Token missing");
-    console.log(
-      "[BODY]",
-      config.data ? JSON.stringify(config.data) : "No body",
-    );
-    console.log(
-      "[TIME]",
-      new Date().toLocaleString("vi-VN", {
-        timeZone: "Asia/Ho_Chi_Minh",
-      }),
-    );
-
-    console.log("================================");
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   });
@@ -71,8 +57,7 @@ export function createPrivateClient(
           const newToken = await refresher.refresh();
           original.headers.Authorization = `Bearer ${newToken}`;
           return client(original); // gọi lại request cũ
-        } catch (e) {
-          console.log("REFRESH FAILED:", e);
+        } catch {
           await tokens.clear();
           unauthorizedEvent.emit();
           return Promise.reject(toApiError(error));

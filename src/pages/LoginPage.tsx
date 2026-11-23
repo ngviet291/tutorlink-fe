@@ -37,7 +37,7 @@ export default function LoginPage() {
         />
         <Input
           label="Mật khẩu"
-          type="text"
+          type="password"
           autoComplete="current-password"
           leftIcon={<Lock className="size-4" />}
           error={errors.password?.message}

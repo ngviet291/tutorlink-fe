@@ -32,7 +32,7 @@ describe('nhận diện người tạo sự kiện', () => {
       return refreshed
     })
     const send = vi.fn().mockResolvedValue(undefined)
-    const service = new TrackingService({ send }, tokens, false, { refresh })
+    const service = new TrackingService({ send }, tokens, { refresh })
     await service.sendEvents(payload, await service.captureIdentity())
     expect(refresh).toHaveBeenCalledOnce()
     expect(send).toHaveBeenCalledExactlyOnceWith(payload, refreshed)
@@ -42,7 +42,7 @@ describe('nhận diện người tạo sự kiện', () => {
     const tokens = tokenStore()
     const refresh = vi.fn()
     const send = vi.fn().mockRejectedValue(httpError(401))
-    const service = new TrackingService({ send }, tokens, false, { refresh })
+    const service = new TrackingService({ send }, tokens, { refresh })
     await expect(service.sendEvents(payload, await service.captureIdentity())).rejects.toThrow('401')
     expect(refresh).not.toHaveBeenCalled()
     expect(send).toHaveBeenCalledExactlyOnceWith(payload, null)
@@ -52,7 +52,7 @@ describe('nhận diện người tạo sự kiện', () => {
     const tokens = tokenStore()
     tokens.getAccessToken.mockResolvedValue(makeToken('member'))
     const refresh = vi.fn()
-    const service = new TrackingService({ send: vi.fn().mockRejectedValue(httpError(500)) }, tokens, false, { refresh })
+    const service = new TrackingService({ send: vi.fn().mockRejectedValue(httpError(500)) }, tokens, { refresh })
     await expect(service.sendEvents(payload, await service.captureIdentity())).rejects.toThrow('500')
     expect(refresh).not.toHaveBeenCalled()
   })
@@ -62,7 +62,7 @@ describe('nhận diện người tạo sự kiện', () => {
     tokens.getAccessToken.mockResolvedValue(makeToken('member'))
     const refresh = vi.fn().mockRejectedValue(new Error('refresh failed'))
     const send = vi.fn().mockRejectedValue(httpError(401))
-    const service = new TrackingService({ send }, tokens, false, { refresh })
+    const service = new TrackingService({ send }, tokens, { refresh })
     await expect(service.sendEvents(payload, await service.captureIdentity())).rejects.toThrow('refresh failed')
     expect(send).toHaveBeenCalledOnce()
     expect(tokens.clear).not.toHaveBeenCalled()
@@ -74,7 +74,7 @@ describe('nhận diện người tạo sự kiện', () => {
     const refreshed = makeToken('member', 2)
     const refresh = vi.fn().mockResolvedValue(refreshed)
     const send = vi.fn().mockRejectedValueOnce(httpError(401)).mockResolvedValue(undefined)
-    const service = new TrackingService({ send }, tokens, false, { refresh })
+    const service = new TrackingService({ send }, tokens, { refresh })
     const identity = await service.captureIdentity()
     await service.sendEvents(payload, identity)
     expect(refresh).toHaveBeenCalledOnce()
@@ -88,7 +88,7 @@ describe('nhận diện người tạo sự kiện', () => {
     tokens.getAccessToken.mockResolvedValue(makeToken('member'))
     const refresh = vi.fn().mockResolvedValue(makeToken('member', 2))
     const send = vi.fn().mockRejectedValue(httpError(401))
-    const service = new TrackingService({ send }, tokens, false, { refresh })
+    const service = new TrackingService({ send }, tokens, { refresh })
     await expect(service.sendEvents(payload, await service.captureIdentity())).rejects.toThrow('401')
     expect(refresh).toHaveBeenCalledOnce()
     expect(send).toHaveBeenCalledTimes(2)
@@ -99,7 +99,7 @@ describe('nhận diện người tạo sự kiện', () => {
     const tokens = tokenStore()
     tokens.getAccessToken.mockResolvedValue(makeToken('original'))
     const refresh = vi.fn()
-    const service = new TrackingService({ send: vi.fn().mockRejectedValue(httpError(401)) }, tokens, false, { refresh })
+    const service = new TrackingService({ send: vi.fn().mockRejectedValue(httpError(401)) }, tokens, { refresh })
     const identity = await service.captureIdentity()
     tokens.getAccessToken.mockResolvedValue(makeToken('another'))
     await expect(service.sendEvents(payload, identity)).rejects.toThrow('401')
@@ -109,7 +109,7 @@ describe('nhận diện người tạo sự kiện', () => {
   it('không gán sự kiện của khách cho tài khoản vừa đăng nhập', async () => {
     const send = vi.fn().mockResolvedValue(undefined)
     const tokens = tokenStore()
-    const service = new TrackingService({ send }, tokens, false)
+    const service = new TrackingService({ send }, tokens)
     const identity = await service.captureIdentity()
     tokens.getAccessToken.mockResolvedValue(makeToken('member'))
     await service.sendEvents(payload, identity)
@@ -122,7 +122,7 @@ describe('nhận diện người tạo sự kiện', () => {
     const original = makeToken('original')
     const refreshed = makeToken('original', 2)
     tokens.getAccessToken.mockResolvedValue(original)
-    const service = new TrackingService({ send }, tokens, false)
+    const service = new TrackingService({ send }, tokens)
     const identity = await service.captureIdentity()
     tokens.getAccessToken.mockResolvedValue(refreshed)
     await service.sendEvents(payload, identity)
@@ -136,19 +136,13 @@ describe('nhận diện người tạo sự kiện', () => {
     const tokens = tokenStore()
     const service = new TrackingService({
       send: vi.fn().mockRejectedValue(new Error('offline')),
-    }, tokens, false)
+    }, tokens)
     await expect(service.sendEvents(payload, {
       subject: null, accessToken: null,
     })).rejects.toThrow('offline')
     expect(tokens.clear).not.toHaveBeenCalled()
   })
 
-  it('không gửi request khi bật nhánh mock', async () => {
-    const send = vi.fn()
-    const service = new TrackingService({ send }, tokenStore(), true)
-    await service.sendEvents(payload, { subject: null, accessToken: null })
-    expect(send).not.toHaveBeenCalled()
-  })
 })
 
 describe('hợp đồng HTTP tracking', () => {

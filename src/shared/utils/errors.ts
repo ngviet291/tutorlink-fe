@@ -16,6 +16,10 @@ const CODE_TO_I18N: Record<string, string> = {
   INVALID_SUBJECT: "error.unknown",
   POST_CLOSED: "error.postClosed",
   WRONG_PASSWORD: "error.wrongPassword",
+  AUTH_VERIFY_001: "error.verifyCodeInvalid",
+  AUTH_VERIFY_002: "error.verifyCodeExpired",
+  AUTH_VERIFY_003: "error.verifyTooManyAttempts",
+  AUTH_VERIFY_004: "error.verifyResendTooSoon",
 };
 
 export function getErrorMessage(error: unknown): string {
@@ -29,7 +33,6 @@ export function getErrorMessage(error: unknown): string {
     if (error.message) return error.message;
   }
   if (error instanceof Error) {
-    console.log(error);
     if (error.message.includes("Network") || error.message.includes("fetch")) {
       return i18n.t("error.network");
     }

@@ -9,22 +9,6 @@ export function createPublicClient(baseURL: string): AxiosInstance {
   });
 
   client.interceptors.request.use((config) => {
-    console.log("[API]", config.method?.toUpperCase(), config.url);
-
-    console.log(
-      "[BODY]",
-      config.data ? JSON.stringify(config.data) : "No body",
-    );
-
-    console.log(
-      "[TIME]",
-      new Date().toLocaleString("vi-VN", {
-        timeZone: "Asia/Ho_Chi_Minh",
-      }),
-    );
-
-    console.log("================================");
-
     return config;
   });
 

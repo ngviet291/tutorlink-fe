@@ -16,7 +16,7 @@ const EXPLORE_LINKS: FooterLink[] = [
   { to: ROUTES.FIND_TUTOR, label: "Tìm gia sư", hideFor: ["TUTOR"] },
   { to: ROUTES.FIND_CLASS, label: "Tìm lớp dạy" },
   { to: ROUTES.TUTOR_CORNER, label: "Góc gia sư", hideFor: ["STUDENT"] },
-  { to: ROUTES.STUDENT_CORNER, label: "Góc học sinh", hideFor: ["TUTOR"] },
+  { to: ROUTES.STUDENT_CORNER, label: "Góc học viên", hideFor: ["TUTOR"] },
 ];
 
 export function Footer() {
