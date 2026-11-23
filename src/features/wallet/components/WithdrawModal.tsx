@@ -116,6 +116,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
             </label>
             <Input
               type="number"
+              step={1000}
               placeholder="Tối thiểu 10,000 VND"
               disabled={isSubmitting}
               {...register("amount", {
