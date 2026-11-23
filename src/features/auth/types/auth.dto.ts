@@ -1,7 +1,7 @@
 // AUTO-GENERATED từ DTO của BE (src/main/java/.../dto). Tên class + tên field giữ nguyên như BE.
 // Quy ước: Instant/LocalDate/UUID → string, BigDecimal/Integer/long/double → number, `?` = BE có thể không trả / request không bắt buộc.
 
-import type { Gender } from "@/shared/types/common.types";
+import type { EducationLevel, Gender } from "@/shared/types/common.types";
 import type {
   AddressRequest,
   BaseUserResponse,
@@ -66,6 +66,8 @@ export interface RegisterTutorRequest {
   address: AddressRequest;
   experienceYears: number;
   education?: string;
+  /** Cấp học nhận dạy (bắt buộc khi đăng ký). */
+  teachingLevels: EducationLevel[];
   subjectIds: string[];
   /** Phần tử i = môn của file chứng chỉ thứ i (bắt buộc khi chọn nhiều môn). */
   certificateSubjectIds?: string[];

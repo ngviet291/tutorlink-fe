@@ -269,12 +269,13 @@ function CommonInfoCard({ form }: { form: Form }) {
       />
       <Input
         label="Khu vực nhận dạy"
+        required
         placeholder="VD: Gò Vấp, Quận 1, Thủ Đức (cách nhau bằng dấu phẩy)"
         {...register("teachingAreasText")}
       />
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium text-text">
-          Cấp học nhận dạy
+          Cấp học nhận dạy <span className="text-danger">*</span>
         </legend>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
           {TEACHING_LEVELS.map((level) => (
@@ -519,6 +520,17 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
       toast.error("Hãy chọn môn học cho thẻ môn mới hoặc bấm Hủy");
       return;
     }
+    // Hồ sơ đã duyệt: phải bổ sung đủ thì mới nhận lớp / đăng bài được
+    if (data.verificationStatus === "APPROVED") {
+      const lacking: string[] = [];
+      if (parseAreas(values.teachingAreasText).length === 0) lacking.push("khu vực nhận dạy");
+      if (!values.educationLevels?.length) lacking.push("cấp học nhận dạy");
+      if (!values.schedule?.length) lacking.push("lịch rảnh trong tuần");
+      if (lacking.length > 0) {
+        toast.error(`Hồ sơ đã duyệt cần bổ sung: ${lacking.join(", ")}`);
+        return;
+      }
+    }
     const hasCertificate = (subjectId: string) =>
       certificates.some((c) => c.subjectId === subjectId) ||
       (files[subjectId]?.length ?? 0) > 0;
@@ -566,6 +578,23 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
       noValidate
       className="flex flex-col gap-5"
     >
+      {data.verificationStatus === "APPROVED" &&
+        !(
+          data.bio?.trim() &&
+          data.teachingAreas?.length &&
+          data.educationLevels?.length &&
+          data.schedule?.length
+        ) && (
+          <p
+            role="alert"
+            className="rounded-xl bg-amber-100 px-4 py-3 text-sm text-amber-800 dark:bg-amber-500/20 dark:text-amber-200"
+          >
+            Hồ sơ đã được duyệt. Hãy bổ sung đủ giới thiệu bản thân, khu vực
+            nhận dạy, cấp học nhận dạy và lịch rảnh trong tuần để đăng bài và
+            nhận lớp.
+          </p>
+        )}
+
       <CommonInfoCard form={form} />
 
       <div className="flex flex-col gap-1">
