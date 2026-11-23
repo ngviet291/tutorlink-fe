@@ -155,7 +155,7 @@ export function TopUpPaymentStep({
         <div className="flex w-full flex-col items-center gap-3">
           <p className="text-sm text-text-secondary">
             {session.paymentLink
-              ? "Bấm nút bên dưới để mở trang thanh toán MoMo. Số dư sẽ cập nhật tự động sau khi hoàn tất."
+              ? "Bấm nút bên dưới để mở trang thanh toán. Số dư sẽ cập nhật tự động sau khi hoàn tất."
               : "Chưa nhận được liên kết thanh toán. Vui lòng đóng và thử lại."}
           </p>
           {session.paymentLink && (

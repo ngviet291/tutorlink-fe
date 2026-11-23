@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next";
 
 import { Button } from "./Button";
+import { RangeSlider } from "./RangeSlider";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 
-import type { TeachingMode } from "@/shared/types/common.types";
+import type { BudgetUnit, TeachingMode } from "@/shared/types/common.types";
 import type { EducationLevel } from "@/constants/enums";
 
-import { EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL } from "@/constants/enums";
+import { BUDGET_UNIT_LABEL, EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL } from "@/constants/enums";
 import { useProvinces, useWards } from "@/shared/hooks/useAddress";
 
 export interface FilterValues {
@@ -17,6 +18,27 @@ export interface FilterValues {
   educationLevels: EducationLevel[];
   min: number;
   max: number;
+  /** Đơn vị học phí khi lọc bài đăng; "" = không lọc theo giá. */
+  budgetUnit: BudgetUnit | "";
+}
+
+/** Khoảng giá hợp lý cho từng đơn vị học phí. */
+export const BUDGET_RANGE_BY_UNIT: Record<BudgetUnit, { max: number; step: number }> = {
+  PER_SESSION: { max: 1_000_000, step: 50_000 },
+  PER_MONTH: { max: 10_000_000, step: 100_000 },
+  PER_HOUR: { max: 500_000, step: 10_000 },
+};
+const UNIT_ORDER: BudgetUnit[] = ["PER_SESSION", "PER_MONTH", "PER_HOUR"];
+
+/** Tham số lọc giá gửi lên BE: chỉ lọc khi đã chọn đơn vị. */
+export function budgetQuery(f: FilterValues) {
+  if (!f.budgetUnit) return {};
+  const { max } = BUDGET_RANGE_BY_UNIT[f.budgetUnit];
+  return {
+    budgetUnit: f.budgetUnit,
+    minBudget: f.min > 0 ? f.min : undefined,
+    maxBudget: f.max < max ? f.max : undefined,
+  };
 }
 
 export function emptyFilter(rangeMax: number): FilterValues {
@@ -28,6 +50,7 @@ export function emptyFilter(rangeMax: number): FilterValues {
     educationLevels: [],
     min: 0,
     max: rangeMax,
+    budgetUnit: "",
   };
 }
 
@@ -37,9 +60,15 @@ interface FilterSidebarProps {
   rangeLabel?: string;
   rangeMax?: number;
   rangeStep?: number;
+  /** Bật chọn đơn vị học phí (buổi/tháng/giờ) và khoảng giá theo đơn vị đó. */
+  budgetUnitMode?: boolean;
   className?: string;
   onSearchPerformed?: (resultCount: number) => void;
   hideProvince?: boolean;
+  /** Ẩn bộ lọc mà trang không dùng (tránh hiện ô lọc nhưng không có tác dụng) */
+  hideWard?: boolean;
+  hideTeachingMode?: boolean;
+  hideEducationLevels?: boolean;
 }
 
 export function FilterSidebar({
@@ -48,9 +77,13 @@ export function FilterSidebar({
   rangeLabel = "Mức giá",
   rangeMax = 1_000_000,
   rangeStep = 10_000,
+  budgetUnitMode = false,
   className = "",
   // onSearchPerformed,
   hideProvince = false,
+  hideWard = false,
+  hideTeachingMode = false,
+  hideEducationLevels = false,
 }: FilterSidebarProps) {
   const { t } = useTranslation();
 
@@ -93,7 +126,28 @@ export function FilterSidebar({
           ))}
         </select>
       </div>
-      {!hideProvince && value.province && (
+      {!hideProvince && (
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-text-secondary">
+            Tỉnh / Thành phố
+          </label>
+
+          <select
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+            value={value.province}
+            onChange={(e) => set({ province: e.target.value, ward: "" })}
+          >
+            <option value="">Tất cả tỉnh/thành</option>
+
+            {provinces.map((p) => (
+              <option key={p.code} value={p.name}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      {!hideProvince && !hideWard && value.province && (
         <div>
           <label className="mb-1 block text-xs font-semibold text-text-secondary">
             Phường / Xã
@@ -117,97 +171,119 @@ export function FilterSidebar({
           </select>
         </div>
       )}
-      <div>
-        <label className="mb-1 block text-xs font-semibold text-text-secondary">
-          Hình thức dạy
-        </label>
+      {!hideTeachingMode && (
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-text-secondary">
+            Hình thức dạy
+          </label>
 
-        <select
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
-          value={value.teachingMode}
-          onChange={(e) =>
-            set({
-              teachingMode: e.target.value as TeachingMode | "",
-            })
-          }
-        >
-          <option value="">Tất cả</option>
-          <option value="ONLINE">Online</option>
-          <option value="OFFLINE">Offline</option>
-          <option value="BOTH">Cả hai</option>
-        </select>
-      </div>
-
-      <div>
-        <p className="mb-2 text-xs font-semibold text-text-secondary">
-          Cấp học
-        </p>
-
-        <div className="flex flex-wrap gap-2">
-          {EDUCATION_LEVELS.map((lvl) => {
-            const active = value.educationLevels.includes(lvl);
-
-            return (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => toggleLevel(lvl)}
-                className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                  active
-                    ? "border-primary bg-primary text-white"
-                    : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
-                }`}
-              >
-                {EDUCATION_LEVEL_LABEL[lvl]}
-              </button>
-            );
-          })}
+          <select
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+            value={value.teachingMode}
+            onChange={(e) =>
+              set({
+                teachingMode: e.target.value as TeachingMode | "",
+              })
+            }
+          >
+            <option value="">Tất cả</option>
+            <option value="ONLINE">Online</option>
+            <option value="OFFLINE">Offline</option>
+            <option value="BOTH">Cả hai</option>
+          </select>
         </div>
-      </div>
+      )}
 
-      <div>
-        <label className="mb-1 block text-xs font-semibold text-text-secondary">
-          {rangeLabel}
-        </label>
+      {!hideEducationLevels && (
+        <div>
+          <p className="mb-2 text-xs font-semibold text-text-secondary">
+            Cấp học
+          </p>
 
-        <div className="flex items-center gap-2 text-xs text-text-secondary">
-          <span>{(value.min / 1000).toFixed(0)}k</span>
-          <span className="flex-1 text-center">—</span>
-          <span>
-            {value.max >= rangeMax
-              ? "Max"
-              : `${(value.max / 1000).toFixed(0)}k`}
-          </span>
+          <div className="flex flex-wrap gap-2">
+            {EDUCATION_LEVELS.map((lvl) => {
+              const active = value.educationLevels.includes(lvl);
+
+              return (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => toggleLevel(lvl)}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                    active
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {EDUCATION_LEVEL_LABEL[lvl]}
+                </button>
+              );
+            })}
+          </div>
         </div>
+      )}
 
-        <input
-          type="range"
-          min={0}
-          max={rangeMax}
-          step={rangeStep}
-          value={value.min}
-          onChange={(e) =>
-            set({
-              min: Math.min(Number(e.target.value), value.max - rangeStep),
-            })
-          }
-          className="mt-1 w-full accent-primary"
-        />
-
-        <input
-          type="range"
-          min={0}
-          max={rangeMax}
-          step={rangeStep}
-          value={value.max}
-          onChange={(e) =>
-            set({
-              max: Math.max(Number(e.target.value), value.min + rangeStep),
-            })
-          }
-          className="w-full accent-primary"
-        />
-      </div>
+      {budgetUnitMode ? (
+        <div>
+          <p className="mb-2 text-xs font-semibold text-text-secondary">
+            {rangeLabel}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {UNIT_ORDER.map((u) => {
+              const active = value.budgetUnit === u;
+              return (
+                <button
+                  key={u}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() =>
+                    set(
+                      active
+                        ? { budgetUnit: "", min: 0, max: rangeMax }
+                        : { budgetUnit: u, min: 0, max: BUDGET_RANGE_BY_UNIT[u].max },
+                    )
+                  }
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                    active
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {BUDGET_UNIT_LABEL[u]}
+                </button>
+              );
+            })}
+          </div>
+          {value.budgetUnit ? (
+            <RangeSlider
+              min={value.min}
+              max={value.max}
+              rangeMax={BUDGET_RANGE_BY_UNIT[value.budgetUnit].max}
+              step={BUDGET_RANGE_BY_UNIT[value.budgetUnit].step}
+              onChange={(mn, mx) => set({ min: mn, max: mx })}
+              className="mt-4"
+            />
+          ) : (
+            <p className="mt-2 text-xs text-text-secondary">
+              Chọn đơn vị để lọc theo khoảng học phí.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-text-secondary">
+            {rangeLabel}
+          </label>
+          <RangeSlider
+            min={value.min}
+            max={value.max}
+            rangeMax={rangeMax}
+            step={rangeStep}
+            onChange={(mn, mx) => set({ min: mn, max: mx })}
+            className="mt-2"
+          />
+        </div>
+      )}
 
       <Button
         variant="ghost"

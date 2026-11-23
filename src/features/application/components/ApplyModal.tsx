@@ -4,6 +4,8 @@ import { Button } from '@/shared/components/ui/Button'
 import { Modal } from '@/shared/components/ui/Modal'
 import { Input } from '@/shared/components/ui/Input'
 import { formatVnd } from '@/shared/utils/currency'
+import { BUDGET_UNIT_LABEL } from '@/constants/enums'
+import type { BudgetUnit } from '@/shared/types/common.types'
 import { Textarea } from '@/shared/components/ui/Textarea'
 import { useToast } from '@/shared/hooks/useToast'
 import { getErrorMessage } from '@/shared/utils/errors'
@@ -11,11 +13,15 @@ import { useApplicationMutations } from '../hooks/useApplications'
 
 interface Props {
   postId: string
+  /** Khoảng ngân sách của bài: phí đề xuất phải nằm trong khoảng này. */
+  minBudget?: number
+  maxBudget?: number
+  budgetUnit?: BudgetUnit
   open: boolean
   onClose: () => void
 }
 
-export function ApplyModal({ postId, open, onClose }: Props) {
+export function ApplyModal({ postId, minBudget, maxBudget, budgetUnit, open, onClose }: Props) {
   const { t } = useTranslation()
   const toast = useToast()
   const { apply } = useApplicationMutations()
@@ -23,9 +29,24 @@ export function ApplyModal({ postId, open, onClose }: Props) {
   const [fee, setFee] = useState('')
   const feeValue = Number(fee.replace(/\D/g, ''))
 
+  const rangeText =
+    minBudget != null && maxBudget != null
+      ? `${formatVnd(minBudget)} – ${formatVnd(maxBudget)}${budgetUnit ? ` (${BUDGET_UNIT_LABEL[budgetUnit]})` : ''}`
+      : ''
+  const outOfRange =
+    feeValue > 0 &&
+    ((minBudget != null && feeValue < minBudget) || (maxBudget != null && feeValue > maxBudget))
+
   const submit = () => {
     if (!feeValue) {
       toast.error('Vui lòng nhập mức phí đề xuất')
+      return
+    }
+    if (
+      (minBudget != null && feeValue < minBudget) ||
+      (maxBudget != null && feeValue > maxBudget)
+    ) {
+      toast.error(`Mức phí đề xuất phải nằm trong khoảng ${rangeText}`)
       return
     }
     apply.mutate(
@@ -53,13 +74,14 @@ export function ApplyModal({ postId, open, onClose }: Props) {
           {t('application.applyDesc')}
         </p>
         <Input
-          label="Mức phí đề xuất (VND/tháng)"
+          label={`Mức phí đề xuất${budgetUnit ? ` (${BUDGET_UNIT_LABEL[budgetUnit]})` : ''}`}
           inputMode="numeric"
           required
           placeholder="VD: 2000000"
           value={fee}
-          onChange={(e) => setFee(e.target.value)}
-          hint={feeValue ? formatVnd(feeValue) : undefined}
+          onChange={(e) => setFee(e.target.value.replace(/\D/g, '').slice(0, 9))}
+          error={outOfRange ? `Phải nằm trong khoảng ${rangeText}` : undefined}
+          hint={outOfRange ? undefined : feeValue ? formatVnd(feeValue) : rangeText ? `Khoảng của bài: ${rangeText}` : undefined}
         />
         <Textarea
           label={t('application.messageLabel')}

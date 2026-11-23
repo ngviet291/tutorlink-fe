@@ -8,6 +8,7 @@ import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import {
   FilterSidebar,
   emptyFilter,
+  budgetQuery,
   type FilterValues,
 } from "@/shared/components/ui/FilterSidebar";
 import { Modal } from "@/shared/components/ui/Modal";
@@ -28,7 +29,7 @@ import type { PostResponse } from "@/features/post/types/post.types";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { PostStatus } from "@/shared/types/common.types";
 
-const RANGE_MAX = 1_000_000;
+const RANGE_MAX = 10_000_000;
 
 function ApplicationsModal({
   post,
@@ -147,9 +148,7 @@ export default function AdminPostsPage() {
         ? filter.educationLevels[0]
         : undefined,
 
-    minBudget: filter.min > 0 ? filter.min : undefined,
-
-    maxBudget: filter.max < RANGE_MAX ? filter.max : undefined,
+    ...budgetQuery(filter),
   });
 
   const posts = (data?.pages.flatMap((page) => page.content) ?? []).filter(
@@ -157,20 +156,6 @@ export default function AdminPostsPage() {
       filter.educationLevels.length <= 1 ||
       filter.educationLevels.includes(post.educationLevel),
   );
-
-  // DEBUG LOG
-  console.log("=== DEBUG Posts Data ===");
-  console.log("Total posts:", posts.length);
-  console.log("Status filter:", status);
-  posts.forEach((post, idx) => {
-    console.log(`Post ${idx + 1}:`, {
-      id: post.id,
-      title: post.title,
-      status: post.status,
-      applicationCount: post.applicationCount,
-    });
-  });
-  console.log("========================");
 
   // Infinite scroll
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -263,8 +248,9 @@ export default function AdminPostsPage() {
           <FilterSidebar
             value={filter}
             onChange={setFilter}
-            rangeLabel="Ngân sách"
+            rangeLabel="Học phí (VNĐ)"
             rangeMax={RANGE_MAX}
+            budgetUnitMode
             hideProvince
           />
         </div>

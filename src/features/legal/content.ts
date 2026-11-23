@@ -68,7 +68,7 @@ export const LEGAL_DOCS: Record<
       {
         heading: "3. Ví và thanh toán",
         bullets: [
-          "Phí được trừ trực tiếp từ ví của gia sư. Ví được nạp qua cổng thanh toán MoMo.",
+          "Phí được trừ trực tiếp từ ví của gia sư. Ví được nạp bằng chuyển khoản VietQR.",
           "Ví chỉ dùng để nạp tiền và trả phí nhận lớp, không hỗ trợ rút tiền.",
           "Mỗi giao dịch đều có trong lịch sử ví để bạn đối chiếu.",
         ],

@@ -8,10 +8,7 @@ import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { useToast } from "@/shared/hooks/useToast";
 import { getErrorMessage } from "@/shared/utils/errors";
-import {
-  useAdminMutations,
-  usePendingCertificates,
-} from "../hooks/useAdmin";
+import { useAdminMutations, usePendingCertificates } from "../hooks/useAdmin";
 import type { PendingCertificate } from "../types/admin.types";
 
 /** Chứng chỉ AI không tự duyệt được khi gia sư cập nhật hồ sơ: admin xem ảnh rồi duyệt / từ chối. */
@@ -53,13 +50,18 @@ export function AdminCertificatesPanel() {
   };
 
   return (
-    <section className="flex flex-col gap-3" aria-label="Chứng chỉ chờ admin duyệt">
+    <section
+      className="flex flex-col gap-3"
+      aria-label="Chứng chỉ chờ admin duyệt"
+    >
       <div>
         <h2 className="text-lg font-bold text-text">
           Chứng chỉ chờ admin duyệt
         </h2>
         <p className="text-sm text-text-secondary">
-          Chứng chỉ gia sư vừa cập nhật mà AI không tự duyệt được.
+          Chứng chỉ gia sư vừa cập nhật hồ sơ mà hệ thống AI chưa kiểm tra được
+          (hết lượt, lỗi hoặc quá thời gian chờ). Hồ sơ đăng ký mới thì xem
+          chứng chỉ ngay trong cửa sổ "Xem & duyệt" bên trên.
         </p>
       </div>
 

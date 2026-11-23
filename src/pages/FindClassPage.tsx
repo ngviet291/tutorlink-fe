@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import {
   FilterSidebar,
   emptyFilter,
+  budgetQuery,
   type FilterValues,
 } from "@/shared/components/ui/FilterSidebar";
 import { Input } from "@/shared/components/ui/Input";
@@ -56,8 +57,7 @@ export default function FindClassPage() {
       ward: filter.ward || undefined,
       teachingMode: filter.teachingMode || undefined,
       educationLevel: filter.educationLevels[0] || undefined,
-      minBudget: filter.min > 0 ? filter.min : undefined,
-      maxBudget: filter.max < BUDGET_MAX ? filter.max : undefined,
+      ...budgetQuery(filter),
       limit: 12,
     }),
     [type, debounced, subjectName, filter],
@@ -83,8 +83,7 @@ export default function FindClassPage() {
     filter.ward ||
     filter.teachingMode ||
     filter.educationLevels.length ||
-    filter.min > 0 ||
-    filter.max < BUDGET_MAX,
+    filter.budgetUnit,
   );
   useSearchTracking({
     active: hasSearch,
@@ -123,9 +122,9 @@ export default function FindClassPage() {
         <FilterSidebar
           value={filter}
           onChange={setFilter}
-          rangeLabel="Học phí / tháng (VNĐ)"
+          rangeLabel="Học phí (VNĐ)"
           rangeMax={BUDGET_MAX}
-          rangeStep={100_000}
+          budgetUnitMode
         />
 
         <div className="min-w-0 flex-1">

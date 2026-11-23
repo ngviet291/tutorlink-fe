@@ -34,11 +34,18 @@ export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
+/** BE: auth/dto/request/SendVerificationCodeRequest.java */
+export interface SendVerificationCodeRequest {
+  email: string;
+}
+
 /** BE: auth/dto/request/RegisterStudentRequest.java */
 export interface RegisterStudentRequest {
   fullName: string;
   email: string;
   password: string;
+  /** Mã 6 số gửi về email (POST /v1/auth/register/verification-code). */
+  verificationCode: string;
   phone?: string;
   gender?: Gender;
   dateOfBirth?: string;
@@ -52,6 +59,7 @@ export interface RegisterTutorRequest {
   fullName: string;
   email: string;
   password: string;
+  verificationCode: string;
   phone?: string;
   gender?: Gender;
   dateOfBirth?: string;

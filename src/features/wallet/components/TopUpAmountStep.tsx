@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { QrCode, Wallet, type LucideIcon } from "lucide-react";
+import { QrCode, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { formatVnd } from "@/shared/utils/currency";
@@ -25,11 +25,6 @@ const METHOD_META: Record<
     logo: "/payment-logos/vietqr.png",
     description: "Quét mã QR bằng app ngân hàng",
   },
-  //   MOMO: {
-  //     icon: Wallet,
-  //     logo: "/payment-logos/momo.png",
-  //     description: "Thanh toán qua ví MoMo",
-  //   },
 };
 
 interface Props {

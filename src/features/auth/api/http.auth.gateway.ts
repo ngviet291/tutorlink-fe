@@ -9,6 +9,7 @@ import type {
   RefreshTokenRequest,
   RegisterStudentRequest,
   RegisterTutorRequest,
+  SendVerificationCodeRequest,
   ResetPasswordRequest,
 } from "../types/auth.dto";
 import type { AuthResponse, AuthTokens } from "../types/auth.types";
@@ -38,6 +39,10 @@ export class HttpAuthGateway implements AuthGateway {
     );
     console.log(res);
     return toAuthResponse(res);
+  }
+
+  async sendVerificationCode(req: SendVerificationCodeRequest): Promise<void> {
+    await this.http.post<void>(`${AUTH}/register/verification-code`, req);
   }
 
   async registerStudent(req: RegisterStudentRequest): Promise<AuthResponse> {

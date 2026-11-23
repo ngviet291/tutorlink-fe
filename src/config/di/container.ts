@@ -33,10 +33,10 @@ import { NotificationService } from "@/features/notification/service/notificatio
 import { HttpNotificationGateway } from "@/features/notification/api/http.notification.gateway";
 import { HttpWalletGateway } from "@/features/wallet/api/http.wallet.gateway";
 import { WalletService } from "@/features/wallet/service/wallet.service";
+import { HttpBankGateway } from "@/features/wallet/api/http.bank.gateway";
+import { BankService } from "@/features/wallet/service/bank.service";
 import { HttpAdminPaymentGateway } from "@/features/admin/api/http.admin.payment.gateway";
 import { AdminPaymentService } from "@/features/admin/service/admin.payment.service";
-import { BankService } from "@/features/wallet/service/bank.service";
-import { HttpBankGateway } from "@/features/wallet/api/http.bank.gateway";
 
 // Toàn bộ bean được quản lí ở đây
 export const tokenStorage = new SecureTokenStorage();
@@ -64,6 +64,9 @@ const privateHttpClient = new AxiosHttpClient(privateHttp);
 
 export const walletService = new WalletService(
   new HttpWalletGateway(privateHttpClient),
+);
+export const bankService = new BankService(
+  new HttpBankGateway(privateHttpClient),
 );
 export const adminPaymentService = new AdminPaymentService(
   new HttpAdminPaymentGateway(privateHttpClient),
@@ -109,8 +112,4 @@ export const chatbotService = new ChatbotService(
     url: env.chatbotApiUrl,
     apiKey: env.chatbotApiKey,
   }),
-);
-
-export const bankService = new BankService(
-  new HttpBankGateway(privateHttpClient),
 );

@@ -15,6 +15,7 @@ import {
   useAdminMutations,
   usePendingTutors,
 } from "@/features/admin/hooks/useAdmin";
+import { TutorCertificateGallery } from "@/features/admin/components/TutorCertificateGallery";
 import { AdminCertificatesPanel } from "@/features/admin/components/AdminCertificatesPanel";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 
@@ -173,17 +174,7 @@ export default function AdminTutorReviewPage() {
             </div>
             <div>
               <p className="text-xs text-text-secondary">Chứng chỉ</p>
-              {detail.certificates?.length ? (
-                <ul className="list-disc pl-5 text-text">
-                  {detail.certificates.map((c, i) => (
-                    <li key={`${c.name}-${i}`}>
-                      {c.name} — {c.issuer} ({c.year})
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-text">Chưa có</p>
-              )}
+              <TutorCertificateGallery tutorId={detail.id} />
             </div>
 
             <Textarea

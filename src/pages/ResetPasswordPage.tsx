@@ -1,8 +1,7 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Eye, EyeOff, KeyRound } from 'lucide-react'
+import { KeyRound } from 'lucide-react'
 import { useResetPassword } from '@/features/auth/hooks/useAuth'
 import { ROUTES } from '@/constants/routes'
 import { Input } from '@/shared/components/ui/Input'
@@ -21,7 +20,6 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') ?? ''
-  const [showPassword, setShowPassword] = useState(false)
   const resetPassword = useResetPassword()
 
   const {
@@ -74,28 +72,19 @@ export default function ResetPasswordPage() {
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="relative">
-              <Input
-                label={t('auth.password')}
-                type={showPassword ? 'text' : 'password'}
-                error={errors.password?.message}
-                {...register('password', {
-                  required: t('validation.required'),
-                  minLength: { value: 8, message: t('validation.minLength', { min: 8 }) },
-                })}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-8 text-text-secondary hover:text-text-secondary"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+            <Input
+              label={t('auth.password')}
+              type="password"
+              error={errors.password?.message}
+              {...register('password', {
+                required: t('validation.required'),
+                minLength: { value: 8, message: t('validation.minLength', { min: 8 }) },
+              })}
+            />
 
             <Input
               label={t('auth.confirmPassword')}
-              type={showPassword ? 'text' : 'password'}
+              type="password"
               error={errors.confirmPassword?.message}
               {...register('confirmPassword', {
                 required: t('validation.required'),

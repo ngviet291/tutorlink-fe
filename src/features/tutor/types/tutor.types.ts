@@ -62,6 +62,7 @@ export interface TutorResponse {
 }
 
 export interface TutorFilter {
+  name?: string;
   subjectName?: string;
   province?: string;
   teachingMode?: TeachingMode | "";

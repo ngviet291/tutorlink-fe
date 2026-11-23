@@ -16,18 +16,15 @@ interface TrackingTokenRefresher {
 export class TrackingService {
   private readonly gateway: TrackingGateway
   private readonly tokens: ITokenStorage
-  private readonly useMock: boolean
   private readonly refresher?: TrackingTokenRefresher
 
   constructor(
     gateway: TrackingGateway,
     tokens: ITokenStorage,
-    useMock: boolean,
     refresher?: TrackingTokenRefresher,
   ) {
     this.gateway = gateway
     this.tokens = tokens
-    this.useMock = useMock
     this.refresher = refresher
   }
 
@@ -56,9 +53,6 @@ export class TrackingService {
   }
 
   async sendEvents(payload: TrackingBatchPayload, identity: TrackingIdentity): Promise<void> {
-    if (this.useMock) {
-      return
-    }
     const current = await this.captureIdentity()
     // Chỉ dùng token mới nếu vẫn thuộc tài khoản đã tạo sự kiện.
     let token = current.subject === identity.subject
