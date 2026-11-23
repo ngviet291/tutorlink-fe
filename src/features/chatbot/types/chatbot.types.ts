@@ -20,6 +20,7 @@ export interface ChatbotMessage {
   content: string;
   createdAt: string;
   isError?: boolean;
+  retryText?: string;
   posts?: ChatbotPost[];
 }
 

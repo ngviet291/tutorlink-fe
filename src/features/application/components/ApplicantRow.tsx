@@ -140,7 +140,7 @@ export function ApplicantRow({
               <Clock className="size-3.5" />
               {t("application.appliedAgo", { time: timeAgo(a.appliedAt) })}
             </p>
-            {/* Đơn ACCEPTED có expiresAt do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
+          {/* Đơn ACCEPTED có expiresAt do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
             {a.applicationStatus === "ACCEPTED" && a.expiresAt && (
               <ExpiryCountdown
                 expiresAt={a.expiresAt}
