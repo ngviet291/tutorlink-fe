@@ -8,7 +8,16 @@ import {
 } from "@tanstack/react-query";
 import { queryKeys } from "@/constants/queryKeys";
 import { walletService } from "@/config/di/container";
-import type { TopUpPayload, TransactionFilter } from "../types/wallet.types";
+import type { TopUpPayload, TransactionFilter, WithdrawalBankDetails } from "../types/wallet.types";
+
+export function useUpdateWithdrawal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, details }: { id: string; details: WithdrawalBankDetails }) =>
+      walletService.updateWithdrawal(id, details),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.wallet.all }),
+  });
+}
 
 export function useWallet(enabled = true) {
   return useQuery({

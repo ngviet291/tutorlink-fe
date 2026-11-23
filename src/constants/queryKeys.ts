@@ -39,6 +39,9 @@ export const queryKeys = {
     quote: (applicationId: string) =>
       ["wallet", "quote", applicationId] as const,
   },
+  banks: {
+    all: ["banks"] as const,
+  },
   subjects: {
     all: ["subjects"] as const,
   },
