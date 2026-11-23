@@ -6,6 +6,7 @@ import type {
   TransactionFilter,
   TransactionResponse,
   WalletResponse,
+  WithdrawalBankDetails,
 } from "../types/wallet.types";
 
 export interface TransactionQueryGateway {
@@ -13,6 +14,7 @@ export interface TransactionQueryGateway {
 }
 
 export interface WalletGateway extends TransactionQueryGateway {
+  updateWithdrawal(id: string, details: WithdrawalBankDetails): Promise<TransactionResponse>;
   confirmDemoTopUp(id: string): Promise<TransactionResponse>;
   getWallet(): Promise<WalletResponse>;
   topUp(payload: TopUpPayload): Promise<TopUpResponse>;

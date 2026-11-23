@@ -13,11 +13,19 @@ import type {
   TransactionFilter,
   TransactionResponse,
   WalletResponse,
+  WithdrawalBankDetails,
 } from "../types/wallet.types";
 import type { WalletGateway } from "./wallet.gateway";
 
 /** Chỉ lớp này biết đường dẫn và cách gửi yêu cầu HTTP của ví. */
 export class HttpWalletGateway implements WalletGateway {
+  async updateWithdrawal(id: string, details: WithdrawalBankDetails): Promise<TransactionResponse> {
+    const dto = await this.http.patch<TransactionDto>(
+      `${PAYMENT_API_PATH}/wallet/withdraw/${id}`,
+      details,
+    );
+    return fromBeTransaction(dto);
+  }
   private readonly http: IHttpClient;
 
   constructor(http: IHttpClient) {

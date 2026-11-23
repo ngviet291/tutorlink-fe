@@ -8,6 +8,12 @@ export interface WalletResponse {
   balance: number;
 }
 
+export interface WithdrawalBankDetails {
+  bankAccountNumber: string;
+  bankName: string;
+  accountHolderName: string;
+}
+
 export interface TransactionResponse {
   id: string;
   transactionType: TransactionType;

@@ -1,8 +1,11 @@
 import type { WalletGateway } from "../api/wallet.gateway";
-import type { TopUpPayload, TransactionFilter } from "../types/wallet.types";
+import type { TopUpPayload, TransactionFilter, WithdrawalBankDetails } from "../types/wallet.types";
 
 /** Điều phối thao tác ví qua hợp đồng gateway, độc lập với HTTP. */
 export class WalletService {
+  updateWithdrawal(id: string, details: WithdrawalBankDetails) {
+    return this.gateway.updateWithdrawal(id, details);
+  }
   private readonly gateway: WalletGateway;
 
   constructor(gateway: WalletGateway) {

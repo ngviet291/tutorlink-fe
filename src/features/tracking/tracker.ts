@@ -13,9 +13,12 @@ declare global {
   }
 }
 
-const ENABLED = import.meta.env.VITE_TRACKING_ENABLED === 'true'
+const ENABLED = import.meta.env.VITE_TRACKING_ENABLED !== 'false'
 const GA_ID = import.meta.env.VITE_GA_ID
-const FLUSH_SECONDS = Number(import.meta.env.VITE_TRACKING_FLUSH_SECONDS) || 300
+const configuredFlushSeconds = Number(import.meta.env.VITE_TRACKING_FLUSH_SECONDS)
+const FLUSH_SECONDS = configuredFlushSeconds > 0
+  ? configuredFlushSeconds
+  : TRACKING.defaultFlushSeconds
 const FLUSH_MS = FLUSH_SECONDS * 1000
 
 let queue: QueuedEvent[] = []

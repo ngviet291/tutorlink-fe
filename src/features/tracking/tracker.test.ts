@@ -21,6 +21,16 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
+it('gửi sự kiện theo thời gian mặc định khi không cấu hình cờ tracking', async () => {
+  vi.stubEnv('VITE_TRACKING_ENABLED', '')
+  vi.stubEnv('VITE_TRACKING_FLUSH_SECONDS', '')
+  const tracker = await import('./tracker')
+  tracker.track('page_view', { path: '/', referrer: '' })
+  await vi.advanceTimersByTimeAsync(5000)
+  expect(service.sendEvents).toHaveBeenCalledOnce()
+  expect(service.sendEvents.mock.calls[0]![0].events[0].name).toBe('page_view')
+})
+
 it('giữ lại batch gửi lỗi để thử lại', async () => {
   const tracker = await import('./tracker')
   service.sendEvents.mockRejectedValueOnce(new Error('offline'))

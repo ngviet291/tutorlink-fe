@@ -1,5 +1,6 @@
 export const TRACKING = {
   endpoint: '/v1/tracking/events',
+  defaultFlushSeconds: 5,
   maxBatch: 50,
   maxQueue: 500,
   maxBodyBytes: 48_000,
