@@ -77,7 +77,9 @@ export function CertificateUpload({
     onChange(value.filter((_, i) => i !== index));
     if (pickSubject) {
       onFileSubjectIdsChange(
-        value.map((_, i) => fileSubjectIds[i] ?? "").filter((_, i) => i !== index),
+        value
+          .map((_, i) => fileSubjectIds[i] ?? "")
+          .filter((_, i) => i !== index),
       );
     }
   };
@@ -106,7 +108,8 @@ export function CertificateUpload({
                 type="button"
                 onClick={() => remove(i)}
                 aria-label={`Xóa ${p.file.name}`}
-                className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80">
+                className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+              >
                 <X className="size-3" />
               </button>
             </div>
@@ -121,7 +124,8 @@ export function CertificateUpload({
                   )
                 }
                 aria-label={`Môn của ${p.file.name}`}
-                className="w-full rounded-md border border-border bg-transparent px-1 py-1 text-xs">
+                className="w-full rounded-md border border-border bg-transparent px-1 py-1 text-xs"
+              >
                 <option value="">Chọn môn</option>
                 {subjectOptions.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -137,7 +141,8 @@ export function CertificateUpload({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-text-secondary transition-colors hover:border-primary hover:text-primary">
+            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-text-secondary transition-colors hover:border-primary hover:text-primary"
+          >
             <ImagePlus className="size-5" />
             Thêm ảnh
           </button>
@@ -154,7 +159,7 @@ export function CertificateUpload({
       />
 
       {message && (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-danger">
           {message}
         </p>
       )}

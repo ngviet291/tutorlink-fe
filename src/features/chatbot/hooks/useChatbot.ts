@@ -37,7 +37,7 @@ function classifyChatbotError(error: unknown): {
   const isUnexpectedChatbotError =
     (error instanceof ApiError &&
       status === 500 &&
-      error.message === UNEXPECTED_ERROR_MESSAGE) ||
+      (error.rawMessage ?? error.message) === UNEXPECTED_ERROR_MESSAGE) ||
     (axios.isAxiosError(error) &&
       status === 500 &&
       error.response?.data?.message === UNEXPECTED_ERROR_MESSAGE);
@@ -193,7 +193,9 @@ export function useChatbot() {
     (messageId: string) => {
       if (sendMutation.isPending) return;
 
-      const failedMessage = messages.find((message) => message.id === messageId);
+      const failedMessage = messages.find(
+        (message) => message.id === messageId,
+      );
       if (!failedMessage?.retryText) return;
 
       setMessages((prev) => prev.filter((message) => message.id !== messageId));

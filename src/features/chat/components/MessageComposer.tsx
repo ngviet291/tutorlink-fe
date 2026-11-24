@@ -73,7 +73,8 @@ export function MessageComposer({ channelId, onSend }: Props) {
   return (
     <form
       onSubmit={(e) => void submit(e)}
-      className="border-t border-border p-3">
+      className="border-t border-border p-3"
+    >
       {(file || uploadError) && (
         <div className="mb-2 flex items-center gap-2 text-sm">
           {file && (
@@ -97,13 +98,14 @@ export function MessageComposer({ channelId, onSend }: Props) {
                   type="button"
                   aria-label="Bỏ tệp đính kèm"
                   onClick={() => setFile(null)}
-                  className="absolute -right-2 -top-2 rounded-full bg-surface p-0.5 shadow ring-1 ring-border">
+                  className="absolute -right-2 -top-2 rounded-full bg-surface p-0.5 shadow ring-1 ring-border"
+                >
                   <X className="size-3.5" />
                 </button>
               )}
             </div>
           )}
-          {uploadError && <span className="text-red-500">{uploadError}</span>}
+          {uploadError && <span className="text-danger">{uploadError}</span>}
         </div>
       )}
 
@@ -114,7 +116,8 @@ export function MessageComposer({ channelId, onSend }: Props) {
           aria-label="Đính kèm tệp"
           disabled={upload.isPending}
           onClick={() => fileRef.current?.click()}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-background disabled:opacity-50">
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-background disabled:opacity-50"
+        >
           <Paperclip className="size-5" />
         </button>
 

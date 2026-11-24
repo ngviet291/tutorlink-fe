@@ -12,6 +12,7 @@ import {
 } from "@/constants/enums";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Button } from "@/shared/components/ui/Button";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { Input } from "@/shared/components/ui/Input";
 import { Select } from "@/shared/components/ui/Select";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
@@ -454,6 +455,11 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
   const { data: certificates = [], isLoading: certsLoading } =
     useMyCertificates();
   const [files, setFiles] = useState<Record<string, File[]>>({});
+  const [subjectToRemove, setSubjectToRemove] = useState<{
+    index: number;
+    subjectId: string;
+    subjectName: string;
+  } | null>(null);
   const { data: allSubjects = [] } = useSubjects();
 
   const form = useForm<FormValues>({
@@ -500,15 +506,15 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
       removeSubject(index);
       return;
     }
-    if (
-      !window.confirm(
-        `Xóa môn ${subjectName}? Khi lưu, thông tin và chứng chỉ của môn này sẽ bị xóa.`,
-      )
-    ) {
-      return;
-    }
+    setSubjectToRemove({ index, subjectId, subjectName });
+  };
+
+  const confirmRemoveSubject = () => {
+    if (!subjectToRemove) return;
+    const { index, subjectId } = subjectToRemove;
     removeSubject(index);
     setFiles(({ [subjectId]: _removed, ...rest }) => rest);
+    setSubjectToRemove(null);
   };
 
   const submit = handleSubmit(async (values) => {
@@ -523,7 +529,8 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
     // Hồ sơ đã duyệt: phải bổ sung đủ thì mới nhận lớp / đăng bài được
     if (data.verificationStatus === "APPROVED") {
       const lacking: string[] = [];
-      if (parseAreas(values.teachingAreasText).length === 0) lacking.push("khu vực nhận dạy");
+      if (parseAreas(values.teachingAreasText).length === 0)
+        lacking.push("khu vực nhận dạy");
       if (!values.educationLevels?.length) lacking.push("cấp học nhận dạy");
       if (!values.schedule?.length) lacking.push("lịch rảnh trong tuần");
       if (lacking.length > 0) {
@@ -677,6 +684,17 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
             : "Lưu hồ sơ"}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={subjectToRemove !== null}
+        onClose={() => setSubjectToRemove(null)}
+        onConfirm={confirmRemoveSubject}
+        danger
+        title={`Xóa môn ${subjectToRemove?.subjectName ?? ""}?`}
+        confirmText="Xóa môn học"
+        cancelText="Giữ lại"
+        description="Khi lưu hồ sơ, thông tin và chứng chỉ của môn này sẽ bị xóa."
+      />
     </form>
   );
 }
