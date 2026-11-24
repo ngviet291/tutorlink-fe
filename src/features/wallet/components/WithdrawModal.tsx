@@ -183,7 +183,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
           className="flex gap-2.5 rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm text-text"
         >
           <AlertTriangle
-            className="mt-0.5 size-5 shrink-0 text-warning"
+            className="mt-0.5 size-5 shrink-0 text-warning-text"
             aria-hidden="true"
           />
           <p>
@@ -214,7 +214,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
             </span>
           </label>
           {errors.confirmInformation && (
-            <p role="alert" className="mt-1 text-xs text-danger">
+            <p role="alert" className="mt-1 text-xs text-danger-text">
               {errors.confirmInformation.message}
             </p>
           )}

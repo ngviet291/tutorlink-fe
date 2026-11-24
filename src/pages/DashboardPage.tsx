@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
   BookOpenCheck,
+  CheckCircle2,
+  ClipboardList,
   FileText,
   Heart,
   Inbox,
@@ -13,17 +15,20 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/shared/components/ui/Button";
 import { Badge } from "@/shared/components/ui/Badge";
-import { EmptyState } from "@/shared/components/ui/EmptyState";
+import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { formatVnd } from "@/shared/utils/currency";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
-import { OfferList } from "@/features/application/components/OfferList";
+import { NextStepHint } from "@/features/application/components/NextStepHint";
 import {
+  useApplicationMutations,
   useConnections,
   useMyApplications,
 } from "@/features/application/hooks/useApplications";
+import { isFeePayer, isApplicant } from "@/features/application/util/applicant";
+import { needsMyAction } from "@/features/application/util/nextStep";
 import type { ApplicationResponse } from "@/features/application/types/application.types";
 import { useFavorites } from "@/features/favorite/hooks/useFavorites";
 import { useMyPosts } from "@/features/post/hooks/usePosts";
@@ -33,6 +38,8 @@ import { useMyTutorProfile } from "@/features/tutor/hooks/useTutors";
 import { PayFeeModal } from "@/features/wallet/components/PayFeeModal";
 import { useWallet } from "@/features/wallet/hooks/useWallet";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
+import { useToast } from "@/shared/hooks/useToast";
+import { getErrorMessage } from "@/shared/utils/errors";
 
 function Stat({
   icon: Icon,
@@ -61,6 +68,165 @@ function Stat({
     </div>
   );
   return to ? <Link to={to}>{body}</Link> : body;
+}
+
+function TodoSection({
+  userId,
+  isTutor,
+  onPay,
+}: {
+  userId: string;
+  isTutor: boolean;
+  onPay: (a: ApplicationResponse) => void;
+}) {
+  const toast = useToast();
+  const apps = useMyApplications();
+  const posts = useMyPosts();
+  const profile = useMyTutorProfile(isTutor);
+  const { confirm, decline } = useApplicationMutations();
+
+  // Đơn PENDING (chủ bài cần chọn) đã được gộp vào dòng "N ứng viên đang chờ bạn chọn" của bài,
+  // nên ở đây chỉ lấy đơn ACCEPTED (cần trả phí / xác nhận) để không bị lặp và không hiện nút sai.
+  const myApps = (apps.data ?? []).filter(
+    (a) => a.applicationStatus === "ACCEPTED" && needsMyAction(a, userId),
+  );
+  const postsWaiting = (posts.data?.pages.flatMap((p) => p.content) ?? []).filter(
+    (p) => p.status === "PUBLISHED" && (p.applicationCount ?? 0) > 0,
+  );
+  const profileRejected =
+    isTutor && profile.data?.verificationStatus === "REJECTED";
+  const total = myApps.length + postsWaiting.length + (profileRejected ? 1 : 0);
+
+  const isLoading = apps.isLoading || posts.isLoading;
+  const isError = apps.isError || posts.isError;
+  const retry = () => {
+    if (apps.isError) void apps.refetch();
+    if (posts.isError) void posts.refetch();
+  };
+
+  return (
+    <section
+      aria-labelledby="todo-heading"
+      className="rounded-2xl border-2 border-primary/40 bg-primary-light/60 p-4 sm:p-5"
+    >
+      <h2
+        id="todo-heading"
+        className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text"
+      >
+        <ClipboardList className="size-5 text-primary" aria-hidden="true" />
+        Việc cần xử lý
+        {total > 0 && (
+          <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-white">
+            {total}
+          </span>
+        )}
+      </h2>
+
+      {isLoading ? (
+        <Skeleton className="h-20 w-full" />
+      ) : isError ? (
+        <ErrorState
+          className="py-6"
+          message="Không tải được danh sách việc cần xử lý. Vui lòng thử lại."
+          onRetry={retry}
+        />
+      ) : total === 0 ? (
+        <p className="flex items-center gap-2 py-2 text-sm text-text-secondary">
+          <CheckCircle2 className="size-5 text-success-text" aria-hidden="true" />
+          Bạn đã xử lý hết mọi việc. Khi có việc mới, nó sẽ hiện ở đây.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {profileRejected && (
+            <li className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-bold text-primary">
+                Hồ sơ gia sư bị từ chối — cập nhật và gửi lại để được duyệt
+              </p>
+              <Link to={ROUTES.TUTOR_PROFILE}>
+                <Button size="sm">Cập nhật hồ sơ</Button>
+              </Link>
+            </li>
+          )}
+
+          {postsWaiting.map((p) => (
+            <li
+              key={p.id}
+              className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-text">{p.title}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-primary">
+                  <Users className="size-4 shrink-0" aria-hidden="true" />
+                  Có {p.applicationCount} ứng viên đang chờ bạn chọn
+                </p>
+              </div>
+              <Link to={ROUTES.POST_DETAIL(p.id)}>
+                <Button size="sm">Xem ứng viên</Button>
+              </Link>
+            </li>
+          ))}
+
+          {myApps.map((a) => {
+            const accepted = a.applicationStatus === "ACCEPTED";
+            const canPay = accepted && !a.paid && isFeePayer(a, userId);
+            const canConfirm = accepted && Boolean(a.paid) && isApplicant(a, userId);
+            return (
+              <li
+                key={a.id}
+                className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <Link
+                    to={ROUTES.POST_DETAIL(a.post.id)}
+                    className="block truncate font-semibold text-text hover:text-primary"
+                  >
+                    {a.post.title}
+                  </Link>
+                  <NextStepHint application={a} userId={userId} className="mt-1" />
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  {canPay && (
+                    <>
+                      <Button size="sm" onClick={() => onPay(a)}>
+                        Thanh toán phí
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        loading={decline.isPending && decline.variables === a.id}
+                        onClick={() =>
+                          decline.mutate(a.id, {
+                            onSuccess: () => toast.success("Đã từ chối lời mời"),
+                            onError: (e) => toast.error(getErrorMessage(e)),
+                          })
+                        }
+                      >
+                        Từ chối
+                      </Button>
+                    </>
+                  )}
+                  {canConfirm && (
+                    <Button
+                      size="sm"
+                      loading={confirm.isPending && confirm.variables === a.id}
+                      onClick={() =>
+                        confirm.mutate(a.id, {
+                          onSuccess: () => toast.success("Đã xác nhận lớp học"),
+                          onError: (e) => toast.error(getErrorMessage(e)),
+                        })
+                      }
+                    >
+                      Xác nhận lớp học
+                    </Button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
 }
 
 function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
@@ -148,30 +314,30 @@ export default function DashboardPage() {
         }
       />
 
-      {isTutor &&
-        profile.data &&
-        profile.data.verificationStatus !== "APPROVED" && (
-          <Link
-            to={ROUTES.TUTOR_PROFILE}
-            className="rounded-2xl bg-amber-100 p-4 text-sm font-semibold text-amber-900 hover:opacity-90 dark:bg-amber-500/20 dark:text-amber-200"
-          >
-            {profile.data.verificationStatus === "PENDING"
-              ? "Hồ sơ gia sư đang chờ duyệt — xem chi tiết →"
-              : "Hồ sơ gia sư bị từ chối — xem ghi chú và cập nhật →"}
-          </Link>
-        )}
+      {/* 1. Việc cần xử lý — luôn ở đầu trang */}
+      <TodoSection userId={user.id} isTutor={isTutor} onPay={setOffer} />
 
+      {isTutor && profile.data?.verificationStatus === "PENDING" && (
+        <Link
+          to={ROUTES.TUTOR_PROFILE}
+          className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm font-semibold text-text hover:opacity-90"
+        >
+          Hồ sơ gia sư đang chờ duyệt — xem chi tiết →
+        </Link>
+      )}
+
+      {/* 2. Thống kê */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           icon={FileText}
           label="Bài đăng của tôi"
-          value={posts.data ? myPosts.length : undefined}
+          value={posts.isError ? "—" : posts.data ? myPosts.length : undefined}
           to={ROUTES.MY_POSTS}
         />
         <Stat
           icon={Users}
           label="Đơn đã ứng tuyển"
-          value={apps.data ? apps.data.length : undefined}
+          value={apps.isError ? "—" : apps.data ? apps.data.length : undefined}
           to={ROUTES.MY_APPLICATIONS}
         />
 
@@ -179,7 +345,13 @@ export default function DashboardPage() {
           <Stat
             icon={Wallet}
             label="Số dư ví"
-            value={wallet.data ? formatVnd(wallet.data.balance) : undefined}
+            value={
+              wallet.isError
+                ? "—"
+                : wallet.data
+                  ? formatVnd(wallet.data.balance)
+                  : undefined
+            }
             to={ROUTES.WALLET}
           />
         ) : (
@@ -188,9 +360,11 @@ export default function DashboardPage() {
             label="Gia sư yêu thích"
             value={
               isStudent
-                ? favorites.data
-                  ? favorites.data.length
-                  : undefined
+                ? favorites.isError
+                  ? "—"
+                  : favorites.data
+                    ? favorites.data.length
+                    : undefined
                 : 0
             }
             to={ROUTES.FAVORITES}
@@ -199,13 +373,18 @@ export default function DashboardPage() {
         <Stat
           icon={Inbox}
           label="Thông báo chưa đọc"
-          value={notifications.data ? unread : undefined}
+          value={
+            notifications.isError
+              ? "—"
+              : notifications.data
+                ? unread
+                : undefined
+          }
           to={ROUTES.NOTIFICATIONS}
         />
       </div>
 
-      {isTutor && <OfferList onPay={setOffer} />}
-
+      {/* 3. Hoạt động gần đây */}
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-extrabold text-text">Bài đăng gần đây</h2>
@@ -218,8 +397,26 @@ export default function DashboardPage() {
         </div>
         {posts.isLoading ? (
           <Skeleton className="h-24 w-full" />
+        ) : posts.isError ? (
+          <ErrorState
+            className="py-8"
+            message="Không tải được bài đăng. Vui lòng thử lại."
+            onRetry={() => void posts.refetch()}
+          />
         ) : recentPosts.length === 0 ? (
-          <EmptyState title="Bạn chưa có bài đăng" />
+          <EmptyState
+            className="py-8"
+            title="Bạn chưa có bài đăng"
+            description="Đăng bài đầu tiên để bắt đầu nhận ứng viên."
+            action={
+              <Link to={ROUTES.POST_CREATE}>
+                <Button size="sm">
+                  <Plus className="size-4" />{" "}
+                  {isTutor ? "Đăng tìm học viên" : "Đăng bài tìm gia sư"}
+                </Button>
+              </Link>
+            }
+          />
         ) : (
           <ul className="flex flex-col gap-2">
             {recentPosts.map((p) => (
@@ -232,7 +429,8 @@ export default function DashboardPage() {
                     {p.title}
                   </span>
                   <span className="flex shrink-0 items-center gap-2 text-xs text-text-secondary">
-                    <Users className="size-3.5" /> {p.applicationCount ?? 0}
+                    <Users className="size-3.5" aria-hidden="true" />{" "}
+                    {p.applicationCount ?? 0}
                     <StatusBadge kind="post" status={p.status} />
                   </span>
                 </Link>
@@ -244,15 +442,29 @@ export default function DashboardPage() {
 
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text">
-          <BookOpenCheck className="size-5 text-primary" />{" "}
+          <BookOpenCheck className="size-5 text-primary" aria-hidden="true" />{" "}
           {isTutor ? "Lớp đang dạy" : "Lớp đã kết nối"}
         </h2>
         {connections.isLoading ? (
           <Skeleton className="h-20 w-full" />
+        ) : connections.isError ? (
+          <ErrorState
+            className="py-8"
+            message="Không tải được danh sách lớp. Vui lòng thử lại."
+            onRetry={() => void connections.refetch()}
+          />
         ) : !connections.data?.length ? (
           <EmptyState
+            className="py-8"
             title="Chưa có lớp nào được kết nối"
             description="Lớp sẽ xuất hiện ở đây sau khi gia sư thanh toán phí nhận lớp."
+            action={
+              <Link to={isTutor ? ROUTES.FIND_CLASS : ROUTES.FIND_TUTOR}>
+                <Button size="sm">
+                  {isTutor ? "Tìm lớp ngay" : "Tìm gia sư"}
+                </Button>
+              </Link>
+            }
           />
         ) : (
           <ul className="flex flex-col gap-3">

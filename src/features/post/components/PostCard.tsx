@@ -136,7 +136,7 @@ export function PostCard({
               title="Gỡ bài"
               aria-label="Gỡ bài"
               onClick={handleClick(onRemove)}
-              className="rounded-md p-1 text-red-600 hover:bg-red-50"
+              className="flex size-10 items-center justify-center rounded-md text-danger-text hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-danger"
             >
               <Ban className="size-4" />
             </button>

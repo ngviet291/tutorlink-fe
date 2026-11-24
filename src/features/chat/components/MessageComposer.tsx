@@ -15,9 +15,6 @@ interface Props {
   onSend: (input: SendMessageInput) => void;
 }
 
-const nowVN = () =>
-  new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
-
 export function MessageComposer({ channelId, onSend }: Props) {
   const [value, setValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -41,7 +38,6 @@ export function MessageComposer({ channelId, onSend }: Props) {
     !upload.isPending && (value.trim().length > 0 || file !== null);
 
   const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
-    console.log("[PICK]", nowVN());
     const picked = e.target.files?.[0];
     e.target.value = ""; // cho phép chọn lại đúng file đó
     if (!picked) return;
@@ -51,7 +47,6 @@ export function MessageComposer({ channelId, onSend }: Props) {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log("[Submit]", nowVN());
     if (!canSend) return;
     setUploadError(null);
 
@@ -73,8 +68,7 @@ export function MessageComposer({ channelId, onSend }: Props) {
   return (
     <form
       onSubmit={(e) => void submit(e)}
-      className="border-t border-border p-3"
-    >
+      className="border-t border-border p-3">
       {(file || uploadError) && (
         <div className="mb-2 flex items-center gap-2 text-sm">
           {file && (
@@ -98,14 +92,13 @@ export function MessageComposer({ channelId, onSend }: Props) {
                   type="button"
                   aria-label="Bỏ tệp đính kèm"
                   onClick={() => setFile(null)}
-                  className="absolute -right-2 -top-2 rounded-full bg-surface p-0.5 shadow ring-1 ring-border"
-                >
+                  className="absolute -right-2 -top-2 rounded-full bg-surface p-0.5 shadow ring-1 ring-border">
                   <X className="size-3.5" />
                 </button>
               )}
             </div>
           )}
-          {uploadError && <span className="text-danger">{uploadError}</span>}
+          {uploadError && <span className="text-danger-text">{uploadError}</span>}
         </div>
       )}
 
@@ -116,8 +109,7 @@ export function MessageComposer({ channelId, onSend }: Props) {
           aria-label="Đính kèm tệp"
           disabled={upload.isPending}
           onClick={() => fileRef.current?.click()}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-background disabled:opacity-50"
-        >
+          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-background disabled:opacity-50">
           <Paperclip className="size-5" />
         </button>
 

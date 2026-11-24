@@ -173,7 +173,7 @@ export default function RegisterTutorPage() {
               render={({ field }) => (
                 <fieldset className="flex flex-col gap-2">
                   <legend className="text-sm font-medium text-text">
-                    Cấp học nhận dạy <span className="text-danger">*</span>
+                    Cấp học nhận dạy <span className="text-danger-text">*</span>
                   </legend>
                   <div className="flex flex-wrap gap-2">
                     {[...EDUCATION_LEVELS, "OTHER" as EducationLevel].map((lv) => {
@@ -205,7 +205,7 @@ export default function RegisterTutorPage() {
                     })}
                   </div>
                   {errors.teachingLevels && (
-                    <p role="alert" className="text-xs text-danger">
+                    <p role="alert" className="text-xs text-danger-text">
                       {errors.teachingLevels.message}
                     </p>
                   )}
@@ -228,7 +228,7 @@ export default function RegisterTutorPage() {
               render={({ field }) => (
                 <fieldset className="flex flex-col gap-2">
                   <legend className="text-sm font-medium text-text">
-                    Môn giảng dạy <span className="text-danger">*</span>
+                    Môn giảng dạy <span className="text-danger-text">*</span>
                   </legend>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {subjects.map((s) => {
@@ -261,7 +261,7 @@ export default function RegisterTutorPage() {
                     })}
                   </div>
                   {errors.subjectIds && (
-                    <p role="alert" className="text-xs text-danger">
+                    <p role="alert" className="text-xs text-danger-text">
                       {errors.subjectIds.message}
                     </p>
                   )}
@@ -321,7 +321,7 @@ export default function RegisterTutorPage() {
           {registerMutation.isError && (
             <p
               role="alert"
-              className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300"
+              className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
             >
               {getErrorMessage(registerMutation.error)}
             </p>

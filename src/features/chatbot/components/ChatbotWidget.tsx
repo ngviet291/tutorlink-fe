@@ -143,7 +143,7 @@ function ConfirmClear({
           })}
         </p>
         {failed && (
-          <p role="alert" className="mt-2 text-xs text-red-600">
+          <p role="alert" className="mt-2 text-xs text-danger-text">
             {t("chatbot.clear.error", {
               defaultValue: "Không xóa được cuộc trò chuyện. Vui lòng thử lại.",
             })}
@@ -163,7 +163,7 @@ function ConfirmClear({
             type="button"
             onClick={onConfirm}
             disabled={isClearing}
-            className="flex cursor-pointer items-center gap-2 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex cursor-pointer items-center gap-2 rounded-lg bg-danger px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isClearing && <Spinner size="sm" />}Xóa
           </button>
@@ -343,7 +343,7 @@ export function ChatbotWidget() {
                 </div>
               ) : historyError ? (
                 <div
-                  className="py-4 text-center text-sm text-red-600"
+                  className="py-4 text-center text-sm text-danger-text"
                   role="alert"
                 >
                   {historyError}

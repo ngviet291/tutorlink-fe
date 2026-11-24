@@ -19,7 +19,7 @@ export function RatingStars({ value, max = 5, size = 'sm', className = '', showV
           key={i}
           className={`${sizeClass[size]} ${
             i < Math.round(value)
-              ? 'fill-amber-400 text-amber-400'
+              ? 'fill-warning text-warning'
               : 'fill-none text-border'
           }`}
         />

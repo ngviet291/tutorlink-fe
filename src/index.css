@@ -17,6 +17,10 @@
   --color-success: #22C55E;
   --color-danger: #EF4444;
   --color-warning: #F59E0B;
+  /* Biến thể dùng cho CHỮ: đủ tương phản 4.5:1 trên nền sáng (màu gốc chỉ dùng cho nền/icon) */
+  --color-success-text: #15803D;
+  --color-warning-text: #B45309;
+  --color-danger-text: #B91C1C;
   --color-info: #3B82F6;
   --color-online: #22C55E;
   --color-offline: #6B7280;
@@ -36,6 +40,9 @@
   --color-text-secondary: #C4A090;
   --color-surface-secondary: #2A1810;
   --color-text-tertiary: #8F7366;
+  --color-success-text: #22C55E;
+  --color-warning-text: #F59E0B;
+  --color-danger-text: #F87171;
 }
 
 @theme inline {
@@ -53,6 +60,9 @@
   --color-success: var(--color-success);
   --color-danger: var(--color-danger);
   --color-warning: var(--color-warning);
+  --color-success-text: var(--color-success-text);
+  --color-warning-text: var(--color-warning-text);
+  --color-danger-text: var(--color-danger-text);
   --color-info: var(--color-info);
   --color-online: var(--color-online);
   --color-offline: var(--color-offline);

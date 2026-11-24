@@ -11,9 +11,9 @@ const LABEL: Record<RealtimeStatus, string> = {
 
 const DOT: Record<RealtimeStatus, string> = {
   connected: 'bg-online',
-  connecting: 'animate-pulse bg-yellow-400',
+  connecting: 'animate-pulse bg-warning',
   disconnected: 'bg-text-secondary',
-  error: 'bg-red-500',
+  error: 'bg-danger',
 }
 
 /** Chấm + nhãn trạng thái kết nối realtime. */

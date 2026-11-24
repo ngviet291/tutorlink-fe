@@ -54,6 +54,11 @@ export function WalletCard({
           <ArrowDownToLine className="size-4" /> Rút tiền
         </Button>
       </div>
+      {data && data.balance < 10000 && (
+        <p className="mt-3 text-sm text-white/90">
+          Cần số dư tối thiểu 10,000 VND để rút tiền.
+        </p>
+      )}
     </section>
   );
 }

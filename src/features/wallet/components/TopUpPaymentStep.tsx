@@ -40,8 +40,8 @@ function Result({
       <span
         className={
           success
-            ? "flex size-20 items-center justify-center rounded-full bg-green-600/10 text-green-600"
-            : "flex size-20 items-center justify-center rounded-full bg-danger/10 text-danger"
+            ? "flex size-20 items-center justify-center rounded-full bg-success/10 text-success-text"
+            : "flex size-20 items-center justify-center rounded-full bg-danger/10 text-danger-text"
         }>
         <Icon className="size-11" />
       </span>
@@ -98,7 +98,7 @@ export function TopUpPaymentStep({
       {isDemo && (
         <p
           role="status"
-          className="w-full rounded-xl bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-600">
+          className="w-full rounded-xl bg-warning/10 px-3 py-2 text-sm font-semibold text-warning-text">
           CHẾ ĐỘ DEMO: tiền giả lập, chỉ dùng với dữ liệu phát triển.
         </p>
       )}
@@ -120,7 +120,7 @@ export function TopUpPaymentStep({
               className="size-60 rounded-2xl border border-border bg-white object-contain p-3 shadow-sm"
             />
           ) : (
-            <p className="text-sm text-danger">
+            <p className="text-sm text-danger-text">
               Chưa nhận được mã QR. Vui lòng đóng và thử lại.
             </p>
           )}
@@ -146,7 +146,7 @@ export function TopUpPaymentStep({
             ))}
           </ol>
 
-          <p className="w-full rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-600">
+          <p className="w-full rounded-xl bg-warning/10 px-3 py-2 text-xs text-warning-text">
             Chuyển đúng số tiền và không sửa nội dung. Chuyển sai số tiền sẽ cần
             đối soát thủ công.
           </p>
@@ -174,7 +174,7 @@ export function TopUpPaymentStep({
 
       {expired ? (
         <div role="alert" className="flex w-full flex-col items-center gap-2">
-          <p className="text-sm text-amber-600">
+          <p className="text-sm text-warning-text">
             Chưa nhận được thanh toán. Nếu bạn đã chuyển tiền, hãy kiểm tra lại
             sau ít phút.
           </p>
@@ -184,7 +184,7 @@ export function TopUpPaymentStep({
         </div>
       ) : statusError ? (
         <div role="alert" className="flex w-full flex-col items-center gap-2">
-          <p className="text-sm text-danger">{statusError}</p>
+          <p className="text-sm text-danger-text">{statusError}</p>
           <Button variant="outline" fullWidth onClick={onRecheck}>
             Kiểm tra lại
           </Button>

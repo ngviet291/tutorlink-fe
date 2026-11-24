@@ -31,17 +31,6 @@ export function OfferList({ onPay }: Props) {
     const isPaid = a.paid || a.transactionStatus === 'SUCCESS';
     const shouldShow = a.applicationStatus === 'ACCEPTED' && !isPaid;
     
-    // Debug: log để kiểm tra
-    if (a.applicationStatus === 'ACCEPTED') {
-      console.log('Application:', a.id, {
-        status: a.applicationStatus,
-        paid: a.paid,
-        transactionStatus: a.transactionStatus,
-        isPaid,
-        shouldShow,
-      });
-    }
-    
     return shouldShow;
   }) ?? [];
 
@@ -56,17 +45,17 @@ export function OfferList({ onPay }: Props) {
   }
 
   return (
-    <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
-      <h2 className="mb-3 flex items-center gap-2 font-extrabold text-amber-900 dark:text-amber-200">
+    <section className="rounded-2xl border border-warning/40 bg-warning/10 p-4">
+      <h2 className="mb-3 flex items-center gap-2 font-extrabold text-text">
         <CheckCircle className="size-5" />
         {t('application.offersTitle', { count: offers.length })}
       </h2>
-      <p className="mb-4 text-xs text-amber-800 dark:text-amber-300">{t('application.offersDesc')}</p>
+      <p className="mb-4 text-xs text-text-secondary">{t('application.offersDesc')}</p>
       <ul className="flex flex-col gap-3">
         {offers.map((a) => (
           <li
             key={a.id}
-            className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-white p-3 dark:border-amber-500/30 dark:bg-surface sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
               <p className="truncate font-bold text-text">{a.post.title}</p>
@@ -75,7 +64,7 @@ export function OfferList({ onPay }: Props) {
               </p>
               {/* Hạn cuối do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
               {a.paid && isFeePayer(a, user?.id) && (
-                <p className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <p className="mt-1 text-xs font-semibold text-success-text">
                   Đã thanh toán — chờ học viên xác nhận
                 </p>
               )}

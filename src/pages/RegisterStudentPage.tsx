@@ -92,7 +92,7 @@ export default function RegisterStudentPage() {
           {registerMutation.isError && (
             <p
               role="alert"
-              className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300"
+              className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
             >
               {getErrorMessage(registerMutation.error)}
             </p>

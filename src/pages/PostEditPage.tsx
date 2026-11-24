@@ -22,7 +22,13 @@ export default function PostEditPage() {
   const { id = "" } = useParams<{ id: string }>();
   const user = useAppSelector((s) => s.auth.user);
 
-  const { data: post, isLoading, isError } = usePostDetail(id, Boolean(user));
+  const {
+    data: post,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = usePostDetail(id, Boolean(user));
 
   const { updatePost, publish } = usePostMutations();
 
@@ -33,7 +39,15 @@ export default function PostEditPage() {
         payload,
       });
       if (!asDraft) {
-        await publish.mutateAsync(id);
+        try {
+          await publish.mutateAsync(id);
+        } catch (publishErr) {
+          // Thay đổi đã được lưu; chỉ bước đăng công khai thất bại.
+          toast.error(
+            `Đã lưu thay đổi nhưng chưa đăng được bài. ${getErrorMessage(publishErr)}`,
+          );
+          return undefined;
+        }
       }
 
       toast.success(asDraft ? t("post.draftSaved") : t("post.publishSuccess"));
@@ -48,14 +62,27 @@ export default function PostEditPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
+      <div
+        role="status"
+        aria-label="Đang tải bài đăng"
+        className="flex min-h-[60vh] items-center justify-center"
+      >
         <Spinner size="lg" />
       </div>
     );
   }
 
   if (isError || !post) {
-    return <ErrorState message={t("post.notFound")} />;
+    return (
+      <ErrorState
+        message={
+          isError && (error as { status?: number } | null)?.status !== 404
+            ? getErrorMessage(error)
+            : t("post.notFound")
+        }
+        onRetry={() => void refetch()}
+      />
+    );
   }
 
   return (

@@ -57,9 +57,9 @@ export function ExpiryCountdown({
   // < 5 phút còn lại -> màu cảnh báo; đã hết -> đỏ.
   const urgent = !expired && remaining != null && remaining < 5 * 60 * 1000;
   const color = expired
-    ? "text-red-500"
+    ? "text-danger-text"
     : urgent
-      ? "text-amber-600 dark:text-amber-400"
+      ? "text-warning-text"
       : "text-text-secondary";
 
   return (

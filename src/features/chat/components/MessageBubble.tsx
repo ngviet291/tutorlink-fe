@@ -94,7 +94,7 @@ export function MessageBubble({
               ? "rounded-br-md bg-primary text-white"
               : "rounded-bl-md border border-border bg-surface text-text",
             sending && "opacity-60",
-            failed && "bg-red-500",
+            failed && "bg-danger",
           )}>
           {message.content}
         </p>
@@ -102,8 +102,8 @@ export function MessageBubble({
       <div className="mt-0.5 flex items-center gap-1 text-[10px] text-text-secondary">
         {failed ? (
           <>
-            <AlertCircle className="size-3 text-red-500" aria-hidden="true" />
-            <span className="text-red-500">Gửi thất bại</span>
+            <AlertCircle className="size-3 text-danger-text" aria-hidden="true" />
+            <span className="text-danger-text">Gửi thất bại</span>
             <button
               type="button"
               onClick={() => onResend(message)}

@@ -142,17 +142,17 @@ export function TopUpModal({ open, onClose }: Props) {
             {formatVnd(session.transaction.amount)}
           </p>
           {isDemo && (
-            <p role="status" className="text-sm font-semibold text-amber-600">
+            <p role="status" className="text-sm font-semibold text-warning-text">
               CHẾ ĐỘ DEMO — tiền giả lập, không thanh toán thật. Chỉ dùng
               với dữ liệu phát triển.
             </p>
           )}
           {done ? (
-            <p className="flex items-center gap-2 font-semibold text-green-600">
+            <p className="flex items-center gap-2 font-semibold text-success-text">
               <CheckCircle2 className="size-5" /> Nạp ví thành công
             </p>
           ) : failed ? (
-            <p className="font-semibold text-danger">
+            <p className="font-semibold text-danger-text">
               Giao dịch không thành công. Vui lòng thử lại.
             </p>
           ) : (
@@ -170,7 +170,7 @@ export function TopUpModal({ open, onClose }: Props) {
                       className="size-52 rounded-xl border border-border bg-white object-contain p-2"
                     />
                   ) : (
-                    <p className="text-sm text-danger">
+                    <p className="text-sm text-danger-text">
                       Chưa nhận được mã QR. Vui lòng đóng và thử lại.
                     </p>
                   )}
@@ -187,7 +187,7 @@ export function TopUpModal({ open, onClose }: Props) {
                       <Copy className="size-3.5" />
                     </button>
                   )}
-                  <p className="text-xs text-amber-600">
+                  <p className="text-xs text-warning-text">
                     Chuyển đúng số tiền và không sửa nội dung. Chuyển sai số
                     tiền sẽ cần đối soát thủ công.
                   </p>
@@ -227,7 +227,7 @@ export function TopUpModal({ open, onClose }: Props) {
               )}
               {expired ? (
                 <div role="alert" className="flex flex-col items-center gap-2">
-                  <p className="text-sm text-amber-600">
+                  <p className="text-sm text-warning-text">
                     Chưa nhận được thanh toán. Nếu bạn đã chuyển tiền, hãy kiểm
                     tra lại sau ít phút.
                   </p>
@@ -242,7 +242,7 @@ export function TopUpModal({ open, onClose }: Props) {
                 </div>
               ) : status.isError ? (
                 <div role="alert">
-                  <p className="text-sm text-danger">
+                  <p className="text-sm text-danger-text">
                     {getErrorMessage(status.error)}
                   </p>
                   <Button

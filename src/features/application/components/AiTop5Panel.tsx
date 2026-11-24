@@ -45,7 +45,7 @@ export function AiTop5Panel({
       {isLoading ? (
         <Skeleton className="h-24 w-full" />
       ) : isError ? (
-        <p className="text-sm text-danger">{t("ai.unavailable")}</p>
+        <p className="text-sm text-danger-text">{t("ai.unavailable")}</p>
       ) : data?.items.length ? (
         <ul className="flex flex-col gap-2">
           {data.items.map((a) => (

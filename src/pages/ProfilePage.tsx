@@ -117,10 +117,14 @@ export default function ProfilePage() {
             aria-label="Đổi ảnh đại diện"
             disabled={uploadAvatar.isPending}
             onClick={() => fileRef.current?.click()}
-            className="group relative shrink-0 rounded-full disabled:opacity-60">
+            className="group relative shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60">
             <Avatar name={user.fullName} src={user.avatarUrl} size="xl" />
             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-              <Camera className="size-5" />
+              <Camera className="size-5" aria-hidden="true" />
+            </span>
+            {/* Huy hiệu luôn hiện để người dùng cảm ứng (không có hover) biết ảnh bấm đổi được */}
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border-2 border-surface bg-primary text-white">
+              <Camera className="size-3.5" aria-hidden="true" />
             </span>
           </button>
           <input
@@ -150,7 +154,7 @@ export default function ProfilePage() {
             label="Họ và tên"
             required
             error={info.formState.errors.fullName?.message}
-            {...info.register("fullName", { required: "Họ tên là bắt buộc" })}
+            {...info.register("fullName", { required: "Vui lòng nhập họ và tên" })}
           />
           <Input
             label="Email"
@@ -233,7 +237,7 @@ export default function ProfilePage() {
             autoComplete="current-password"
             required
             error={pw.formState.errors.currentPassword?.message}
-            {...pw.register("currentPassword", { required: "Bắt buộc" })}
+            {...pw.register("currentPassword", { required: "Vui lòng nhập mật khẩu hiện tại" })}
           />
           <Input
             label="Mật khẩu mới"
@@ -250,7 +254,7 @@ export default function ProfilePage() {
             required
             error={pw.formState.errors.confirm?.message}
             {...pw.register("confirm", {
-              required: "Bắt buộc",
+              required: "Vui lòng nhập lại mật khẩu mới",
               validate: (v) =>
                 v === pw.getValues("newPassword") || "Mật khẩu không khớp",
             })}

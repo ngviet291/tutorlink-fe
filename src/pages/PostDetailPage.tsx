@@ -56,6 +56,7 @@ export default function PostDetailPage() {
   const [closeOpen, setCloseOpen] = useState(false);
   const [applyOpen, setApplyOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const isAdmin = user?.role === "ADMIN";
   const isTutor = user?.role === "TUTOR";
@@ -69,6 +70,7 @@ export default function PostDetailPage() {
     data: post,
     isLoading,
     isError,
+    error,
     refetch,
   } = usePostDetail(id, Boolean(user), isAdmin);
 
@@ -88,7 +90,11 @@ export default function PostDetailPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
         <ErrorState
-          message="Không tìm thấy bài đăng hoặc bài đã bị gỡ."
+          message={
+            isError && (error as { status?: number } | null)?.status !== 404
+              ? getErrorMessage(error)
+              : "Không tìm thấy bài đăng hoặc bài đã bị gỡ."
+          }
           onRetry={() => void refetch()}
         />
       </div>
@@ -317,6 +323,13 @@ export default function PostDetailPage() {
             </Tooltip>
           )}
 
+          {/* Hiện lý do ngay trên trang (tooltip không dùng được trên cảm ứng) */}
+          {!isAuthor && !isAdmin && disabledReason && (
+            <p className="w-full text-sm text-text-secondary">
+              {disabledReason}
+            </p>
+          )}
+
           {!isAuthor && !isAdmin && user && !roleMatches && !disabledReason && (
             <p className="self-center text-xs text-text-secondary">
               {post.type === "FIND_TUTOR"
@@ -339,12 +352,7 @@ export default function PostDetailPage() {
               variant="outline"
               size="lg"
               loading={cancel.isPending}
-              onClick={() =>
-                cancel.mutate(myApplication.id, {
-                  onSuccess: () => toast.success("Đã hủy đăng ký"),
-                  onError: (e) => toast.error(getErrorMessage(e)),
-                })
-              }
+              onClick={() => setCancelOpen(true)}
             >
               <XCircle className="size-4" /> Hủy đăng ký
             </Button>
@@ -412,6 +420,30 @@ export default function PostDetailPage() {
         budgetUnit={post.budgetUnit}
         open={applyOpen}
         onClose={() => setApplyOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        title="Hủy đăng ký bài này?"
+        confirmText="Hủy đăng ký"
+        cancelText="Giữ đăng ký"
+        danger
+        loading={cancel.isPending}
+        onConfirm={() => {
+          if (!myApplication) return;
+          cancel.mutate(myApplication.id, {
+            onSuccess: () => {
+              setCancelOpen(false);
+              toast.success("Đã hủy đăng ký");
+            },
+            onError: (e) => {
+              setCancelOpen(false);
+              toast.error(getErrorMessage(e));
+            },
+          });
+        }}
+        description="Đơn đăng ký của bạn sẽ bị hủy và chủ bài sẽ không còn thấy bạn trong danh sách ứng viên."
       />
 
       <ConfirmDialog
