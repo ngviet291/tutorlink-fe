@@ -301,6 +301,7 @@ export function PostForm({
       {/* Title */}
       <Input
         label={t("post.title")}
+        required
         error={errors.title?.message}
         maxLength={TITLE_MAX}
         {...register("title", {
@@ -319,8 +320,10 @@ export function PostForm({
       {/* Content */}
       <Textarea
         label={t("post.description")}
+        required
         error={errors.content?.message}
-        rows={4}
+        hint={`Tối đa ${CONTENT_MAX} ký tự. Mô tả rõ mục tiêu, trình độ và lịch học mong muốn.`}
+        rows={5}
         maxLength={CONTENT_MAX}
         {...register("content", {
           required: t("validation.required"),
@@ -345,6 +348,7 @@ export function PostForm({
         render={({ field }) => (
           <Select
             label={t("post.subject")}
+        required
             error={errors.subjectId?.message}
             value={field.value}
             onChange={field.onChange}>
@@ -360,7 +364,7 @@ export function PostForm({
       />
 
       {/* Education level + teaching mode */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Controller
           name="educationLevel"
           control={control}
@@ -370,6 +374,7 @@ export function PostForm({
           render={({ field }) => (
             <Select
               label={t("post.educationLevel")}
+        required
               error={errors.educationLevel?.message}
               value={field.value}
               onChange={field.onChange}>
@@ -391,6 +396,7 @@ export function PostForm({
           render={({ field }) => (
             <Select
               label={t("post.teachingMode")}
+        required
               error={errors.teachingMode?.message}
               value={field.value}
               onChange={field.onChange}>
@@ -423,7 +429,7 @@ export function PostForm({
       />
 
       {/* Budget */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
           label={`Ngân sách tối thiểu (${budgetUnitLabel})`}
           type="number"
@@ -462,7 +468,7 @@ export function PostForm({
       </div>
 
       {/* Sessions + duration */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
           label={t("post.sessionsPerWeek")}
           type="number"
@@ -497,6 +503,7 @@ export function PostForm({
       {/* Deadline */}
       <Input
         label={t("post.deadline")}
+        required
         type="date"
         error={errors.deadline?.message}
         min={today}
@@ -515,6 +522,7 @@ export function PostForm({
             // API địa chỉ lỗi -> cho nhập tay
             <Input
               label={t("common.province")}
+              required={addressRequired}
               error={errors.address?.province?.message}
               {...register("address.province", requiredIfOffline)}
             />
@@ -526,6 +534,7 @@ export function PostForm({
               render={({ field }) => (
                 <Select
                   label={t("common.province")}
+                  required={addressRequired}
                   error={errors.address?.province?.message}
                   value={field.value ?? ""}
                   onChange={field.onChange}
@@ -544,10 +553,11 @@ export function PostForm({
             />
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {manualEntry ? (
               <Input
                 label="Phường / Xã"
+                required={addressRequired}
                 error={errors.address?.ward?.message}
                 maxLength={100}
                 {...register("address.ward", requiredIfOffline)}
@@ -560,6 +570,7 @@ export function PostForm({
                 render={({ field }) => (
                   <Select
                     label="Phường / Xã"
+                    required={addressRequired}
                     error={errors.address?.ward?.message}
                     value={field.value ?? ""}
                     onChange={field.onChange}
@@ -582,6 +593,7 @@ export function PostForm({
 
             <Input
               label="Số nhà, đường"
+              required={addressRequired}
               error={errors.address?.street?.message}
               maxLength={255}
               {...register("address.street", requiredIfOffline)}
@@ -591,7 +603,7 @@ export function PostForm({
       )}
 
       {/* Actions */}
-      <div className="flex gap-3 pt-2">
+      <div className="flex flex-col gap-3 pt-2 sm:flex-row">
         {isCreate ? (
           <>
             <Button

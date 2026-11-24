@@ -114,7 +114,7 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
             </span>
           </div>
           {showError && (
-            <p role="alert" className="mt-1 text-xs text-danger">
+            <p role="alert" className="mt-1 text-xs text-danger-text">
               Số tiền nạp từ {formatVnd(MIN)} đến {formatVnd(MAX)}
             </p>
           )}

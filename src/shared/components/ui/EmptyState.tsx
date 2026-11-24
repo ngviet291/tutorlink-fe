@@ -46,7 +46,7 @@ export function ErrorState({ message, onRetry, className = '' }: ErrorStateProps
   const { t } = useTranslation()
   return (
     <div className={`flex flex-col items-center justify-center gap-3 py-16 text-center ${className}`}>
-      <div className="mb-2 text-red-400 opacity-70">
+      <div className="mb-2 text-danger-text opacity-70">
         <AlertCircle className="w-10 h-10" />
       </div>
       <p className="text-base font-semibold text-text">{message ?? t('common.error')}</p>

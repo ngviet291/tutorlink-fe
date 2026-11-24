@@ -1,18 +1,16 @@
-// Error message strings used in ApiError constructor.
-// The CODE is what getErrorMessage maps to i18n; message is a fallback.
 export const ERROR_MESSAGES = {
-  NETWORK: 'Cannot connect to server.',
-  UNKNOWN: 'An error occurred.',
-  UNAUTHORIZED: 'Session expired. Please log in again.',
-  FORBIDDEN: 'You do not have permission to perform this action.',
-  NOT_FOUND: 'Requested resource not found.',
-  INVALID_CREDENTIALS: 'Incorrect email or password.',
-  EMAIL_EXISTS: 'This email is already registered.',
-  ALREADY_APPLIED: 'You have already applied to this post.',
-  OWN_POST: 'You cannot apply to your own post.',
-  TUTOR_NOT_APPROVED: 'Your tutor profile has not been approved yet.',
-  INSUFFICIENT_BALANCE: 'Insufficient wallet balance.',
-  ACCOUNT_LOCKED: 'Account locked. Please contact admin.',
-  AI_UNAVAILABLE: 'AI service temporarily unavailable.',
-  SUBJECT_IN_USE: 'Cannot delete a subject that is in use.',
-} as const
+  NETWORK: "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.",
+  UNKNOWN: "Đã xảy ra lỗi. Vui lòng thử lại.",
+  UNAUTHORIZED: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+  FORBIDDEN: "Bạn không có quyền thực hiện thao tác này.",
+  NOT_FOUND: "Không tìm thấy dữ liệu yêu cầu.",
+  INVALID_CREDENTIALS: "Email hoặc mật khẩu không đúng.",
+  EMAIL_EXISTS: "Email này đã được đăng ký.",
+  ALREADY_APPLIED: "Bạn đã ứng tuyển bài đăng này rồi.",
+  OWN_POST: "Bạn không thể ứng tuyển vào bài đăng của chính mình.",
+  TUTOR_NOT_APPROVED: "Hồ sơ gia sư của bạn chưa được duyệt.",
+  INSUFFICIENT_BALANCE: "Số dư ví không đủ.",
+  ACCOUNT_LOCKED: "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.",
+  AI_UNAVAILABLE: "Dịch vụ AI tạm thời không khả dụng.",
+  SUBJECT_IN_USE: "Không thể xóa môn học đang được sử dụng.",
+} as const;

@@ -84,10 +84,10 @@ export default function ForgotPasswordPage() {
               <p className="text-sm text-text-secondary mb-6">
                 {t('auth.checkEmail')}
               </p>
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-6 h-6 text-success-text" />
               </div>
-              <p className="text-green-600 font-medium">{t('auth.sendResetEmail')}</p>
+              <p className="text-success-text font-medium">{t('auth.sendResetEmail')}</p>
             </div>
           )}
 

@@ -16,11 +16,14 @@ import {
   type CommonRegisterValues,
 } from "@/features/auth/components/CommonRegisterFields";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
+import { EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL } from "@/constants/enums";
+import type { EducationLevel } from "@/shared/types/common.types";
 import { CertificateUpload } from "@/features/auth/components/CertificateUpload";
 
 interface TutorFormValues extends CommonRegisterValues {
   experienceYears: number;
   education: string;
+  teachingLevels: EducationLevel[];
   subjectIds: string[];
 }
 
@@ -69,6 +72,7 @@ export default function RegisterTutorPage() {
       ...COMMON_DEFAULTS,
       experienceYears: 0,
       education: "",
+      teachingLevels: [],
       subjectIds: [],
     },
   });
@@ -105,6 +109,7 @@ export default function RegisterTutorPage() {
         ...buildBasePayload(v),
         experienceYears: v.experienceYears,
         education: v.education,
+        teachingLevels: v.teachingLevels,
         subjectIds: v.subjectIds,
         // File thứ i thuộc môn thứ i: BE ghép đúng cho cả 1 môn lẫn nhiều môn
         certificates: v.subjectIds.map((id) => files[id][0]),
@@ -136,7 +141,7 @@ export default function RegisterTutorPage() {
           <Step
             no={2}
             title="Học vấn và kinh nghiệm"
-            hint="Kinh nghiệm riêng từng môn, giá và lịch dạy bạn sẽ bổ sung ở Hồ sơ giảng dạy sau khi đăng ký."
+            hint="Giới thiệu, khu vực, lịch rảnh, giá và kinh nghiệm từng môn bạn bổ sung ở Hồ sơ giảng dạy; cần hoàn thiện đủ sau khi được duyệt mới nhận lớp được."
           >
             <Input
               label="Trường / Học vấn"
@@ -159,6 +164,54 @@ export default function RegisterTutorPage() {
                 max: { value: 50, message: "Tối đa 50" },
               })}
             />
+            <Controller
+              name="teachingLevels"
+              control={control}
+              rules={{
+                validate: (v) => v.length > 0 || "Chọn ít nhất một cấp học",
+              }}
+              render={({ field }) => (
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="text-sm font-medium text-text">
+                    Cấp học nhận dạy <span className="text-danger-text">*</span>
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {[...EDUCATION_LEVELS, "OTHER" as EducationLevel].map((lv) => {
+                      const checked = field.value.includes(lv);
+                      return (
+                        <label
+                          key={lv}
+                          className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                            checked
+                              ? "border-primary bg-primary-light text-primary"
+                              : "border-border text-text-secondary hover:border-primary/50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() =>
+                              field.onChange(
+                                checked
+                                  ? field.value.filter((x) => x !== lv)
+                                  : [...field.value, lv],
+                              )
+                            }
+                            className="accent-primary"
+                          />
+                          {EDUCATION_LEVEL_LABEL[lv]}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {errors.teachingLevels && (
+                    <p role="alert" className="text-xs text-danger-text">
+                      {errors.teachingLevels.message}
+                    </p>
+                  )}
+                </fieldset>
+              )}
+            />
           </Step>
 
           <Step
@@ -175,7 +228,7 @@ export default function RegisterTutorPage() {
               render={({ field }) => (
                 <fieldset className="flex flex-col gap-2">
                   <legend className="text-sm font-medium text-text">
-                    Môn giảng dạy <span className="text-danger">*</span>
+                    Môn giảng dạy <span className="text-danger-text">*</span>
                   </legend>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {subjects.map((s) => {
@@ -208,7 +261,7 @@ export default function RegisterTutorPage() {
                     })}
                   </div>
                   {errors.subjectIds && (
-                    <p role="alert" className="text-xs text-danger">
+                    <p role="alert" className="text-xs text-danger-text">
                       {errors.subjectIds.message}
                     </p>
                   )}
@@ -268,7 +321,7 @@ export default function RegisterTutorPage() {
           {registerMutation.isError && (
             <p
               role="alert"
-              className="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300"
+              className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
             >
               {getErrorMessage(registerMutation.error)}
             </p>

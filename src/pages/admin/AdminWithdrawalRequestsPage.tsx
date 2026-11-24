@@ -99,7 +99,7 @@ export default function AdminWithdrawalRequestsPage() {
                       {formatDateTime(t.createdAt)}
                     </td>
                     <td className="font-medium text-text">{t.tutorName ?? t.tutorId ?? "—"}</td>
-                    <td className="pr-5 text-right font-semibold text-danger">
+                    <td className="pr-5 text-right font-semibold text-danger-text">
                       {formatVnd(t.amount)}
                     </td>
                     <td className="text-text-secondary">

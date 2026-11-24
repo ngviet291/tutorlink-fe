@@ -11,6 +11,7 @@ import { StatusBadge } from '@/shared/components/ui/StatusBadge'
 import { formatDate } from '@/shared/utils/date'
 import { OfferList } from '@/features/application/components/OfferList'
 import { ExpiryCountdown } from '@/features/application/components/ExpiryCountdown'
+import { NextStepHint } from '@/features/application/components/NextStepHint'
 import { useToast } from '@/shared/hooks/useToast'
 import { getErrorMessage } from '@/shared/utils/errors'
 import { useApplicationMutations, useMyApplications } from '@/features/application/hooks/useApplications'
@@ -62,8 +63,8 @@ export default function MyApplicationsPage() {
       />
       {user?.role === 'TUTOR' && <OfferList onPay={setOffer} />}
     
-      {isLoading ? <ListSkeleton /> : isError ? <ErrorState onRetry={() => void refetch()} /> : !data?.length ? (
-        <EmptyState title="Bạn chưa đăng ký lớp nào" action={<Link to={ROUTES.FIND_CLASS}><Button>Tìm lớp ngay</Button></Link>} />
+      {isLoading ? <ListSkeleton /> : isError ? <ErrorState message="Không tải được danh sách đơn. Vui lòng thử lại." onRetry={() => void refetch()} /> : !data?.length ? (
+        <EmptyState title={user?.role === 'TUTOR' ? 'Bạn chưa đăng ký lớp nào' : 'Bạn chưa ứng tuyển bài nào'} description="Các đơn của bạn và bước cần làm tiếp theo sẽ hiện ở đây." action={<Link to={ROUTES.FIND_CLASS}><Button>Tìm lớp ngay</Button></Link>} />
       ) : (
         <ul className="flex flex-col gap-3">
           {data.map((a) => (
@@ -71,6 +72,7 @@ export default function MyApplicationsPage() {
               <div className="min-w-0">
                 <Link to={ROUTES.POST_DETAIL(a.post.id)} state={{mine:true}} className="block truncate font-bold text-text hover:text-primary">{a.post.title}</Link>
                 <p className="mt-0.5 text-xs text-text-secondary">Đăng ký ngày {formatDate(a.appliedAt)}</p>
+                <NextStepHint application={a} userId={user?.id} className="mt-1.5" />
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <StatusBadge kind="application" status={a.applicationStatus} />

@@ -17,12 +17,12 @@ export function FormField({ label, htmlFor, error, hint, required, className, ch
       {label && (
         <label htmlFor={htmlFor} className="text-sm font-medium text-text">
           {label}
-          {required && <span className="ml-0.5 text-danger">*</span>}
+          {required && <span className="ml-0.5 text-danger-text">*</span>}
         </label>
       )}
       {children}
       {error ? (
-        <p role="alert" className="text-xs text-danger">
+        <p id={htmlFor ? `${htmlFor}-error` : undefined} role="alert" className="text-xs text-danger-text">
           {error}
         </p>
       ) : (

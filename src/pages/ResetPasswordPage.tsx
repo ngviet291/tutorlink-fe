@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{t('error.notFound')}</p>
+          <p className="text-danger-text mb-4">{t('error.notFound')}</p>
           <Link to={ROUTES.LOGIN} className="text-primary hover:underline">
             {t('auth.login')}
           </Link>

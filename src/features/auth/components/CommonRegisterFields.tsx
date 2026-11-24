@@ -139,7 +139,7 @@ function EmailVerificationFields() {
         </p>
       )}
       {sendCode.isError && (
-        <p role="alert" className="text-xs text-danger">
+        <p role="alert" className="text-xs text-danger-text">
           {getErrorMessage(sendCode.error)}
         </p>
       )}

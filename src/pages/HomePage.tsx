@@ -115,7 +115,7 @@ function Hero({ role }: { role?: string }) {
                   Toán · Lý · 5 năm kinh nghiệm
                 </p>
               </div>
-              <span className="ml-auto rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+              <span className="ml-auto rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success-text">
                 Phù hợp 94%
               </span>
             </div>
@@ -223,7 +223,7 @@ function Testimonials() {
         ))}
         <button
           type="button"
-          aria-label="Sau"
+          aria-label="Đánh giá tiếp theo"
           onClick={() => setI((i + 1) % TESTIMONIALS.length)}
           className="cursor-pointer rounded-full border border-border p-2 hover:bg-surface-hover"
         >

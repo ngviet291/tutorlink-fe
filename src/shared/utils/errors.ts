@@ -1,5 +1,5 @@
-import { ApiError } from "@/shared/types/api.types";
 import i18n from "@/app/i18n";
+import { resolveErrorMessage } from "@/config/http/apiError";
 
 const CODE_TO_I18N: Record<string, string> = {
   INVALID_CREDENTIALS: "error.invalidCredentials",
@@ -23,20 +23,14 @@ const CODE_TO_I18N: Record<string, string> = {
 };
 
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    if (error.code && CODE_TO_I18N[error.code]) {
-      return i18n.t(CODE_TO_I18N[error.code]);
-    }
-    if (error.status === 401) return i18n.t("error.unauthorized");
-    if (error.status === 403) return i18n.t("error.forbidden");
-    if (error.status === 404) return i18n.t("error.notFound");
-    if (error.message) return error.message;
+  const code =
+    error && typeof error === "object" && "code" in error
+      ? (error as { code?: unknown }).code
+      : undefined;
+
+  if (typeof code === "string" && CODE_TO_I18N[code]) {
+    const translated = i18n.t(CODE_TO_I18N[code]);
+    if (translated && translated !== CODE_TO_I18N[code]) return translated;
   }
-  if (error instanceof Error) {
-    if (error.message.includes("Network") || error.message.includes("fetch")) {
-      return i18n.t("error.network");
-    }
-    return error.message;
-  }
-  return i18n.t("error.unknown");
+  return resolveErrorMessage(error);
 }

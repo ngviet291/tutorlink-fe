@@ -48,7 +48,7 @@ export function PayFeeModal({ application, onClose }: Props) {
         {quote.isLoading || wallet.isLoading ? (
           <Skeleton className="h-24 w-full" />
         ) : quote.isError || wallet.isError ? (
-          <p role="alert" className="text-danger">
+          <p role="alert" className="text-danger-text">
             {getErrorMessage(quote.error ?? wallet.error)}
           </p>
         ) : (
@@ -66,7 +66,7 @@ export function PayFeeModal({ application, onClose }: Props) {
             <div className="my-1 border-t border-border" />
             <div className="flex justify-between text-sm">
               <span className="text-text-secondary">{t("wallet.afterBalance")}</span>
-              <span className={`font-bold ${insufficient ? "text-danger" : "text-text"}`}>
+              <span className={`font-bold ${insufficient ? "text-danger-text" : "text-text"}`}>
                 {fee > 0 ? formatVnd(balance - fee) : "—"}
               </span>
             </div>
@@ -74,7 +74,7 @@ export function PayFeeModal({ application, onClose }: Props) {
         )}
 
         {insufficient && (
-          <div className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
+          <div className="flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/10 p-3 text-sm text-danger-text">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" />
             {t("wallet.insufficientBalance")}
           </div>

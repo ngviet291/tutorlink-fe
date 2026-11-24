@@ -132,7 +132,7 @@ export default function AdminSubjectsPage() {
                   aria-label={`Xóa ${s.name}`}
                   onClick={() => setDeleting(s)}
                 >
-                  <Trash2 className="size-4 text-danger" />
+                  <Trash2 className="size-4 text-danger-text" />
                 </Button>
               </div>
             </li>
@@ -213,7 +213,7 @@ export default function AdminSubjectsPage() {
         {deletingInUse && (
           <p
             role="alert"
-            className="mt-3 rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 dark:bg-red-500/20 dark:text-red-300"
+            className="mt-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
           >
             {SUBJECT_IN_USE_MESSAGE}
           </p>

@@ -15,9 +15,6 @@ interface Props {
   onSend: (input: SendMessageInput) => void;
 }
 
-const nowVN = () =>
-  new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
-
 export function MessageComposer({ channelId, onSend }: Props) {
   const [value, setValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -41,7 +38,6 @@ export function MessageComposer({ channelId, onSend }: Props) {
     !upload.isPending && (value.trim().length > 0 || file !== null);
 
   const pickFile = (e: ChangeEvent<HTMLInputElement>) => {
-    console.log("[PICK]", nowVN());
     const picked = e.target.files?.[0];
     e.target.value = ""; // cho phép chọn lại đúng file đó
     if (!picked) return;
@@ -51,7 +47,6 @@ export function MessageComposer({ channelId, onSend }: Props) {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log("[Submit]", nowVN());
     if (!canSend) return;
     setUploadError(null);
 
@@ -103,7 +98,7 @@ export function MessageComposer({ channelId, onSend }: Props) {
               )}
             </div>
           )}
-          {uploadError && <span className="text-red-500">{uploadError}</span>}
+          {uploadError && <span className="text-danger-text">{uploadError}</span>}
         </div>
       )}
 

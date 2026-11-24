@@ -31,7 +31,7 @@ export function TutorCertificateGallery({ tutorId }: { tutorId: string }) {
 
   if (isLoading) return <p className="text-text-secondary">Đang tải chứng chỉ…</p>;
   if (isError)
-    return <p className="text-danger">Không tải được chứng chỉ</p>;
+    return <p className="text-danger-text">Không tải được chứng chỉ</p>;
   if (!data?.length) return <p className="text-text">Chưa có</p>;
 
   return (

@@ -39,7 +39,7 @@ export function Footer() {
             toàn quốc.
           </p>
           <div className="flex gap-3 text-text-secondary">
-            <a href="#" aria-label="Website" className={link}>
+            <a href="#" aria-label="Trang web TutorLink" className={link}>
               <Globe className="size-5" />
             </a>
             <Link to={ROUTES.CHAT_INBOX} aria-label="Tin nhắn" className={link}>

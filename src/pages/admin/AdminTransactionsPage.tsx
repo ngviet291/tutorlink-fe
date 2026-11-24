@@ -91,7 +91,7 @@ export default function AdminTransactionsPage() {
           />
         </div>
         {rangeInvalid ? (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="text-sm text-danger-text">
             Chọn đủ hai ngày, ngày bắt đầu không sau ngày kết thúc.
           </p>
         ) : !from || !to ? (
@@ -177,9 +177,9 @@ export default function AdminTransactionsPage() {
                     <td
                       className={`pr-4 text-right font-semibold ${
                         t.transactionType === "TOP_UP"
-                          ? "text-success"
+                          ? "text-success-text"
                           : t.transactionType === "WITHDRAW"
-                            ? "text-danger"
+                            ? "text-danger-text"
                             : ""
                       }`}
                     >

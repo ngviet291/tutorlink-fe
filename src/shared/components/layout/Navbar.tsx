@@ -89,7 +89,7 @@ export function Navbar() {
                     <button
                       type="button"
                       role="menuitem"
-                      className={cn(dropdownItemClass, 'text-danger')}
+                      className={cn(dropdownItemClass, 'text-danger-text')}
                       onClick={() => {
                         close()
                         logout.mutate(undefined, {

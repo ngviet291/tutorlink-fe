@@ -10,6 +10,8 @@ interface Props {
   onChange: (shortName: string) => void;
   disabled?: boolean;
   error?: boolean;
+  /** id gắn vào nút để <label htmlFor> trỏ tới được. */
+  id?: string;
 }
 
 function BankLogo({ bank }: { bank: Bank }) {
@@ -33,7 +35,7 @@ function BankLogo({ bank }: { bank: Bank }) {
 }
 
 /** Chọn ngân hàng: có logo, ô tìm kiếm, thay cho <select> mặc định. */
-export function BankSelect({ value, onChange, disabled, error }: Props) {
+export function BankSelect({ value, onChange, disabled, error, id }: Props) {
   const { data: banks = [], isLoading } = useBanks();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -73,8 +75,10 @@ export function BankSelect({ value, onChange, disabled, error }: Props) {
   return (
     <div ref={rootRef} className="relative">
       <button
+        id={id}
         type="button"
         disabled={disabled}
+        aria-invalid={error || undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
@@ -146,7 +150,9 @@ export function BankSelect({ value, onChange, disabled, error }: Props) {
                         {b.name}
                       </span>
                     </span>
-                    {active && <Check className="size-4 shrink-0 text-primary" />}
+                    {active && (
+                      <Check className="size-4 shrink-0 text-primary" />
+                    )}
                   </button>
                 </li>
               );

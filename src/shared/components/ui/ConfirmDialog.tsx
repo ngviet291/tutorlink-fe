@@ -1,21 +1,21 @@
-import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Modal } from './Modal'
-import { Button } from './Button'
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { Modal } from "./Modal";
+import { Button } from "./Button";
 
 interface ConfirmDialogProps {
-  open: boolean
-  onClose: () => void
-  onConfirm: () => void
-  title: string
-  description?: ReactNode
-  confirmLabel?: string
-  cancelLabel?: string
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  description?: ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
   /** alias của confirmLabel / cancelLabel */
-  confirmText?: string
-  cancelText?: string
-  danger?: boolean
-  loading?: boolean
+  confirmText?: string;
+  cancelText?: string;
+  danger?: boolean;
+  loading?: boolean;
 }
 
 export function ConfirmDialog({
@@ -31,25 +31,31 @@ export function ConfirmDialog({
   danger = false,
   loading = false,
 }: ConfirmDialogProps) {
-  const { t } = useTranslation()
+  const { t } = useTranslation();
 
   return (
-    <Modal open={open} onClose={onClose} title={title} maxWidth="max-w-sm">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={title}
+      maxWidth="max-w-sm"
+      busy={loading}
+    >
       {description && (
         <div className="mb-5 text-sm text-text-secondary">{description}</div>
       )}
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="ghost" onClick={onClose} disabled={loading}>
-          {cancelLabel ?? cancelText ?? t('common.cancel')}
+          {cancelLabel ?? cancelText ?? t("common.cancel")}
         </Button>
         <Button
-          variant={danger ? 'danger' : 'primary'}
+          variant={danger ? "danger" : "primary"}
           onClick={onConfirm}
           loading={loading}
         >
-          {confirmLabel ?? confirmText ?? t('common.confirm')}
+          {confirmLabel ?? confirmText ?? t("common.confirm")}
         </Button>
       </div>
     </Modal>
-  )
+  );
 }

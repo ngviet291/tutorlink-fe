@@ -14,6 +14,7 @@ import { useToast } from "@/shared/hooks/useToast";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { useApplicationMutations } from "../hooks/useApplications";
 import { ExpiryCountdown } from "./ExpiryCountdown";
+import { NextStepHint } from "./NextStepHint";
 import { formatVnd } from "@/shared/utils/currency";
 import { timeAgo } from "@/shared/utils/date";
 import type { ApplicationResponse } from "../types/application.types";
@@ -140,7 +141,8 @@ export function ApplicantRow({
               <Clock className="size-3.5" />
               {t("application.appliedAgo", { time: timeAgo(a.appliedAt) })}
             </p>
-          {/* Đơn ACCEPTED có expiresAt do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
+            <NextStepHint application={a} userId={user?.id} className="mt-2" />
+            {/* Đơn ACCEPTED có expiresAt do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
             {a.applicationStatus === "ACCEPTED" && a.expiresAt && (
               <ExpiryCountdown
                 expiresAt={a.expiresAt}

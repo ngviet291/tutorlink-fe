@@ -12,6 +12,7 @@ import {
 } from "@/constants/enums";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Button } from "@/shared/components/ui/Button";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { Input } from "@/shared/components/ui/Input";
 import { Select } from "@/shared/components/ui/Select";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
@@ -172,7 +173,7 @@ function CertificateItem({
         loading={deleting}
         onClick={onDelete}
       >
-        <Trash2 className="size-4 text-danger" />
+        <Trash2 className="size-4 text-danger-text" />
       </Button>
     </li>
   );
@@ -222,7 +223,7 @@ function SlotsEditor({ form }: { form: Form }) {
             })}
           />
           <Button variant="ghost" aria-label="Xóa ca" onClick={() => remove(i)}>
-            <Trash2 className="size-4 text-danger" />
+            <Trash2 className="size-4 text-danger-text" />
           </Button>
         </div>
       ))}
@@ -269,12 +270,13 @@ function CommonInfoCard({ form }: { form: Form }) {
       />
       <Input
         label="Khu vực nhận dạy"
+        required
         placeholder="VD: Gò Vấp, Quận 1, Thủ Đức (cách nhau bằng dấu phẩy)"
         {...register("teachingAreasText")}
       />
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium text-text">
-          Cấp học nhận dạy
+          Cấp học nhận dạy <span className="text-danger-text">*</span>
         </legend>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
           {TEACHING_LEVELS.map((level) => (
@@ -385,7 +387,7 @@ function SubjectCard({
           aria-label={`Xóa môn ${subjectName}`}
           onClick={onRemoveSubject}
         >
-          <Trash2 className="size-4 text-danger" />
+          <Trash2 className="size-4 text-danger-text" />
         </Button>
       </div>
 
@@ -414,7 +416,7 @@ function SubjectCard({
 
       <div className="flex flex-col gap-2 border-t border-border pt-4">
         <h4 className="text-sm font-medium text-text">
-          Chứng chỉ của môn này <span className="text-danger">*</span>
+          Chứng chỉ của môn này <span className="text-danger-text">*</span>
         </h4>
         {certificates.length > 0 ? (
           <ul className="flex flex-col gap-2">
@@ -453,6 +455,11 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
   const { data: certificates = [], isLoading: certsLoading } =
     useMyCertificates();
   const [files, setFiles] = useState<Record<string, File[]>>({});
+  const [subjectToRemove, setSubjectToRemove] = useState<{
+    index: number;
+    subjectId: string;
+    subjectName: string;
+  } | null>(null);
   const { data: allSubjects = [] } = useSubjects();
 
   const form = useForm<FormValues>({
@@ -499,15 +506,15 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
       removeSubject(index);
       return;
     }
-    if (
-      !window.confirm(
-        `Xóa môn ${subjectName}? Khi lưu, thông tin và chứng chỉ của môn này sẽ bị xóa.`,
-      )
-    ) {
-      return;
-    }
+    setSubjectToRemove({ index, subjectId, subjectName });
+  };
+
+  const confirmRemoveSubject = () => {
+    if (!subjectToRemove) return;
+    const { index, subjectId } = subjectToRemove;
     removeSubject(index);
     setFiles(({ [subjectId]: _removed, ...rest }) => rest);
+    setSubjectToRemove(null);
   };
 
   const submit = handleSubmit(async (values) => {
@@ -518,6 +525,17 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
     if (values.subjects.some((s) => !s.subjectId)) {
       toast.error("Hãy chọn môn học cho thẻ môn mới hoặc bấm Hủy");
       return;
+    }
+    // Hồ sơ đã duyệt: phải bổ sung đủ thì mới nhận lớp / đăng bài được
+    if (data.verificationStatus === "APPROVED") {
+      const lacking: string[] = [];
+      if (parseAreas(values.teachingAreasText).length === 0) lacking.push("khu vực nhận dạy");
+      if (!values.educationLevels?.length) lacking.push("cấp học nhận dạy");
+      if (!values.schedule?.length) lacking.push("lịch rảnh trong tuần");
+      if (lacking.length > 0) {
+        toast.error(`Hồ sơ đã duyệt cần bổ sung: ${lacking.join(", ")}`);
+        return;
+      }
     }
     const hasCertificate = (subjectId: string) =>
       certificates.some((c) => c.subjectId === subjectId) ||
@@ -566,6 +584,23 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
       noValidate
       className="flex flex-col gap-5"
     >
+      {data.verificationStatus === "APPROVED" &&
+        !(
+          data.bio?.trim() &&
+          data.teachingAreas?.length &&
+          data.educationLevels?.length &&
+          data.schedule?.length
+        ) && (
+          <p
+            role="alert"
+            className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-text"
+          >
+            Hồ sơ đã được duyệt. Hãy bổ sung đủ giới thiệu bản thân, khu vực
+            nhận dạy, cấp học nhận dạy và lịch rảnh trong tuần để đăng bài và
+            nhận lớp.
+          </p>
+        )}
+
       <CommonInfoCard form={form} />
 
       <div className="flex flex-col gap-1">
@@ -648,6 +683,17 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
             : "Lưu hồ sơ"}
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={subjectToRemove !== null}
+        onClose={() => setSubjectToRemove(null)}
+        onConfirm={confirmRemoveSubject}
+        danger
+        title={`Xóa môn ${subjectToRemove?.subjectName ?? ""}?`}
+        confirmText="Xóa môn học"
+        cancelText="Giữ lại"
+        description="Khi lưu hồ sơ, thông tin và chứng chỉ của môn này sẽ bị xóa."
+      />
     </form>
   );
 }

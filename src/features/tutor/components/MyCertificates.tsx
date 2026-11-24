@@ -76,7 +76,7 @@ function CertificateItem({
         loading={deleting}
         onClick={onDelete}
       >
-        <Trash2 className="size-4 text-danger" />
+        <Trash2 className="size-4 text-danger-text" />
       </Button>
     </li>
   );
