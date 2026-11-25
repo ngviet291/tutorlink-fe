@@ -37,7 +37,7 @@ export function RecommendedPosts({ limit = 5 }: { limit?: number }) {
                 <PostCard post={post} compact />
                 <div className="flex flex-col items-start gap-1 px-1 text-xs">
                   <Badge tone="green">
-                    {t("findClass.matchScore", "Phù hợp")} {toPercent(score)}%
+                    {t("findClass.matchScore", { score: toPercent(score) })}
                   </Badge>
                   {warning && (
                     <span className="flex min-w-0 items-start gap-1 text-text-secondary">
