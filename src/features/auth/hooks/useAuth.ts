@@ -2,6 +2,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAppDispatch } from "@/shared/hooks/useAppStore";
 import type { AuthUser } from "@/features/user/types/user.types";
 import { clearUser, setUser } from "../store/authSlice";
+import { setTutorProfile } from "@/features/tutor/store/tutorProfileSlice";
+import { loadTutorProfile } from "@/features/tutor/store/loadTutorProfile";
 import type {
   ForgotPasswordRequest,
   LoginRequest,
@@ -12,16 +14,26 @@ import type {
 } from "../types/auth.dto";
 import { authService } from "@/config/di/container";
 
-/** Dùng chung cho mọi thao tác mở phiên: lưu user vào store, xoá cache của phiên cũ. */
+/**
+ * Dùng chung cho mọi thao tác mở phiên (đăng nhập / đăng ký): lưu user vào store,
+ * với tài khoản TUTOR thì tải thêm hồ sơ gia sư (GET /v1/users/me) rồi lưu vào store,
+ * và xoá cache của phiên cũ. Hồ sơ được tải xong trước khi `setUser` nên khi giao diện
+ * chuyển trang thì store đã có đủ dữ liệu.
+ */
 function useSessionMutation<TVariables>(
   mutationFn: (variables: TVariables) => Promise<AuthUser>,
 ) {
   const dispatch = useAppDispatch();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn,
-    onSuccess: (user) => {
+    mutationFn: async (variables: TVariables) => {
+      const user = await mutationFn(variables);
+      const tutorProfile = await loadTutorProfile(user);
+      return { user, tutorProfile };
+    },
+    onSuccess: ({ user, tutorProfile }) => {
       dispatch(setUser(user));
+      dispatch(setTutorProfile(tutorProfile));
       qc.clear();
     },
   });
@@ -82,18 +94,9 @@ export function useIntrospect() {
 type RegisterRequest = RegisterStudentRequest | RegisterTutorRequest;
 
 export function useRegister(role: "STUDENT" | "TUTOR") {
-  const dispatch = useAppDispatch();
-  const qc = useQueryClient();
-
-  return useMutation<AuthUser, Error, RegisterRequest>({
-    mutationFn: (req) =>
-      role === "STUDENT"
-        ? authService.registerStudent(req as RegisterStudentRequest)
-        : authService.registerTutor(req as RegisterTutorRequest),
-
-    onSuccess: (user) => {
-      dispatch(setUser(user));
-      qc.clear();
-    },
-  });
+  return useSessionMutation((req: RegisterRequest) =>
+    role === "STUDENT"
+      ? authService.registerStudent(req as RegisterStudentRequest)
+      : authService.registerTutor(req as RegisterTutorRequest),
+  );
 }

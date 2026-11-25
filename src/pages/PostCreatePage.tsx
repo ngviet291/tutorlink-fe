@@ -15,6 +15,7 @@ export default function PostCreatePage() {
   const toast = useToast();
   const { createPost } = usePostMutations();
 
+
   const handleSubmit = async (payload: PostPayload, asDraft = false) => {
     try {
       const post = await createPost.mutateAsync({ payload, asDraft });

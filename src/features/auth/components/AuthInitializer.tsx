@@ -4,6 +4,8 @@ import { useAppDispatch } from "@/shared/hooks/useAppStore";
 import { PageSpinner } from "@/shared/components/ui/Spinner";
 import { userService, tokenStorage } from "@/config/di/container";
 import { setUser, clearUser } from "../store/authSlice";
+import { setTutorProfile } from "@/features/tutor/store/tutorProfileSlice";
+import { loadTutorProfile } from "@/features/tutor/store/loadTutorProfile";
 import { unauthorizedEvent } from "@/config/events/emitter";
 
 export function AuthInitializer({ children }: { children: ReactNode }) {
@@ -15,7 +17,10 @@ export function AuthInitializer({ children }: { children: ReactNode }) {
 
       if (token) {
         const user = await userService.getMe();
+        // F5: Redux mất sạch state nên tải lại hồ sơ gia sư trước khi hiện giao diện
+        const tutorProfile = await loadTutorProfile(user);
         dispatch(setUser(user));
+        dispatch(setTutorProfile(tutorProfile));
       }
     } catch {
       await tokenStorage.clear();
