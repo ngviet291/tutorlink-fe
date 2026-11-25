@@ -20,9 +20,12 @@ import {
   Flag,
   type LucideIcon,
 } from "lucide-react";
+import i18n from "@/app/i18n";
 import { ROUTES } from "@/constants/routes";
 import type { Role } from "@/shared/types/common.types";
 
+// Giữ nguyên tên `label` / `title` để Sidebar, MobileBottomNav không phải sửa kiểu.
+// Chữ được dịch lúc đọc (getter), nên đổi VI/EN có hiệu lực khi component render lại.
 export interface NavItem {
   to: string;
   label: string;
@@ -63,67 +66,73 @@ export function getPublicNav(role?: Role): PublicNavItem[] {
   return PUBLIC_NAV.filter((i) => !i.hideFor?.includes(effective));
 }
 
+/** Tạo một mục menu có nhãn dịch theo ngôn ngữ hiện tại (key nằm trong nav.items.*). */
+function navItem(
+  to: string,
+  key: string,
+  icon: LucideIcon,
+  end?: boolean,
+): NavItem {
+  return {
+    to,
+    icon,
+    end,
+    get label() {
+      return i18n.t(`nav.items.${key}`);
+    },
+  };
+}
+
 // end: true vì /profile là tiền tố của /profile/tutor, không có end thì
 // đứng ở Hồ sơ giảng dạy nút Tài khoản vẫn sáng.
-const accountItem: NavItem = {
-  to: ROUTES.PROFILE,
-  label: "Tài khoản",
-  icon: User,
-  end: true,
-};
+const accountItem = navItem(ROUTES.PROFILE, "account", User, true);
 
 const common: NavItem[] = [
-  { to: ROUTES.CHAT_INBOX, label: "Tin nhắn", icon: MessageSquare, end: true },
-  { to: ROUTES.NOTIFICATIONS, label: "Thông báo", icon: Bell },
+  navItem(ROUTES.CHAT_INBOX, "messages", MessageSquare, true),
+  navItem(ROUTES.NOTIFICATIONS, "notifications", Bell),
   accountItem,
 ];
 
 const studentItems: NavItem[] = [
-  {
-    to: ROUTES.DASHBOARD,
-    label: "Tổng quan",
-    icon: LayoutDashboard,
-    end: true,
-  },
-  { to: ROUTES.POST_CREATE, label: "Đăng bài mới", icon: PlusCircle },
-  { to: ROUTES.MY_POSTS, label: "Bài đăng của tôi", icon: FileText },
-  { to: ROUTES.MY_APPLICATIONS, label: "Đơn đã ứng tuyển", icon: BookOpen },
-  { to: ROUTES.FAVORITES, label: "Gia sư yêu thích", icon: Heart },
+  navItem(ROUTES.DASHBOARD, "overview", LayoutDashboard, true),
+  navItem(ROUTES.POST_CREATE, "postCreate", PlusCircle),
+  navItem(ROUTES.MY_POSTS, "myPosts", FileText),
+  navItem(ROUTES.MY_APPLICATIONS, "myApplications", BookOpen),
+  navItem(ROUTES.FAVORITES, "favorites", Heart),
 ];
 
 const tutorItems: NavItem[] = [
-  {
-    to: ROUTES.DASHBOARD,
-    label: "Tổng quan",
-    icon: LayoutDashboard,
-    end: true,
-  },
-  { to: ROUTES.TUTOR_PROFILE, label: "Hồ sơ giảng dạy", icon: GraduationCap },
-  { to: ROUTES.POST_CREATE, label: "Đăng tìm học viên", icon: PlusCircle },
-  { to: ROUTES.MY_POSTS, label: "Bài đăng của tôi", icon: FileText },
-  { to: ROUTES.MY_APPLICATIONS, label: "Đơn đã ứng tuyển", icon: BookOpen },
-  { to: ROUTES.WALLET, label: "Ví của tôi", icon: Wallet },
+  navItem(ROUTES.DASHBOARD, "overview", LayoutDashboard, true),
+  navItem(ROUTES.TUTOR_PROFILE, "tutorProfile", GraduationCap),
+  navItem(ROUTES.POST_CREATE, "postCreateTutor", PlusCircle),
+  navItem(ROUTES.MY_POSTS, "myPosts", FileText),
+  navItem(ROUTES.MY_APPLICATIONS, "myApplications", BookOpen),
+  navItem(ROUTES.WALLET, "wallet", Wallet),
 ];
 
 const adminItems: NavItem[] = [
-  { to: ROUTES.ADMIN, label: "Thống kê", icon: BarChart3, end: true },
-  {
-    to: ROUTES.ADMIN_TUTOR_REVIEW,
-    label: "Duyệt hồ sơ gia sư",
-    icon: ShieldCheck,
-  },
-  { to: ROUTES.ADMIN_USERS, label: "Người dùng", icon: Users },
-  { to: ROUTES.ADMIN_SUBJECTS, label: "Môn học", icon: Tags },
-  { to: ROUTES.ADMIN_POSTS, label: "Bài đăng & đăng ký", icon: FileText },
-  { to: ROUTES.ADMIN_TRANSACTIONS, label: "Giao dịch", icon: Receipt },
-  { to: ROUTES.ADMIN_WITHDRAWALS, label: "Yêu cầu rút tiền", icon: Wallet },
-  { to: ROUTES.ADMIN_FEE, label: "Tỉ lệ phí", icon: CircleDollarSign },
-  { to: ROUTES.ADMIN_COMPLAINTS, label: "Khiếu nại đánh giá", icon: Flag },
+  navItem(ROUTES.ADMIN, "adminStats", BarChart3, true),
+  navItem(ROUTES.ADMIN_TUTOR_REVIEW, "adminTutorReview", ShieldCheck),
+  navItem(ROUTES.ADMIN_USERS, "adminUsers", Users),
+  navItem(ROUTES.ADMIN_SUBJECTS, "adminSubjects", Tags),
+  navItem(ROUTES.ADMIN_POSTS, "adminPosts", FileText),
+  navItem(ROUTES.ADMIN_TRANSACTIONS, "adminTransactions", Receipt),
+  navItem(ROUTES.ADMIN_WITHDRAWALS, "adminWithdrawals", Wallet),
+  navItem(ROUTES.ADMIN_FEE, "adminFee", CircleDollarSign),
+  navItem(ROUTES.ADMIN_COMPLAINTS, "adminComplaints", Flag),
 ];
 
 export function getNavGroups(role: Role): NavGroup[] {
   if (role === "ADMIN") {
-    return [{ title: "Quản trị", items: adminItems }, { items: [accountItem] }];
+    return [
+      {
+        get title() {
+          return i18n.t("nav.items.adminTitle");
+        },
+        items: adminItems,
+      },
+      { items: [accountItem] },
+    ];
   }
   if (role === "TUTOR") return [{ items: [...tutorItems, ...common] }];
   return [{ items: [...studentItems, ...common] }];
@@ -136,7 +145,7 @@ export function getBottomNav(role: Role): NavItem[] {
       adminItems[0]!,
       adminItems[1]!,
       adminItems[5]!,
-      { to: ROUTES.PROFILE, label: "Tài khoản", icon: Settings2, end: true },
+      navItem(ROUTES.PROFILE, "account", Settings2, true),
     ];
   }
   if (role === "TUTOR") {
@@ -144,15 +153,15 @@ export function getBottomNav(role: Role): NavItem[] {
       tutorItems[0]!,
       tutorItems[4]!,
       tutorItems[5]!,
-      { to: ROUTES.NOTIFICATIONS, label: "Thông báo", icon: Bell },
-      { to: ROUTES.PROFILE, label: "Tài khoản", icon: UserCog, end: true },
+      navItem(ROUTES.NOTIFICATIONS, "notifications", Bell),
+      navItem(ROUTES.PROFILE, "account", UserCog, true),
     ];
   }
   return [
     studentItems[0]!,
     studentItems[1]!,
     studentItems[2]!,
-    { to: ROUTES.NOTIFICATIONS, label: "Thông báo", icon: Bell },
-    { to: ROUTES.PROFILE, label: "Tài khoản", icon: User, end: true },
+    navItem(ROUTES.NOTIFICATIONS, "notifications", Bell),
+    navItem(ROUTES.PROFILE, "account", User, true),
   ];
 }

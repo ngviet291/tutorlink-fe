@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Landmark, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/utils/cn";
 import { useBanks } from "../hooks/useBanks";
 import type { Bank } from "../types/bank.types";
@@ -36,6 +37,7 @@ function BankLogo({ bank }: { bank: Bank }) {
 
 /** Chọn ngân hàng: có logo, ô tìm kiếm, thay cho <select> mặc định. */
 export function BankSelect({ value, onChange, disabled, error, id }: Props) {
+  const { t } = useTranslation();
   const { data: banks = [], isLoading } = useBanks();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -96,7 +98,10 @@ export function BankSelect({ value, onChange, disabled, error, id }: Props) {
           </>
         ) : (
           <span className="flex-1 text-text-secondary">
-            {value || (isLoading ? "Đang tải ngân hàng..." : "Chọn ngân hàng")}
+            {value ||
+              (isLoading
+                ? t("wallet.bankSelect.loadingBanks")
+                : t("wallet.bankSelect.choose"))}
           </span>
         )}
         <ChevronDown
@@ -115,14 +120,16 @@ export function BankSelect({ value, onChange, disabled, error, id }: Props) {
               autoFocus
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Tìm ngân hàng..."
+              placeholder={t("wallet.bankSelect.searchPlaceholder")}
               className="h-9 w-full rounded-lg bg-background pl-8 pr-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <ul role="listbox" className="max-h-60 overflow-y-auto p-1">
             {list.length === 0 && (
               <li className="px-3 py-6 text-center text-sm text-text-secondary">
-                {isLoading ? "Đang tải..." : "Không tìm thấy ngân hàng"}
+                {isLoading
+                  ? t("wallet.bankSelect.loading")
+                  : t("wallet.bankSelect.notFound")}
               </li>
             )}
             {list.map((b) => {

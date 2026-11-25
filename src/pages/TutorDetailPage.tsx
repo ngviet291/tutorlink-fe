@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Award,
   BadgeCheck,
@@ -41,6 +42,7 @@ import { useTutorProfileTracking, track } from "@/features/tracking/hooks";
 type Tab = "about" | "certs" | "reviews" | "schedule" | "posts";
 
 export default function TutorDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -74,7 +76,7 @@ export default function TutorDetailPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
         <ErrorState
-          message="Không tìm thấy hồ sơ gia sư hoặc hồ sơ chưa được duyệt."
+          message={t("tutorDetail.notFound")}
           onRetry={() => void refetch()}
         />
       </div>
@@ -88,9 +90,7 @@ export default function TutorDetailPage() {
       });
       return;
     }
-    toast.info(
-      "Hãy đăng bài tìm gia sư hoặc đăng ký lớp để được kết nối. Thông tin liên hệ mở sau khi thanh toán phí nhận lớp.",
-    );
+    toast.info(t("tutorDetail.contactHint"));
   };
 
   const onFavorite = () => {
@@ -101,13 +101,15 @@ export default function TutorDetailPage() {
       return;
     }
     if (!canFavorite) {
-      toast.info("Chỉ tài khoản học viên mới lưu gia sư yêu thích.");
+      toast.info(t("tutorDetail.studentOnlyFavorite"));
       return;
     }
     toggle.mutate(tutor.id, {
       onSuccess: (r) => {
         toast.success(
-          r.favorited ? "Đã lưu vào yêu thích" : "Đã bỏ khỏi yêu thích",
+          r.favorited
+            ? t("tutorDetail.favoriteAdded")
+            : t("tutorDetail.favoriteRemoved"),
         );
         // Track: tutor favorited
         track("tutor_favorited", {
@@ -127,7 +129,7 @@ export default function TutorDetailPage() {
             {tutor.fullName}
             {tutor.verificationStatus === "APPROVED" ? (
               <Badge tone="blue" icon={<BadgeCheck className="size-3.5" />}>
-                Đã xác minh
+                {t("tutorDetail.verified")}
               </Badge>
             ) : (
               <StatusBadge
@@ -150,8 +152,10 @@ export default function TutorDetailPage() {
           </div>
           <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-text-secondary">
             <li className="flex items-center gap-1.5">
-              <Briefcase className="size-4" /> {tutor.experienceYears} năm kinh
-              nghiệm
+              <Briefcase className="size-4" />{" "}
+              {t("tutorDetail.experienceYears", {
+                years: tutor.experienceYears,
+              })}
             </li>
             <li className="flex items-center gap-1.5">
               <MapPin className="size-4" />{" "}
@@ -166,7 +170,9 @@ export default function TutorDetailPage() {
           <p className="text-3xl font-extrabold text-primary">
             {formatVnd(tutor.hourlyRate)}
           </p>
-          <p className="text-xs text-text-secondary">mỗi giờ</p>
+          <p className="text-xs text-text-secondary">
+            {t("tutorDetail.perHour")}
+          </p>
         </div>
       </section>
 
@@ -176,16 +182,16 @@ export default function TutorDetailPage() {
             value={tab}
             onChange={setTab}
             items={[
-              { value: "about", label: "Giới thiệu" },
-              { value: "certs", label: "Bằng cấp / Chứng chỉ" },
+              { value: "about", label: t("tutorDetail.tabs.about") },
+              { value: "certs", label: t("tutorDetail.tabs.certs") },
               {
                 value: "reviews",
-                label: `Đánh giá${tutor.reviewCount ? ` (${tutor.reviewCount})` : ""}`,
+                label: `${t("tutorDetail.tabs.reviews")}${tutor.reviewCount ? ` (${tutor.reviewCount})` : ""}`,
               },
-              { value: "schedule", label: "Lịch dạy" },
+              { value: "schedule", label: t("tutorDetail.tabs.schedule") },
               {
                 value: "posts",
-                label: `Bài đăng${postItems.length ? ` (${postItems.length}${tutorPosts.hasNextPage ? "+" : ""})` : ""}`,
+                label: `${t("tutorDetail.tabs.posts")}${postItems.length ? ` (${postItems.length}${tutorPosts.hasNextPage ? "+" : ""})` : ""}`,
               },
             ]}
           />
@@ -193,7 +199,7 @@ export default function TutorDetailPage() {
             {tab === "about" && (
               <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5">
                 <p className="whitespace-pre-line text-text">
-                  {tutor.bio || "Gia sư chưa có phần giới thiệu."}
+                  {tutor.bio || t("tutorDetail.noBio")}
                 </p>
                 {tutor.education && (
                   <p className="flex items-start gap-2 text-sm text-text-secondary">
@@ -233,7 +239,7 @@ export default function TutorDetailPage() {
                   ))}
                 </ul>
               ) : (
-                <EmptyState title="Chưa có chứng chỉ" />
+                <EmptyState title={t("tutorDetail.noCertificates")} />
               ))}
             {tab === "reviews" && <ReviewList tutorId={tutor.id} />}
             {tab === "posts" &&
@@ -255,13 +261,13 @@ export default function TutorDetailPage() {
                         loading={tutorPosts.isFetchingNextPage}
                         onClick={() => void tutorPosts.fetchNextPage()}
                       >
-                        Xem thêm
+                        {t("tutorDetail.loadMore")}
                       </Button>
                     </div>
                   )}
                 </>
               ) : (
-                <EmptyState title="Gia sư chưa có bài đăng công khai" />
+                <EmptyState title={t("tutorDetail.noPublicPosts")} />
               ))}
             {tab === "schedule" &&
               (tutor.schedule?.length ? (
@@ -281,7 +287,7 @@ export default function TutorDetailPage() {
                   ))}
                 </ul>
               ) : (
-                <EmptyState title="Chưa cập nhật lịch dạy" />
+                <EmptyState title={t("tutorDetail.noSchedule")} />
               ))}
           </div>
         </div>
@@ -290,7 +296,8 @@ export default function TutorDetailPage() {
           <div className="sticky top-20 flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
             <MaskedContact />
             <Button fullWidth onClick={onContact}>
-              <MessageCircle className="size-4" /> Liên hệ gia sư
+              <MessageCircle className="size-4" />{" "}
+              {t("tutorDetail.contactTutor")}
             </Button>
             <Button
               fullWidth
@@ -299,14 +306,16 @@ export default function TutorDetailPage() {
               loading={toggle.isPending}
             >
               <Heart className={isFav ? "size-4 fill-current" : "size-4"} />{" "}
-              {isFav ? "Đã yêu thích" : "Lưu vào yêu thích"}
+              {isFav
+                ? t("tutorDetail.favorited")
+                : t("tutorDetail.addFavorite")}
             </Button>
             {!user && (
               <p className="text-xs text-text-secondary">
                 <Link className="font-semibold text-primary" to={ROUTES.LOGIN}>
-                  Đăng nhập
+                  {t("tutorDetail.login")}
                 </Link>{" "}
-                để liên hệ và lưu gia sư.
+                {t("tutorDetail.loginToContact")}
               </p>
             )}
           </div>
@@ -315,12 +324,12 @@ export default function TutorDetailPage() {
 
       <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-border bg-surface p-3 lg:hidden">
         <Button className="flex-1" onClick={onContact}>
-          <MessageCircle className="size-4" /> Liên hệ
+          <MessageCircle className="size-4" /> {t("tutorDetail.contact")}
         </Button>
         <Button
           variant={isFav ? "secondary" : "outline"}
           onClick={onFavorite}
-          aria-label="Yêu thích"
+          aria-label={t("tutorDetail.favoriteAria")}
         >
           <Heart className={isFav ? "size-4 fill-current" : "size-4"} />
         </Button>

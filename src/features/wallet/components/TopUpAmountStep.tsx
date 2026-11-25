@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { formatVnd } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/cn";
+import { intlLocale } from "@/shared/utils/locale";
 import { PaymentMethodLogo } from "./PaymentMethodLogo";
 import {
   TOP_UP_PRESETS as PRESETS,
@@ -16,14 +17,16 @@ import {
 
 const CUSTOM_MAX_DIGITS = 9;
 
+// Chỉ giữ icon, logo và khóa dịch; chữ được dịch lúc render bằng t().
 const METHOD_META: Record<
   TopUpMethod,
-  { icon: LucideIcon; logo: string; description: string }
+  { icon: LucideIcon; logo: string; labelKey: string; descriptionKey: string }
 > = {
   VIETQR: {
     icon: QrCode,
     logo: "/payment-logos/vietqr.png",
-    description: "Quét mã QR bằng app ngân hàng",
+    labelKey: "wallet.topUpAmountStep.methodVietqr",
+    descriptionKey: "wallet.topUpAmountStep.methodVietqrDesc",
   },
 };
 
@@ -47,7 +50,7 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
     <div className="flex flex-col gap-5">
       <div className="rounded-2xl bg-primary-light px-4 py-5 text-center">
         <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
-          Số tiền nạp
+          {t("wallet.topUpAmountStep.amountLabel")}
         </p>
         <p className="mt-1 text-3xl font-extrabold text-primary">
           {formatVnd(finalAmount)}
@@ -57,7 +60,7 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
         </p>
       </div>
 
-      <section aria-label="Chọn nhanh số tiền">
+      <section aria-label={t("wallet.topUpAmountStep.quickAmounts")}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {PRESETS.map((p) => {
             const active = amount === p && !custom;
@@ -75,7 +78,8 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
                   active
                     ? "border-primary bg-primary text-white shadow-sm"
                     : "border-border bg-surface text-text hover:border-primary hover:text-primary",
-                )}>
+                )}
+              >
                 {formatVnd(p)}
               </button>
             );
@@ -85,7 +89,8 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
         <div className="mt-3">
           <label
             htmlFor="topup-custom"
-            className="mb-1 block text-xs font-semibold text-text-secondary">
+            className="mb-1 block text-xs font-semibold text-text-secondary"
+          >
             {t("wallet.customAmount")}
           </label>
           <div className="relative">
@@ -94,7 +99,7 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
               type="text"
               inputMode="numeric"
               autoComplete="off"
-              value={custom ? Number(custom).toLocaleString("vi-VN") : ""}
+              value={custom ? Number(custom).toLocaleString(intlLocale()) : ""}
               onChange={(e) =>
                 setCustom(
                   e.target.value.replace(/\D/g, "").slice(0, CUSTOM_MAX_DIGITS),
@@ -115,21 +120,25 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
           </div>
           {showError && (
             <p role="alert" className="mt-1 text-xs text-danger-text">
-              Số tiền nạp từ {formatVnd(MIN)} đến {formatVnd(MAX)}
+              {t("wallet.topUpModal.amountRange", {
+                min: formatVnd(MIN),
+                max: formatVnd(MAX),
+              })}
             </p>
           )}
         </div>
       </section>
 
-      <section aria-label="Phương thức thanh toán">
+      <section aria-label={t("wallet.topUpModal.method")}>
         <p className="mb-2 text-xs font-semibold text-text-secondary">
-          Phương thức thanh toán
+          {t("wallet.topUpModal.method")}
         </p>
         <div className="grid gap-2" role="radiogroup">
           {METHODS.map((m) => {
             const meta = METHOD_META[m.value];
             const Icon = meta.icon;
             const active = method === m.value;
+            const label = t(meta.labelKey);
             return (
               <button
                 key={m.value}
@@ -142,19 +151,20 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
                   active
                     ? "border-primary bg-primary-light"
                     : "border-border bg-surface hover:border-primary",
-                )}>
+                )}
+              >
                 <PaymentMethodLogo
                   src={meta.logo}
-                  alt={m.label}
+                  alt={label}
                   fallbackIcon={Icon}
                   active={active}
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-text">
-                    {m.label}
+                    {label}
                   </span>
                   <span className="block text-xs text-text-secondary">
-                    {meta.description}
+                    {t(meta.descriptionKey)}
                   </span>
                 </span>
                 <span
@@ -162,7 +172,8 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
                   className={cn(
                     "flex size-5 shrink-0 items-center justify-center rounded-full border-2",
                     active ? "border-primary" : "border-border",
-                  )}>
+                  )}
+                >
                   {active && (
                     <span className="size-2.5 rounded-full bg-primary" />
                   )}
@@ -177,9 +188,8 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
         fullWidth
         loading={loading}
         disabled={!valid}
-        onClick={() =>
-          onSubmit({ amount: finalAmount, paymentMethod: method })
-        }>
+        onClick={() => onSubmit({ amount: finalAmount, paymentMethod: method })}
+      >
         {t("wallet.confirmTopUp")} · {formatVnd(valid ? finalAmount : 0)}
       </Button>
     </div>

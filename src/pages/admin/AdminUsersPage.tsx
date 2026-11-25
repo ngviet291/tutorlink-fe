@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 import { ACCOUNT_STATUS_META } from "@/constants/enums";
 import { Avatar } from "@/shared/components/ui/Avatar";
@@ -11,7 +12,6 @@ import { Button } from "@/shared/components/ui/Button";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { Select } from "@/shared/components/ui/Select";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
-import { getErrorMessage } from "@/shared/utils/errors";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { useToast } from "@/shared/hooks/useToast";
 import {
@@ -22,13 +22,11 @@ import {
 import type { AccountStatus, Role } from "@/shared/types/common.types";
 import type { BaseUserResponse } from "@/features/user/types/user.types";
 
-const ROLE_LABEL: Record<Role, string> = {
-  STUDENT: "Học viên",
-  TUTOR: "Gia sư",
-  ADMIN: "Admin",
-};
+const ROLES: Role[] = ["STUDENT", "TUTOR", "ADMIN"];
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation();
+  const roleLabel = (r: Role) => t(`adminUsers.role.${r}`);
   const toast = useToast();
   const [keyword, setKeyword] = useState("");
   const [role, setRole] = useState<Role | "">("");
@@ -74,39 +72,39 @@ export default function AdminUsersPage() {
       { id: u.id, status: next },
       {
         onSuccess: () => {
-          toast.success("Đã cập nhật trạng thái tài khoản");
+          toast.success(t("adminUsers.statusUpdated"));
           void detailQuery.refetch();
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => toast.apiError(e),
       },
     );
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5">
-      <PageHeader title="Quản lý người dùng" />
+      <PageHeader title={t("adminUsers.title")} />
       <Input
-        aria-label="Tìm người dùng"
-        placeholder="Tìm theo tên, email, SĐT..."
+        aria-label={t("adminUsers.searchAria")}
+        placeholder={t("adminUsers.searchPlaceholder")}
         leftIcon={<Search className="size-4" />}
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
       />
       <div className="grid gap-3 sm:grid-cols-2">
         <Select
-          aria-label="Lọc theo vai trò"
+          aria-label={t("adminUsers.filterRoleAria")}
           value={role}
           onChange={(e) => setRole(e.target.value as Role | "")}
-          placeholder="Tất cả vai trò"
-          options={(Object.keys(ROLE_LABEL) as Role[]).map((r) => ({
+          placeholder={t("adminUsers.allRoles")}
+          options={ROLES.map((r) => ({
             value: r,
-            label: ROLE_LABEL[r],
+            label: roleLabel(r),
           }))}
         />
         <Select
-          aria-label="Lọc theo trạng thái"
+          aria-label={t("adminUsers.filterStatusAria")}
           value={status}
           onChange={(e) => setStatus(e.target.value as AccountStatus | "")}
-          placeholder="Tất cả trạng thái"
+          placeholder={t("adminUsers.allStatuses")}
           options={(Object.keys(ACCOUNT_STATUS_META) as AccountStatus[]).map(
             (st) => ({ value: st, label: ACCOUNT_STATUS_META[st].label }),
           )}
@@ -118,17 +116,19 @@ export default function AdminUsersPage() {
       ) : isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : !items.length ? (
-        <EmptyState title="Không có người dùng" />
+        <EmptyState title={t("adminUsers.empty")} />
       ) : (
         <>
           <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
             <table className="w-full min-w-[40rem] text-left text-sm">
               <thead className="bg-surface-hover text-xs uppercase text-text-secondary">
                 <tr>
-                  <th className="p-3">Người dùng</th>
-                  <th>Vai trò</th>
-                  <th>Trạng thái</th>
-                  <th className="pr-3 text-right">Thao tác</th>
+                  <th className="p-3">{t("adminUsers.colUser")}</th>
+                  <th>{t("adminUsers.colRole")}</th>
+                  <th>{t("adminUsers.colStatus")}</th>
+                  <th className="pr-3 text-right">
+                    {t("adminUsers.colActions")}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -148,7 +148,7 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                     <td>
-                      <Badge tone="gray">{ROLE_LABEL[u.role]}</Badge>
+                      <Badge tone="gray">{roleLabel(u.role)}</Badge>
                     </td>
                     <td>
                       <StatusBadge kind="user" status={u.userStatus} />
@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
                         className="cursor-pointer text-sm font-semibold text-primary hover:underline"
                         onClick={() => openDetail(u)}
                       >
-                        Chi tiết
+                        {t("adminUsers.details")}
                       </button>
                     </td>
                   </tr>
@@ -174,7 +174,7 @@ export default function AdminUsersPage() {
                 loading={isFetchingNextPage}
                 onClick={() => void fetchNextPage()}
               >
-                Xem thêm
+                {t("adminUsers.loadMore")}
               </Button>
             </div>
           )}
@@ -184,18 +184,18 @@ export default function AdminUsersPage() {
       <Modal
         open={Boolean(detail)}
         onClose={closeDetail}
-        title="Chi tiết người dùng"
+        title={t("adminUsers.detailTitle")}
       >
         {detail && (
           <div className="flex flex-col gap-4 text-sm">
             <dl className="grid gap-2 sm:grid-cols-2">
               {[
-                ["Họ tên", detail.fullName],
+                [t("adminUsers.fullName"), detail.fullName],
                 ["Email", detail.email],
-                ["SĐT", detail.phone],
-                ["Vai trò", ROLE_LABEL[detail.role]],
+                [t("adminUsers.phone"), detail.phone],
+                [t("adminUsers.colRole"), roleLabel(detail.role)],
                 [
-                  "Khu vực",
+                  t("adminUsers.area"),
                   [detail.address?.ward, detail.address?.province]
                     .filter(Boolean)
                     .join(", ") || "—",
@@ -208,11 +208,11 @@ export default function AdminUsersPage() {
               ))}
             </dl>
             <p className="text-xs text-text-secondary">
-              Mật khẩu không bao giờ được hiển thị.
+              {t("adminUsers.passwordNote")}
             </p>
             {detail.role !== "ADMIN" && (
               <Select
-                label="Trạng thái tài khoản"
+                label={t("adminUsers.accountStatus")}
                 value={detail.userStatus}
                 disabled={setUserStatus.isPending}
                 onChange={(e) =>

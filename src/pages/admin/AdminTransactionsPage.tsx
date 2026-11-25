@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { TRANSACTION_STATUS_META, TRANSACTION_TYPE_LABEL } from "@/constants/enums";
+import { useTranslation } from "react-i18next";
+import {
+  TRANSACTION_STATUS_META,
+  TRANSACTION_TYPE_LABEL,
+} from "@/constants/enums";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { Input } from "@/shared/components/ui/Input";
 import { Modal } from "@/shared/components/ui/Modal";
@@ -11,7 +15,6 @@ import { formatVnd } from "@/shared/utils/currency";
 import { formatDateTime } from "@/shared/utils/date";
 import { Button } from "@/shared/components/ui/Button";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
 import {
   useAdminPaymentMutations,
   useAdminTransactions,
@@ -21,6 +24,7 @@ import {
 import type { TransactionStatus } from "@/shared/types/common.types";
 
 export default function AdminTransactionsPage() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<TransactionStatus | "">("");
   const {
     data,
@@ -35,55 +39,61 @@ export default function AdminTransactionsPage() {
   const [detailId, setDetailId] = useState<string>();
   const detailQuery = useAdminTransaction(detailId);
   const detail = detailQuery.data;
-  
+
   // Mặc định: 30 ngày gần nhất
   const getDefaultDates = () => {
     const today = new Date();
     const thirtyDaysAgo = new Date(today);
     thirtyDaysAgo.setDate(today.getDate() - 30);
     return {
-      from: thirtyDaysAgo.toISOString().split('T')[0],
-      to: today.toISOString().split('T')[0],
+      from: thirtyDaysAgo.toISOString().split("T")[0],
+      to: today.toISOString().split("T")[0],
     };
   };
-  
+
   const defaultDates = getDefaultDates();
   const [from, setFrom] = useState(defaultDates.from);
   const [to, setTo] = useState(defaultDates.to);
   const toast = useToast();
-  const revenue = useRevenueStatistics({ from: from || undefined, to: to || undefined });
+  const revenue = useRevenueStatistics({
+    from: from || undefined,
+    to: to || undefined,
+  });
   const { refundTransaction } = useAdminPaymentMutations();
-  const rangeInvalid = Boolean(from) !== Boolean(to) || Boolean(from && to && from > to);
+  const rangeInvalid =
+    Boolean(from) !== Boolean(to) || Boolean(from && to && from > to);
   const refund = () => {
     if (!detail) {
       return;
     }
     refundTransaction.mutate(detail.id, {
       onSuccess: () => {
-        toast.success("Đã hoàn tiền giao dịch");
+        toast.success(t("adminTransactions.refundDone"));
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (e) => toast.apiError(e),
     });
   };
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5">
-      <PageHeader title="Quản lý giao dịch" />
+      <PageHeader title={t("adminTransactions.title")} />
       <section
-        aria-label="Thống kê doanh thu"
+        aria-label={t("adminTransactions.revenueTitle")}
         className="rounded-2xl border border-border bg-surface p-4"
       >
         <div className="mb-3 flex flex-wrap items-end gap-3">
-          <h2 className="mr-auto text-base font-bold text-text">Thống kê doanh thu</h2>
+          <h2 className="mr-auto text-base font-bold text-text">
+            {t("adminTransactions.revenueTitle")}
+          </h2>
           <Input
-            aria-label="Từ ngày"
+            aria-label={t("adminTransactions.fromDate")}
             type="date"
             value={from}
             max={to || undefined}
             onChange={(e) => setFrom(e.target.value)}
           />
           <Input
-            aria-label="Đến ngày"
+            aria-label={t("adminTransactions.toDate")}
             type="date"
             value={to}
             min={from || undefined}
@@ -92,11 +102,11 @@ export default function AdminTransactionsPage() {
         </div>
         {rangeInvalid ? (
           <p role="alert" className="text-sm text-danger-text">
-            Chọn đủ hai ngày, ngày bắt đầu không sau ngày kết thúc.
+            {t("adminTransactions.rangeInvalid")}
           </p>
         ) : !from || !to ? (
           <p className="text-sm text-text-secondary">
-            Vui lòng chọn khoảng thời gian để xem thống kê doanh thu.
+            {t("adminTransactions.pickRange")}
           </p>
         ) : revenue.isError ? (
           <ErrorState onRetry={() => void revenue.refetch()} />
@@ -106,19 +116,39 @@ export default function AdminTransactionsPage() {
           revenue.data && (
             <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
               {[
-                ["Doanh thu thuần", formatVnd(revenue.data.totalRevenue)],
-                ["Đã hoàn tiền", formatVnd(revenue.data.totalRefunded)],
-                ["Tổng nạp ví", formatVnd(revenue.data.totalTopUp)],
-                ["Lượt thu phí thành công", revenue.data.successCount],
-                ["Lượt nạp ví thành công", revenue.data.topUpCount],
                 [
-                  "Giao dịch thất bại / hoàn",
+                  t("adminTransactions.netRevenue"),
+                  formatVnd(revenue.data.totalRevenue),
+                ],
+                [
+                  t("adminTransactions.refunded"),
+                  formatVnd(revenue.data.totalRefunded),
+                ],
+                [
+                  t("adminTransactions.totalTopUp"),
+                  formatVnd(revenue.data.totalTopUp),
+                ],
+                [
+                  t("adminTransactions.feeSuccessCount"),
+                  revenue.data.successCount,
+                ],
+                [
+                  t("adminTransactions.topUpSuccessCount"),
+                  revenue.data.topUpCount,
+                ],
+                [
+                  t("adminTransactions.failedRefunded"),
                   `${revenue.data.failedCount} / ${revenue.data.refundedCount}`,
                 ],
               ].map(([k, v]) => (
-                <div key={String(k)} className="rounded-xl bg-surface-hover p-3">
+                <div
+                  key={String(k)}
+                  className="rounded-xl bg-surface-hover p-3"
+                >
                   <dt className="text-xs text-text-secondary">{k}</dt>
-                  <dd className="mt-0.5 text-lg font-extrabold text-text">{v}</dd>
+                  <dd className="mt-0.5 text-lg font-extrabold text-text">
+                    {v}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -127,15 +157,15 @@ export default function AdminTransactionsPage() {
       </section>
       <div className="grid gap-3 sm:grid-cols-2">
         <Select
-          aria-label="Trạng thái"
-          placeholder="Tất cả trạng thái"
+          aria-label={t("adminTransactions.status")}
+          placeholder={t("adminTransactions.allStatuses")}
           value={status}
           onChange={(e) => {
             setStatus(e.target.value as TransactionStatus | "");
           }}
-          options={(Object.keys(TRANSACTION_STATUS_META) as TransactionStatus[]).map(
-            (s) => ({ value: s, label: TRANSACTION_STATUS_META[s].label }),
-          )}
+          options={(
+            Object.keys(TRANSACTION_STATUS_META) as TransactionStatus[]
+          ).map((s) => ({ value: s, label: TRANSACTION_STATUS_META[s].label }))}
         />
       </div>
 
@@ -144,49 +174,54 @@ export default function AdminTransactionsPage() {
       ) : isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : !items.length ? (
-        <EmptyState title="Không có giao dịch" />
+        <EmptyState title={t("adminTransactions.empty")} />
       ) : (
         <>
           <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
             <table className="w-full min-w-[40rem] text-left text-sm">
               <thead className="bg-surface-hover text-xs uppercase text-text-secondary">
                 <tr>
-                  <th className="p-3">Thời gian</th>
-                  <th>ID giao dịch</th>
-                  <th>Loại</th>
-                  <th className="pr-4 text-right">Số tiền</th>
-                  <th className="pr-3">Trạng thái</th>
+                  <th className="p-3">{t("adminTransactions.colTime")}</th>
+                  <th>{t("adminTransactions.colId")}</th>
+                  <th>{t("adminTransactions.colType")}</th>
+                  <th className="pr-4 text-right">
+                    {t("adminTransactions.colAmount")}
+                  </th>
+                  <th className="pr-3">{t("adminTransactions.status")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {items.map((t) => (
+                {items.map((tx) => (
                   <tr
-                    key={t.id}
+                    key={tx.id}
                     className="cursor-pointer hover:bg-surface-hover"
-                    onClick={() => setDetailId(t.id)}
+                    onClick={() => setDetailId(tx.id)}
                   >
                     <td className="p-3 text-text-secondary">
-                      {formatDateTime(t.createdAt)}
+                      {formatDateTime(tx.createdAt)}
                     </td>
-                    <td className="font-medium text-text">{t.id ?? "—"}</td>
+                    <td className="font-medium text-text">{tx.id ?? "—"}</td>
                     <td>
                       {TRANSACTION_TYPE_LABEL[
-                        t.transactionType as keyof typeof TRANSACTION_TYPE_LABEL
-                      ] ?? t.transactionType}
+                        tx.transactionType as keyof typeof TRANSACTION_TYPE_LABEL
+                      ] ?? tx.transactionType}
                     </td>
                     <td
                       className={`pr-4 text-right font-semibold ${
-                        t.transactionType === "TOP_UP"
+                        tx.transactionType === "TOP_UP"
                           ? "text-success-text"
-                          : t.transactionType === "WITHDRAW"
+                          : tx.transactionType === "WITHDRAW"
                             ? "text-danger-text"
                             : ""
                       }`}
                     >
-                      {formatVnd(t.amount)}
+                      {formatVnd(tx.amount)}
                     </td>
                     <td className="pr-3">
-                      <StatusBadge kind="transaction" status={t.transactionStatus} />
+                      <StatusBadge
+                        kind="transaction"
+                        status={tx.transactionStatus}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -194,8 +229,11 @@ export default function AdminTransactionsPage() {
             </table>
           </div>
           {hasNextPage && (
-            <Button loading={isFetchingNextPage} onClick={() => void fetchNextPage()}>
-              Tải thêm giao dịch
+            <Button
+              loading={isFetchingNextPage}
+              onClick={() => void fetchNextPage()}
+            >
+              {t("adminTransactions.loadMore")}
             </Button>
           )}
         </>
@@ -204,24 +242,32 @@ export default function AdminTransactionsPage() {
       <Modal
         open={Boolean(detailId)}
         onClose={() => setDetailId(undefined)}
-        title="Chi tiết giao dịch"
+        title={t("adminTransactions.detailTitle")}
         size="sm"
       >
         {detailQuery.isLoading && <ListSkeleton rows={2} />}
-        {detailQuery.isError && <ErrorState onRetry={() => void detailQuery.refetch()} />}
+        {detailQuery.isError && (
+          <ErrorState onRetry={() => void detailQuery.refetch()} />
+        )}
         {detail && (
           <dl className="divide-y divide-border text-sm">
             {[
-              ["Mã giao dịch", detail.id],
-              ["Gia sư", detail.tutorName ?? detail.tutorId ?? "—"],
+              [t("adminTransactions.txCode"), detail.id],
               [
-                "Loại",
+                t("adminTransactions.tutor"),
+                detail.tutorName ?? detail.tutorId ?? "—",
+              ],
+              [
+                t("adminTransactions.colType"),
                 TRANSACTION_TYPE_LABEL[
                   detail.transactionType as keyof typeof TRANSACTION_TYPE_LABEL
                 ] ?? detail.transactionType,
               ],
-              ["Số tiền", formatVnd(detail.amount)],
-              ["Thời gian", formatDateTime(detail.createdAt)],
+              [t("adminTransactions.colAmount"), formatVnd(detail.amount)],
+              [
+                t("adminTransactions.colTime"),
+                formatDateTime(detail.createdAt),
+              ],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-3 py-2">
                 <dt className="text-text-secondary">{k}</dt>
@@ -229,9 +275,14 @@ export default function AdminTransactionsPage() {
               </div>
             ))}
             <div className="flex justify-between py-2">
-              <dt className="text-text-secondary">Trạng thái</dt>
+              <dt className="text-text-secondary">
+                {t("adminTransactions.status")}
+              </dt>
               <dd>
-                <StatusBadge kind="transaction" status={detail.transactionStatus} />
+                <StatusBadge
+                  kind="transaction"
+                  status={detail.transactionStatus}
+                />
               </dd>
             </div>
             {detail.transactionType === "COMMISSION" &&
@@ -243,7 +294,7 @@ export default function AdminTransactionsPage() {
                     loading={refundTransaction.isPending}
                     onClick={refund}
                   >
-                    Hoàn tiền cho gia sư
+                    {t("adminTransactions.refundButton")}
                   </Button>
                 </div>
               )}

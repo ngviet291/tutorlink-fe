@@ -4,7 +4,6 @@ import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
 import {
   useApplicationMutations,
   useMyApplicationsForPost,
@@ -73,7 +72,7 @@ export function ApplicantList({ post }: { post: PostResponse }) {
         );
         setTarget(null);
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (e) => toast.apiError(e),
     });
   };
 

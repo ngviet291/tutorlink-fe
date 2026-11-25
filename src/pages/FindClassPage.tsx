@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   FilterSidebar,
   emptyFilter,
@@ -23,6 +24,7 @@ import { useSearchTracking } from "@/features/tracking/hooks";
 const BUDGET_MAX = 10_000_000;
 
 export default function FindClassPage() {
+  const { t } = useTranslation();
   const role = useAppSelector((s) => s.auth.user?.role);
   const isTutor = role === "TUTOR";
   const isStudent = !role || role === "STUDENT";
@@ -35,8 +37,8 @@ export default function FindClassPage() {
       : null;
   const type: PostType = lockedType ?? picked ?? defaultType;
   const typeItems: { value: PostType; label: string }[] = [
-    { value: "FIND_TUTOR", label: "Lớp cần gia sư" },
-    { value: "FIND_STUDENT", label: "Gia sư tìm học viên" },
+    { value: "FIND_TUTOR", label: t("findClass.typeFindTutor") },
+    { value: "FIND_STUDENT", label: t("findClass.typeFindStudent") },
   ];
   if (defaultType === "FIND_STUDENT") typeItems.reverse();
   const [filter, setFilter] = useState<FilterValues>(emptyFilter(BUDGET_MAX));
@@ -105,12 +107,9 @@ export default function FindClassPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="text-3xl font-extrabold text-text">
-        {isStudent ? "Bài Đăng Của Gia Sư" : "Tìm Lớp"}
+        {isStudent ? t("findClass.titleStudent") : t("findClass.titleTutor")}
       </h1>
-      <p className="mt-1 text-text-secondary">
-        Các bài đăng đang tuyển. Thông tin liên hệ của người đăng được ẩn cho
-        tới khi kết nối thành công.
-      </p>
+      <p className="mt-1 text-text-secondary">{t("findClass.subtitle")}</p>
 
       {!lockedType && (
         <div className="mt-5">
@@ -122,15 +121,15 @@ export default function FindClassPage() {
         <FilterSidebar
           value={filter}
           onChange={setFilter}
-          rangeLabel="Học phí (VNĐ)"
+          rangeLabel={t("findClass.tuitionRange")}
           rangeMax={BUDGET_MAX}
           budgetUnitMode
         />
 
         <div className="min-w-0 flex-1">
           <Input
-            aria-label="Tìm kiếm bài đăng"
-            placeholder="Tìm theo tiêu đề, nội dung, môn học..."
+            aria-label={t("findClass.searchAria")}
+            placeholder={t("findClass.searchPlaceholder")}
             leftIcon={<Search className="size-4" />}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
@@ -144,7 +143,7 @@ export default function FindClassPage() {
             ) : items.length > 0 ? (
               <>
                 <p className="mb-3 text-sm text-text-secondary">
-                  {items.length} bài đăng
+                  {t("findClass.postCount", { count: items.length })}
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {items.map((p) => (
@@ -158,15 +157,15 @@ export default function FindClassPage() {
                       loading={isFetchingNextPage}
                       onClick={() => void fetchNextPage()}
                     >
-                      Xem thêm
+                      {t("findClass.loadMore")}
                     </Button>
                   </div>
                 )}
               </>
             ) : (
               <EmptyState
-                title="Chưa có bài đăng phù hợp"
-                description="Thử thay đổi bộ lọc hoặc quay lại sau."
+                title={t("findClass.emptyTitle")}
+                description={t("findClass.emptyDescription")}
               />
             )}
           </div>

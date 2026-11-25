@@ -285,14 +285,25 @@ export const EDUCATION_LEVEL_LABEL: Record<EducationLevel, string> = {
 };
 
 export const BUDGET_UNIT_LABEL: Record<BudgetUnit, string> = {
-  PER_SESSION: "mỗi buổi",
-  PER_MONTH: "mỗi tháng",
-  PER_HOUR: "mỗi giờ",
+  get PER_SESSION() {
+    return t("constants.enums.budgetUnit.PER_SESSION");
+  },
+  get PER_MONTH() {
+    return t("constants.enums.budgetUnit.PER_MONTH");
+  },
+  get PER_HOUR() {
+    return t("constants.enums.budgetUnit.PER_HOUR");
+  },
 };
 
+// MoMo, ZaloPay, VietQR là tên thương hiệu nên giữ nguyên ở mọi ngôn ngữ
 export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
-  BANK_TRANSFER: "Chuyển khoản",
-  WALLET: "Ví TutorLink",
+  get BANK_TRANSFER() {
+    return t("constants.enums.paymentMethod.BANK_TRANSFER");
+  },
+  get WALLET() {
+    return t("constants.enums.paymentMethod.WALLET");
+  },
   MOMO: "MoMo",
   ZALOPAY: "ZaloPay",
   VIETQR: "VietQR",
@@ -301,13 +312,27 @@ export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
 export const ACCOUNT_STATUS_META = USER_STATUS_META;
 
 export const DAY_LABEL: Record<DayOfWeek, string> = {
-  MONDAY: "Thứ 2",
-  TUESDAY: "Thứ 3",
-  WEDNESDAY: "Thứ 4",
-  THURSDAY: "Thứ 5",
-  FRIDAY: "Thứ 6",
-  SATURDAY: "Thứ 7",
-  SUNDAY: "Chủ nhật",
+  get MONDAY() {
+    return t("constants.enums.day.MONDAY");
+  },
+  get TUESDAY() {
+    return t("constants.enums.day.TUESDAY");
+  },
+  get WEDNESDAY() {
+    return t("constants.enums.day.WEDNESDAY");
+  },
+  get THURSDAY() {
+    return t("constants.enums.day.THURSDAY");
+  },
+  get FRIDAY() {
+    return t("constants.enums.day.FRIDAY");
+  },
+  get SATURDAY() {
+    return t("constants.enums.day.SATURDAY");
+  },
+  get SUNDAY() {
+    return t("constants.enums.day.SUNDAY");
+  },
 };
 
 export const EDUCATION_LEVELS: EducationLevel[] = [

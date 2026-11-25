@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   CalendarDays,
   Clock,
@@ -13,7 +14,6 @@ import {
   XCircle,
 } from "lucide-react";
 import {
-  BUDGET_UNIT_LABEL,
   EDUCATION_LEVEL_LABEL,
   POST_TYPE_LABEL,
   TEACHING_MODE_LABEL,
@@ -47,6 +47,8 @@ import {
 import { useMyTutorProfile } from "@/features/tutor/hooks/useTutors";
 
 export default function PostDetailPage() {
+  // Gọi useTranslation để trang render lại khi đổi ngôn ngữ (kể cả chữ lỗi bên dưới).
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -93,7 +95,7 @@ export default function PostDetailPage() {
           message={
             isError && (error as { status?: number } | null)?.status !== 404
               ? getErrorMessage(error)
-              : "Không tìm thấy bài đăng hoặc bài đã bị gỡ."
+              : t("postDetail.notFound")
           }
           onRetry={() => void refetch()}
         />
@@ -129,13 +131,13 @@ export default function PostDetailPage() {
   let disabledReason: string | undefined;
 
   if (isAuthor) {
-    disabledReason = "Bạn không thể đăng ký bài của chính mình";
+    disabledReason = t("postDetail.cannotApplyOwn");
   } else if (alreadyApplied) {
-    disabledReason = "Bạn đã đăng ký bài này rồi";
+    disabledReason = t("postDetail.alreadyApplied");
   } else if (post.status !== "PUBLISHED") {
-    disabledReason = "Bài đăng không còn nhận đăng ký";
+    disabledReason = t("postDetail.notAccepting");
   } else if (isTutor && post.type === "FIND_TUTOR" && !tutorApproved) {
-    disabledReason = "Hồ sơ gia sư của bạn chưa được duyệt";
+    disabledReason = t("postDetail.tutorNotApproved");
   }
 
   const onApply = () => {
@@ -153,9 +155,9 @@ export default function PostDetailPage() {
     close.mutate(post.id, {
       onSuccess: () => {
         setCloseOpen(false);
-        toast.success("Đã đóng bài đăng");
+        toast.success(t("postDetail.closedToast"));
       },
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onError: (e) => toast.apiError(e),
     });
   };
 
@@ -164,12 +166,12 @@ export default function PostDetailPage() {
 
     remove.mutate(post.id, {
       onSuccess: () => {
-        toast.success("Đã xóa bài đăng");
+        toast.success(t("postDetail.deletedToast"));
         navigate(ROUTES.MY_POSTS);
       },
       onError: (e) => {
         setDeleting(false);
-        toast.error(getErrorMessage(e));
+        toast.apiError(e);
       },
     });
   };
@@ -178,30 +180,38 @@ export default function PostDetailPage() {
     isAuthor && post.status !== "CLOSED" && post.status !== "REMOVED";
 
   const info: {
+    key: string;
     icon: typeof MapPin;
     label: string;
     value: string;
   }[] = [
     {
+      key: "area",
       icon: MapPin,
-      label: "Khu vực",
+      label: t("postDetail.area"),
       value: [post.address?.ward, post.address?.province]
         .filter(Boolean)
         .join(", "),
     },
     {
+      key: "mode",
       icon: Wifi,
-      label: "Hình thức",
+      label: t("postDetail.mode"),
       value: TEACHING_MODE_LABEL[post.teachingMode],
     },
     {
+      key: "schedule",
       icon: Clock,
-      label: "Lịch học",
-      value: `${post.sessionsPerWeek} buổi/tuần · ${post.durationMinutes} phút/buổi`,
+      label: t("postDetail.schedule"),
+      value: t("postDetail.scheduleValue", {
+        sessions: post.sessionsPerWeek,
+        minutes: post.durationMinutes,
+      }),
     },
     {
+      key: "deadline",
       icon: CalendarDays,
-      label: "Hạn đăng ký",
+      label: t("postDetail.deadline"),
       value: formatDate(post.deadline),
     },
   ];
@@ -239,18 +249,15 @@ export default function PostDetailPage() {
         <p className="mt-3 text-2xl font-extrabold text-primary">
           {formatBudgetRange(post.minBudget, post.maxBudget)}{" "}
           <span className="text-sm font-medium text-text-secondary">
-            {BUDGET_UNIT_LABEL[post.budgetUnit ?? "PER_MONTH"].replace(
-              "mỗi ",
-              "/",
-            )}{" "}
-            (dự kiến)
+            {t(`postDetail.budgetUnit.${post.budgetUnit ?? "PER_MONTH"}`)}{" "}
+            {t("postDetail.estimated")}
           </span>
         </p>
 
         <dl className="mt-5 grid gap-3 sm:grid-cols-2">
-          {info.map(({ icon: Icon, label, value }) => (
+          {info.map(({ key, icon: Icon, label, value }) => (
             <div
-              key={label}
+              key={key}
               className="flex items-start gap-3 rounded-xl bg-surface-hover p-3"
             >
               <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
@@ -265,7 +272,7 @@ export default function PostDetailPage() {
         </dl>
 
         <h2 className="mb-2 mt-6 text-lg font-bold text-text">
-          Mô tả chi tiết
+          {t("postDetail.descriptionTitle")}
         </h2>
 
         <p className="whitespace-pre-line text-text-secondary">
@@ -274,9 +281,7 @@ export default function PostDetailPage() {
 
         <p className="mt-5 flex items-start gap-2 rounded-xl border border-border p-3 text-xs text-text-secondary">
           <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-          Học phí thực tế hằng tháng do hai bên tự thỏa thuận ngoài hệ thống
-          TutorLink. Gia sư chỉ trả một khoản phí nhận lớp (tính trên học phí dự
-          kiến tháng đầu) khi được chọn.
+          {t("postDetail.feeNotice")}
         </p>
 
         <div className="mt-6 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-start sm:justify-between">
@@ -295,12 +300,16 @@ export default function PostDetailPage() {
             />
 
             <div>
-              <p className="text-xs text-text-secondary">Người đăng</p>
+              <p className="text-xs text-text-secondary">
+                {t("postDetail.author")}
+              </p>
 
               <p className="font-bold text-text">{post.author.fullName}</p>
 
               <p className="text-xs text-text-secondary">
-                {post.applicationCount ?? 0} lượt đăng ký
+                {t("postDetail.applicationCount", {
+                  count: post.applicationCount ?? 0,
+                })}
               </p>
             </div>
           </Link>
@@ -318,7 +327,7 @@ export default function PostDetailPage() {
                   Boolean(disabledReason) || (Boolean(user) && !roleMatches)
                 }
               >
-                Đăng ký nhận lớp
+                {t("postDetail.apply")}
               </Button>
             </Tooltip>
           )}
@@ -333,30 +342,32 @@ export default function PostDetailPage() {
           {!isAuthor && !isAdmin && user && !roleMatches && !disabledReason && (
             <p className="self-center text-xs text-text-secondary">
               {post.type === "FIND_TUTOR"
-                ? "Chỉ gia sư mới đăng ký bài này."
-                : "Chỉ học viên mới đăng ký bài này."}
+                ? t("postDetail.onlyTutorsApply")
+                : t("postDetail.onlyStudentsApply")}
             </p>
           )}
 
           {!user && (
             <p className="self-center text-xs text-text-secondary">
               <Link className="font-semibold text-primary" to={ROUTES.LOGIN}>
-                Đăng nhập
+                {t("postDetail.login")}
               </Link>{" "}
-              để đăng ký nhận lớp.
+              {t("postDetail.loginToApply")}
             </p>
           )}
 
-          {!isAuthor && alreadyApplied && myApplication?.applicationStatus === "PENDING" && (
-            <Button
-              variant="outline"
-              size="lg"
-              loading={cancel.isPending}
-              onClick={() => setCancelOpen(true)}
-            >
-              <XCircle className="size-4" /> Hủy đăng ký
-            </Button>
-          )}
+          {!isAuthor &&
+            alreadyApplied &&
+            myApplication?.applicationStatus === "PENDING" && (
+              <Button
+                variant="outline"
+                size="lg"
+                loading={cancel.isPending}
+                onClick={() => setCancelOpen(true)}
+              >
+                <XCircle className="size-4" /> {t("postDetail.cancelApply")}
+              </Button>
+            )}
 
           {isTutor &&
             post.type === "FIND_TUTOR" &&
@@ -367,7 +378,7 @@ export default function PostDetailPage() {
                 className="self-center text-xs font-semibold text-primary hover:underline"
               >
                 <Wallet className="mr-1 inline size-3.5" />
-                Xem trạng thái hồ sơ gia sư
+                {t("postDetail.viewTutorStatus")}
               </Link>
             )}
         </div>
@@ -379,29 +390,30 @@ export default function PostDetailPage() {
                 loading={publish.isPending}
                 onClick={() =>
                   publish.mutate(post.id, {
-                    onSuccess: () => toast.success("Đã đăng công khai"),
-                    onError: (e) => toast.error(getErrorMessage(e)),
+                    onSuccess: () =>
+                      toast.success(t("postDetail.publishedToast")),
+                    onError: (e) => toast.apiError(e),
                   })
                 }
               >
-                Đăng công khai
+                {t("postDetail.publish")}
               </Button>
             )}
 
             {post.status === "PUBLISHED" && (
               <Button variant="outline" onClick={() => setCloseOpen(true)}>
-                <Lock className="size-4" /> Đóng bài
+                <Lock className="size-4" /> {t("postDetail.closePost")}
               </Button>
             )}
 
             <Link to={ROUTES.POST_EDIT(post.id)}>
               <Button variant="outline">
-                <Pencil className="size-4" /> Sửa bài
+                <Pencil className="size-4" /> {t("postDetail.edit")}
               </Button>
             </Link>
 
             <Button variant="danger" onClick={() => setDeleteOpen(true)}>
-              <Trash2 className="size-4" /> Xóa bài
+              <Trash2 className="size-4" /> {t("postDetail.delete")}
             </Button>
           </div>
         )}
@@ -425,9 +437,9 @@ export default function PostDetailPage() {
       <ConfirmDialog
         open={cancelOpen}
         onClose={() => setCancelOpen(false)}
-        title="Hủy đăng ký bài này?"
-        confirmText="Hủy đăng ký"
-        cancelText="Giữ đăng ký"
+        title={t("postDetail.cancelDialog.title")}
+        confirmText={t("postDetail.cancelDialog.confirm")}
+        cancelText={t("postDetail.cancelDialog.cancel")}
         danger
         loading={cancel.isPending}
         onConfirm={() => {
@@ -435,36 +447,36 @@ export default function PostDetailPage() {
           cancel.mutate(myApplication.id, {
             onSuccess: () => {
               setCancelOpen(false);
-              toast.success("Đã hủy đăng ký");
+              toast.success(t("postDetail.cancelledToast"));
             },
             onError: (e) => {
               setCancelOpen(false);
-              toast.error(getErrorMessage(e));
+              toast.apiError(e);
             },
           });
         }}
-        description="Đơn đăng ký của bạn sẽ bị hủy và chủ bài sẽ không còn thấy bạn trong danh sách ứng viên."
+        description={t("postDetail.cancelDialog.description")}
       />
 
       <ConfirmDialog
         open={closeOpen}
         onClose={() => setCloseOpen(false)}
-        title="Đóng bài đăng?"
-        confirmText="Đóng bài"
+        title={t("postDetail.closeDialog.title")}
+        confirmText={t("postDetail.closeDialog.confirm")}
         loading={close.isPending}
         onConfirm={onClosePost}
-        description="Bài đăng sẽ ngừng nhận đăng ký mới. Các đăng ký hiện có vẫn được giữ lại."
+        description={t("postDetail.closeDialog.description")}
       />
 
       <ConfirmDialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        title="Xóa bài đăng?"
+        title={t("postDetail.deleteDialog.title")}
         danger
-        confirmText="Xóa bài"
+        confirmText={t("postDetail.deleteDialog.confirm")}
         loading={remove.isPending}
         onConfirm={onDelete}
-        description="Bài đăng sẽ bị xóa vĩnh viễn. Thao tác này chỉ thực hiện được khi bài chưa ghép cặp."
+        description={t("postDetail.deleteDialog.description")}
       />
     </div>
   );

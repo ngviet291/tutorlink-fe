@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Globe, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/constants/routes";
 import { Logo } from "@/shared/components/ui/Logo";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
@@ -7,19 +8,33 @@ import type { Role } from "@/shared/types/common.types";
 
 interface FooterLink {
   to: string;
-  label: string;
+  /** Khóa dịch; chữ được dịch lúc render để đổi VI/EN có hiệu lực ngay. */
+  labelKey: string;
   /** Vai trò không thấy link này (khách chưa đăng nhập được coi là học viên). */
   hideFor?: Role[];
 }
 
 const EXPLORE_LINKS: FooterLink[] = [
-  { to: ROUTES.FIND_TUTOR, label: "Tìm gia sư", hideFor: ["TUTOR"] },
-  { to: ROUTES.FIND_CLASS, label: "Tìm lớp dạy" },
-  { to: ROUTES.TUTOR_CORNER, label: "Góc gia sư", hideFor: ["STUDENT"] },
-  { to: ROUTES.STUDENT_CORNER, label: "Góc học viên", hideFor: ["TUTOR"] },
+  {
+    to: ROUTES.FIND_TUTOR,
+    labelKey: "shared.footer.findTutor",
+    hideFor: ["TUTOR"],
+  },
+  { to: ROUTES.FIND_CLASS, labelKey: "shared.footer.findClass" },
+  {
+    to: ROUTES.TUTOR_CORNER,
+    labelKey: "shared.footer.tutorCorner",
+    hideFor: ["STUDENT"],
+  },
+  {
+    to: ROUTES.STUDENT_CORNER,
+    labelKey: "shared.footer.studentCorner",
+    hideFor: ["TUTOR"],
+  },
 ];
 
 export function Footer() {
+  const { t } = useTranslation();
   const role = useAppSelector((s) => s.auth.user?.role);
   const effective: Role = role ?? "STUDENT";
   const exploreLinks =
@@ -35,48 +50,61 @@ export function Footer() {
         <div className="flex flex-col gap-3">
           <Logo />
           <p className="text-sm text-text-secondary">
-            Nền tảng ghép cặp gia sư và học viên minh bạch, nhanh chóng trên
-            toàn quốc.
+            {t("shared.footer.tagline")}
           </p>
           <div className="flex gap-3 text-text-secondary">
-            <a href="#" aria-label="Trang web TutorLink" className={link}>
+            <a
+              href="#"
+              aria-label={t("shared.footer.websiteAria")}
+              className={link}
+            >
               <Globe className="size-5" />
             </a>
-            <Link to={ROUTES.CHAT_INBOX} aria-label="Tin nhắn" className={link}>
+            <Link
+              to={ROUTES.CHAT_INBOX}
+              aria-label={t("shared.footer.messagesAria")}
+              className={link}
+            >
               <MessageCircle className="size-5" />
             </Link>
           </div>
         </div>
 
         {exploreLinks.length > 0 && (
-          <nav aria-label="Khám phá" className={col}>
-            <h3 className="mb-1 font-bold text-text">Khám phá</h3>
+          <nav aria-label={t("shared.footer.explore")} className={col}>
+            <h3 className="mb-1 font-bold text-text">
+              {t("shared.footer.explore")}
+            </h3>
             {exploreLinks.map((l) => (
               <Link key={l.to} className={link} to={l.to}>
-                {l.label}
+                {t(l.labelKey)}
               </Link>
             ))}
           </nav>
         )}
 
-        <nav aria-label="Hỗ trợ" className={col}>
-          <h3 className="mb-1 font-bold text-text">Hỗ trợ</h3>
+        <nav aria-label={t("shared.footer.support")} className={col}>
+          <h3 className="mb-1 font-bold text-text">
+            {t("shared.footer.support")}
+          </h3>
           <Link className={link} to={ROUTES.GUIDE}>
-            Hướng dẫn sử dụng
+            {t("shared.footer.guide")}
           </Link>
           <Link className={link} to={ROUTES.FEE_POLICY}>
-            Quy định phí nhận lớp
+            {t("shared.footer.feePolicy")}
           </Link>
           <Link className={link} to={ROUTES.PRIVACY}>
-            Chính sách bảo mật
+            {t("shared.footer.privacy")}
           </Link>
           <Link className={link} to={ROUTES.TERMS}>
-            Điều khoản dịch vụ
+            {t("shared.footer.terms")}
           </Link>
         </nav>
 
         <div className={col}>
-          <h3 className="mb-1 font-bold text-text">Liên hệ</h3>
+          <h3 className="mb-1 font-bold text-text">
+            {t("shared.footer.contact")}
+          </h3>
           <span className="flex items-center gap-2">
             <Phone className="size-4" /> 1900 0000
           </span>
@@ -84,14 +112,12 @@ export function Footer() {
             <Mail className="size-4" /> tutorlink.n3@gmail.com
           </span>
           <span className="flex items-center gap-2">
-            <MapPin className="size-4" /> 12 Nguyễn Văn Bảo, Phường Hạnh
-            Thông,TP.HCM
+            <MapPin className="size-4" /> {t("shared.footer.address")}
           </span>
         </div>
       </div>
       <div className="border-t border-border py-4 text-center text-xs text-text-secondary">
-        © {new Date().getFullYear()} TutorLink. Học phí hằng tháng do hai bên tự
-        thỏa thuận ngoài hệ thống.
+        {t("shared.footer.copyright", { year: new Date().getFullYear() })}
       </div>
     </footer>
   );

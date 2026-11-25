@@ -1,53 +1,47 @@
 import axios from "axios";
+import i18n from "@/app/i18n";
+import { translateBackendMessage } from "@/shared/i18n/backendMessages";
 
 export class ApiError extends Error {
   status?: number | string;
   fieldErrors?: Record<string, string>;
   code?: string;
   rawMessage?: string;
+  rawFieldErrors?: Record<string, string>;
 
   constructor(
     message: string,
     status?: number | string,
     fieldErrors?: Record<string, string>,
     code?: string,
+    rawFieldErrors?: Record<string, string>,
   ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.fieldErrors = fieldErrors;
     this.code = code;
+    this.rawFieldErrors = rawFieldErrors;
   }
 }
 
-export const GENERIC_ERROR_MESSAGE = "Đã xảy ra lỗi. Vui lòng thử lại.";
-export const NETWORK_ERROR_MESSAGE =
-  "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.";
+/** Câu lỗi chung theo ngôn ngữ đang chọn (đọc lúc gọi, không cố định lúc tải module). */
+export const genericErrorMessage = () => i18n.t("error.unknown");
+export const networkErrorMessage = () => i18n.t("error.network");
 
-const STATUS_MESSAGES: Record<number, string> = {
-  400: "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.",
-  401: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
-  403: "Bạn không có quyền thực hiện thao tác này.",
-  404: "Không tìm thấy dữ liệu yêu cầu.",
-  408: "Yêu cầu mất quá nhiều thời gian. Vui lòng thử lại.",
-  409: "Dữ liệu đã tồn tại hoặc thao tác đang bị xung đột.",
-  413: "Tệp tải lên quá lớn. Vui lòng chọn tệp nhỏ hơn.",
-  415: "Định dạng tệp không được hỗ trợ.",
-  422: "Thông tin không hợp lệ. Vui lòng kiểm tra lại.",
-  429: "Bạn đang thực hiện quá nhiều yêu cầu. Vui lòng thử lại sau.",
-  500: "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
-  502: "Hệ thống đang tạm thời không khả dụng. Vui lòng thử lại sau.",
-  503: "Hệ thống đang tạm thời không khả dụng. Vui lòng thử lại sau.",
-  504: "Hệ thống đang tạm thời không khả dụng. Vui lòng thử lại sau.",
-};
+/** Mã HTTP -> key i18n (`error.s<mã>`); mã không có bảng riêng rơi về nhóm gần nhất. */
+const STATUS_KEYS = new Set([
+  400, 401, 403, 404, 408, 409, 413, 415, 422, 429, 500, 503,
+]);
 
 export function messageForStatus(status?: number | string): string {
   const code = Number(status);
-  if (!Number.isFinite(code)) return GENERIC_ERROR_MESSAGE;
-  if (STATUS_MESSAGES[code]) return STATUS_MESSAGES[code];
-  if (code >= 500) return STATUS_MESSAGES[500];
-  if (code >= 400) return STATUS_MESSAGES[400];
-  return GENERIC_ERROR_MESSAGE;
+  if (!Number.isFinite(code)) return genericErrorMessage();
+  if (code === 502 || code === 504) return i18n.t("error.s503");
+  if (STATUS_KEYS.has(code)) return i18n.t(`error.s${code}`);
+  if (code >= 500) return i18n.t("error.s500");
+  if (code >= 400) return i18n.t("error.s400");
+  return genericErrorMessage();
 }
 
 const VIETNAMESE_RE =
@@ -64,22 +58,32 @@ export function isVietnameseMessage(message?: unknown): message is string {
   );
 }
 export function localizeFieldMessage(message: unknown): string {
-  if (isVietnameseMessage(message)) return message.trim();
+  const known = translateBackendMessage(message);
+  if (known) return known;
   const text = typeof message === "string" ? message.toLowerCase() : "";
   if (/blank|required|empty|must not be null|cannot be null/.test(text)) {
-    return "Vui lòng nhập thông tin này.";
+    return i18n.t("validation.fieldRequired");
   }
-  if (/email/.test(text)) return "Email không hợp lệ.";
+  if (/email/.test(text)) return i18n.t("validation.fieldEmail");
   if (/size|length|too long|too short/.test(text)) {
-    return "Độ dài không hợp lệ.";
+    return i18n.t("validation.fieldLength");
   }
   if (/min|max|greater|less|positive|range/.test(text)) {
-    return "Giá trị không nằm trong phạm vi cho phép.";
+    return i18n.t("validation.fieldRange");
   }
-  if (/pattern|format|invalid/.test(text)) return "Định dạng không hợp lệ.";
-  return "Giá trị không hợp lệ.";
+  if (/pattern|format|invalid/.test(text))
+    return i18n.t("validation.fieldFormat");
+  return i18n.t("validation.fieldInvalid");
 }
-
+export function localizeFieldErrors(
+  raw: Record<string, unknown> | undefined,
+): Record<string, string> | undefined {
+  return raw
+    ? Object.fromEntries(
+        Object.entries(raw).map(([k, v]) => [k, localizeFieldMessage(v)]),
+      )
+    : undefined;
+}
 function isNetworkLike(error: unknown): boolean {
   if (axios.isAxiosError(error)) {
     if (error.response) return false;
@@ -102,7 +106,7 @@ type ErrorLike = {
 };
 
 export function resolveErrorMessage(error: unknown): string {
-  if (error == null) return GENERIC_ERROR_MESSAGE;
+  if (error == null) return genericErrorMessage();
 
   if (typeof error === "object") {
     const e = error as ErrorLike;
@@ -111,22 +115,24 @@ export function resolveErrorMessage(error: unknown): string {
 
     if (isApiError) {
       const status = e.status as number | string | undefined;
-      if (isVietnameseMessage(e.message)) return e.message.trim();
+      const source = (e as { rawMessage?: unknown }).rawMessage ?? e.message;
+      const translated = translateBackendMessage(source);
+      if (translated) return translated;
 
       if (e.fieldErrors && typeof e.fieldErrors === "object") {
-        const vi = Object.values(e.fieldErrors as Record<string, unknown>)
-          .filter(isVietnameseMessage)
-          .map((m) => m.trim());
-        if (vi.length > 0) return vi.join("\n");
+        const msgs = Object.values(e.fieldErrors as Record<string, unknown>)
+          .map(translateBackendMessage)
+          .filter((m): m is string => Boolean(m));
+        if (msgs.length > 0) return msgs.join("\n");
       }
       if (status === undefined && isNetworkLike(error)) {
-        return NETWORK_ERROR_MESSAGE;
+        return networkErrorMessage();
       }
       if (status === undefined) {
         return typeof e.message === "string" &&
           /network|failed to fetch|timeout|timed out/i.test(e.message)
-          ? NETWORK_ERROR_MESSAGE
-          : GENERIC_ERROR_MESSAGE;
+          ? networkErrorMessage()
+          : genericErrorMessage();
       }
       return messageForStatus(status);
     }
@@ -134,19 +140,22 @@ export function resolveErrorMessage(error: unknown): string {
 
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as { message?: unknown } | undefined;
-    if (isVietnameseMessage(data?.message)) return data.message.trim();
-    if (!error.response) return NETWORK_ERROR_MESSAGE;
+    const translatedData = translateBackendMessage(data?.message);
+    if (translatedData) return translatedData;
+    if (!error.response) return networkErrorMessage();
     return messageForStatus(error.response.status);
   }
 
   if (error instanceof Error) {
-    if (isVietnameseMessage(error.message)) return error.message.trim();
-    if (isNetworkLike(error)) return NETWORK_ERROR_MESSAGE;
-    return GENERIC_ERROR_MESSAGE;
+    const translatedErr = translateBackendMessage(error.message);
+    if (translatedErr) return translatedErr;
+    if (isNetworkLike(error)) return networkErrorMessage();
+    return genericErrorMessage();
   }
 
-  if (isVietnameseMessage(error)) return (error as string).trim();
-  return GENERIC_ERROR_MESSAGE;
+  const translatedRaw = translateBackendMessage(error);
+  if (translatedRaw) return translatedRaw;
+  return genericErrorMessage();
 }
 
 export const getErrorMessage = resolveErrorMessage;
@@ -173,12 +182,14 @@ export function toApiError(error: unknown): ApiError {
       typeof data?.code === "string" ? (data.code as string) : undefined;
 
     const message = !error.response
-      ? NETWORK_ERROR_MESSAGE
-      : isVietnameseMessage(backendMessage)
-        ? backendMessage.trim()
-        : messageForStatus(status);
+      ? networkErrorMessage()
+      : (translateBackendMessage(backendMessage) ?? messageForStatus(status));
 
     const apiError = new ApiError(message, status, fieldErrors, code);
+    apiError.rawFieldErrors =
+      rawFieldErrors && typeof rawFieldErrors === "object"
+        ? (rawFieldErrors as Record<string, string>)
+        : undefined;
     apiError.rawMessage =
       typeof backendMessage === "string" ? backendMessage : undefined;
     return apiError;

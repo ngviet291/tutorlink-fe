@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { SUBJECT_FORM_NAME_MAX_LENGTH } from "@/features/subject/constants/subject.constants";
 import { useForm } from "react-hook-form";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -8,8 +9,8 @@ import { Input } from "@/shared/components/ui/Input";
 import { Modal } from "@/shared/components/ui/Modal";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
-import { getErrorMessage } from "@/shared/utils/errors";
 import { useToast } from "@/shared/hooks/useToast";
+import { useServerFormErrors } from "@/shared/hooks/useServerFormErrors";
 import {
   useSubjectMutations,
   useSubjects,
@@ -19,9 +20,10 @@ import type {
   SubjectResponse,
 } from "@/features/subject/types/subject.types";
 
-const SUBJECT_IN_USE_MESSAGE = "Môn học đang được sử dụng nên không thể xóa.";
+const NO_KNOWN_FIELDS = [] as const;
 
 export default function AdminSubjectsPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const { data, isLoading, isError, refetch } = useSubjects();
   const { create, update, remove } = useSubjectMutations();
@@ -29,12 +31,16 @@ export default function AdminSubjectsPage() {
   const [deleting, setDeleting] = useState<SubjectResponse | null>(null);
   // Môn mà BE từ chối xóa vì đang được sử dụng: disable nút Xóa trong modal
   const [inUseIds, setInUseIds] = useState<string[]>([]);
+  const form = useForm<SubjectPayload>();
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<SubjectPayload>();
+  } = form;
+
+  // Đổi ngôn ngữ: validate lại ô đang lỗi để chữ lỗi đổi theo
+  useServerFormErrors(form, NO_KNOWN_FIELDS);
 
   const open = (s: SubjectResponse | "new") => {
     setEditing(s);
@@ -61,10 +67,10 @@ export default function AdminSubjectsPage() {
   const submit = handleSubmit((v) => {
     const opts = {
       onSuccess: () => {
-        toast.success("Đã lưu môn học");
+        toast.success(t("adminSubjects.saved"));
         setEditing(null);
       },
-      onError: (e: unknown) => toast.error(getErrorMessage(e)),
+      onError: (e: unknown) => toast.apiError(e),
     };
     if (editing === "new") {
       create.mutate(v, opts);
@@ -80,7 +86,7 @@ export default function AdminSubjectsPage() {
     const subject = deleting;
     remove.mutate(subject.id, {
       onSuccess: () => {
-        toast.success("Đã xóa môn học");
+        toast.success(t("adminSubjects.deleted"));
         setDeleting(null);
       },
       // BE từ chối: giữ modal mở, lúc này deletingInUse = true nên nút Xóa bị disable
@@ -91,10 +97,10 @@ export default function AdminSubjectsPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
       <PageHeader
-        title="Quản lý môn học"
+        title={t("adminSubjects.title")}
         actions={
           <Button onClick={() => open("new")}>
-            <Plus className="size-4" /> Thêm môn
+            <Plus className="size-4" /> {t("adminSubjects.add")}
           </Button>
         }
       />
@@ -114,14 +120,14 @@ export default function AdminSubjectsPage() {
                 <p className="text-xs text-text-secondary">
                   {s.usageCount === undefined
                     ? s.category
-                    : `Đang được dùng ở ${s.usageCount} bài đăng/hồ sơ`}
+                    : t("adminSubjects.usage", { count: s.usageCount })}
                 </p>
               </div>
               <div className="flex gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  aria-label={`Sửa ${s.name}`}
+                  aria-label={t("adminSubjects.editAria", { name: s.name })}
                   onClick={() => open(s)}
                 >
                   <Pencil className="size-4" />
@@ -129,7 +135,7 @@ export default function AdminSubjectsPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  aria-label={`Xóa ${s.name}`}
+                  aria-label={t("adminSubjects.deleteAria", { name: s.name })}
                   onClick={() => setDeleting(s)}
                 >
                   <Trash2 className="size-4 text-danger-text" />
@@ -143,49 +149,60 @@ export default function AdminSubjectsPage() {
       <Modal
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
-        title={editing === "new" ? "Thêm môn học" : "Sửa môn học"}
+        title={
+          editing === "new"
+            ? t("adminSubjects.addTitle")
+            : t("adminSubjects.editTitle")
+        }
         size="sm"
         footer={
           <>
             <Button variant="ghost" onClick={() => setEditing(null)}>
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button
               loading={create.isPending || update.isPending}
               onClick={() => void submit()}
             >
-              Lưu
+              {t("common.save")}
             </Button>
           </>
         }
       >
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-3">
           <Input
-            label="Tên môn học"
+            label={t("adminSubjects.nameLabel")}
             required
             error={errors.name?.message}
             {...register("name", {
-              required: "Tên môn học là bắt buộc",
+              required: t("adminSubjects.nameRequired"),
               maxLength: {
                 value: SUBJECT_FORM_NAME_MAX_LENGTH,
-                message: `Tối đa ${SUBJECT_FORM_NAME_MAX_LENGTH} ký tự`,
+                message: t("adminSubjects.maxChars", {
+                  max: SUBJECT_FORM_NAME_MAX_LENGTH,
+                }),
               },
             })}
           />
           <Input
-            label="Nhóm môn"
+            label={t("adminSubjects.categoryLabel")}
             required
             error={errors.category?.message}
-            {...register("category", { required: "Nhóm môn là bắt buộc" })}
+            {...register("category", {
+              required: t("adminSubjects.categoryRequired"),
+            })}
           />
-          <Input label="Mô tả" {...register("description")} />
+          <Input
+            label={t("adminSubjects.descriptionLabel")}
+            {...register("description")}
+          />
         </form>
       </Modal>
 
       <Modal
         open={Boolean(deleting)}
         onClose={() => setDeleting(null)}
-        title="Xóa môn học?"
+        title={t("adminSubjects.deleteTitle")}
         size="sm"
         footer={
           <>
@@ -194,7 +211,7 @@ export default function AdminSubjectsPage() {
               onClick={() => setDeleting(null)}
               disabled={remove.isPending}
             >
-              Hủy
+              {t("common.cancel")}
             </Button>
             <Button
               variant="danger"
@@ -202,20 +219,24 @@ export default function AdminSubjectsPage() {
               disabled={deletingInUse}
               onClick={confirmDelete}
             >
-              Xóa
+              {t("common.delete")}
             </Button>
           </>
         }
       >
         <p className="text-sm text-text-secondary">
-          Xóa môn <strong>{deleting?.name}</strong>?
+          <Trans
+            i18nKey="adminSubjects.deleteConfirm"
+            values={{ name: deleting?.name ?? "" }}
+            components={{ strong: <strong /> }}
+          />
         </p>
         {deletingInUse && (
           <p
             role="alert"
             className="mt-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
           >
-            {SUBJECT_IN_USE_MESSAGE}
+            {t("adminSubjects.inUse")}
           </p>
         )}
       </Modal>

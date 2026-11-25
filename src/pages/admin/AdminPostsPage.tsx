@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { POST_STATUS_META } from "@/constants/enums";
 import { ROUTES } from "@/constants/routes";
@@ -38,6 +39,7 @@ function ApplicationsModal({
   post: PostResponse | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useApplicationsByPost(
     post?.id ?? "",
     Boolean(post),
@@ -47,13 +49,13 @@ function ApplicationsModal({
     <Modal
       open={Boolean(post)}
       onClose={onClose}
-      title={`Lượt đăng ký: ${post?.title ?? ""}`}
+      title={t("adminPosts.applicationsTitle", { title: post?.title ?? "" })}
       size="lg"
     >
       {isLoading ? (
         <ListSkeleton rows={3} />
       ) : !data?.length ? (
-        <EmptyState title="Chưa có lượt đăng ký" />
+        <EmptyState title={t("adminPosts.noApplications")} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {data.map((a) => {
@@ -85,7 +87,9 @@ function ApplicationsModal({
                         <span className="font-medium text-text">{rating}</span>
                       </span>
                       <span>•</span>
-                      <span>{reviewCount} đánh giá</span>
+                      <span>
+                        {t("adminPosts.reviewCount", { count: reviewCount })}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -94,10 +98,12 @@ function ApplicationsModal({
                 {a.proposedFee && (
                   <div className="flex items-center justify-between rounded-md bg-primary/10 px-3 py-2">
                     <span className="text-xs font-medium text-text-secondary">
-                      Đề xuất phí
+                      {t("adminPosts.proposedFee")}
                     </span>
                     <span className="text-base font-bold text-primary">
-                      {a.proposedFee.toLocaleString()} đ
+                      {t("adminPosts.feeAmount", {
+                        amount: a.proposedFee.toLocaleString(),
+                      })}
                     </span>
                   </div>
                 )}
@@ -105,7 +111,11 @@ function ApplicationsModal({
                 {/* Applied Time */}
                 <div className="flex items-center gap-1.5 text-xs text-text-secondary">
                   <Clock className="size-3.5" />
-                  <span>Đã ứng tuyển {timeAgo(a.appliedAt)}</span>
+                  <span>
+                    {t("adminPosts.appliedAgo", {
+                      time: timeAgo(a.appliedAt),
+                    })}
+                  </span>
                 </div>
               </Link>
             );
@@ -117,6 +127,7 @@ function ApplicationsModal({
 }
 
 export default function AdminPostsPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const subjects = useSubjects();
 
@@ -204,7 +215,7 @@ export default function AdminPostsPage() {
     }
 
     if (reason.trim().length < 5) {
-      setReasonError("Vui lòng nhập lý do (tối thiểu 5 ký tự)");
+      setReasonError(t("adminPosts.reasonTooShort"));
       return;
     }
 
@@ -215,7 +226,7 @@ export default function AdminPostsPage() {
       },
       {
         onSuccess: () => {
-          toast.success("Đã gỡ bài vi phạm");
+          toast.success(t("adminPosts.removedToast"));
           close();
         },
         onError: (e) => {
@@ -227,14 +238,14 @@ export default function AdminPostsPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5">
-      <PageHeader title="Quản lý bài đăng & lượt đăng ký" />
+      <PageHeader title={t("adminPosts.pageTitle")} />
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
         {/* FILTER */}
         <div className="flex w-full flex-col gap-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:w-64 lg:shrink-0 lg:self-start lg:overflow-y-auto">
           <Select
-            aria-label="Lọc theo trạng thái"
-            placeholder="Tất cả trạng thái"
+            aria-label={t("adminPosts.statusFilterAria")}
+            placeholder={t("adminPosts.allStatuses")}
             value={status}
             onChange={(e) => setStatus(e.target.value as PostStatus | "")}
             options={(Object.keys(POST_STATUS_META) as PostStatus[]).map(
@@ -248,7 +259,7 @@ export default function AdminPostsPage() {
           <FilterSidebar
             value={filter}
             onChange={setFilter}
-            rangeLabel="Học phí (VNĐ)"
+            rangeLabel={t("adminPosts.tuitionRange")}
             rangeMax={RANGE_MAX}
             budgetUnitMode
             hideProvince
@@ -262,7 +273,7 @@ export default function AdminPostsPage() {
           ) : isError ? (
             <ErrorState onRetry={() => void refetch()} />
           ) : !posts.length ? (
-            <EmptyState title="Không có bài đăng" />
+            <EmptyState title={t("adminPosts.noPosts")} />
           ) : (
             <>
               <ul className="grid gap-4 sm:grid-cols-2">
@@ -296,12 +307,12 @@ export default function AdminPostsPage() {
       <Modal
         open={Boolean(target)}
         onClose={close}
-        title="Gỡ bài vi phạm"
+        title={t("adminPosts.removeTitle")}
         size="sm"
         footer={
           <>
             <Button variant="ghost" onClick={close}>
-              Hủy
+              {t("adminPosts.cancel")}
             </Button>
 
             <Button
@@ -309,18 +320,17 @@ export default function AdminPostsPage() {
               loading={removePost.isPending}
               onClick={confirm}
             >
-              Gỡ bài
+              {t("adminPosts.removeBtn")}
             </Button>
           </>
         }
       >
         <p className="mb-3 text-sm text-text-secondary">
-          Bài “{target?.title}” sẽ chuyển sang trạng thái Đã gỡ và người đăng
-          được thông báo.
+          {t("adminPosts.removeNotice", { title: target?.title })}
         </p>
 
         <Textarea
-          label="Lý do gỡ"
+          label={t("adminPosts.reasonLabel")}
           required
           value={reason}
           error={reasonError}

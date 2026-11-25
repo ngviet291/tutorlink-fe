@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { FormField } from "@/shared/components/ui/FormField";
 import { Input } from "@/shared/components/ui/Input";
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export function WithdrawModal({ open, onClose, currentBalance }: Props) {
+  const { t } = useTranslation();
   const toast = useToast();
   const { withdraw } = useWalletMutations();
   const isSubmitting = withdraw.isPending;
@@ -55,9 +57,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
       },
       {
         onSuccess: () => {
-          toast.success(
-            "Yêu cầu rút tiền đã được gửi. Vui lòng chờ Admin duyệt.",
-          );
+          toast.success(t("wallet.withdrawModal.submitted"));
           reset();
           onClose();
         },
@@ -74,16 +74,19 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
     onClose();
   };
 
+  const minText = formatVnd(MIN_WITHDRAW);
+  const maxText = formatVnd(MAX_WITHDRAW);
+
   return (
     <Modal
       open={open}
       onClose={handleClose}
-      title="Rút tiền về tài khoản"
+      title={t("wallet.withdrawModal.title")}
       size="md"
       busy={isSubmitting}
     >
       <p className="mb-4 text-sm text-text-secondary">
-        Số dư hiện tại:{" "}
+        {t("wallet.withdrawModal.currentBalance")}{" "}
         <strong className="text-primary">{formatVnd(currentBalance)}</strong>
       </p>
 
@@ -93,50 +96,57 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
         className="flex flex-col gap-4"
       >
         <Input
-          label="Số tiền rút (VND)"
+          label={t("wallet.withdrawModal.amountLabel")}
           required
           type="number"
           inputMode="numeric"
           step={1000}
-          placeholder="Tối thiểu 10,000 VND"
-          hint={`Tối thiểu ${formatVnd(MIN_WITHDRAW)}, tối đa ${formatVnd(MAX_WITHDRAW)} mỗi lần.`}
+          placeholder={t("wallet.withdrawModal.amountPlaceholder", {
+            min: minText,
+          })}
+          hint={t("wallet.withdrawModal.amountHint", {
+            min: minText,
+            max: maxText,
+          })}
           disabled={isSubmitting}
           error={errors.amount?.message}
           {...register("amount", {
-            required: "Vui lòng nhập số tiền",
+            required: t("wallet.withdrawModal.amountRequired"),
             validate: (value) => {
               const amount = Number(value);
-              if (!Number.isInteger(amount)) return "Số tiền phải là số nguyên";
+              if (!Number.isInteger(amount))
+                return t("wallet.withdrawModal.amountInteger");
               if (amount < MIN_WITHDRAW)
-                return "Số tiền tối thiểu là 10,000 VND";
+                return t("wallet.withdrawModal.amountMin", { min: minText });
               if (amount > MAX_WITHDRAW)
-                return "Số tiền tối đa mỗi lần là 50,000,000 VND";
-              if (amount > currentBalance) return "Số dư không đủ để rút";
+                return t("wallet.withdrawModal.amountMax", { max: maxText });
+              if (amount > currentBalance)
+                return t("wallet.withdrawModal.amountInsufficient");
               return true;
             },
           })}
         />
 
         <Input
-          label="Số tài khoản"
+          label={t("wallet.withdrawModal.accountNumber")}
           required
           type="text"
           inputMode="numeric"
           autoComplete="off"
-          placeholder="Nhập số tài khoản ngân hàng"
+          placeholder={t("wallet.withdrawModal.accountNumberPlaceholder")}
           disabled={isSubmitting}
           error={errors.bankAccountNumber?.message}
           {...register("bankAccountNumber", {
-            required: "Vui lòng nhập số tài khoản",
+            required: t("wallet.withdrawModal.accountNumberRequired"),
             pattern: {
               value: /^\d{6,19}$/,
-              message: "Số tài khoản gồm 6–19 chữ số",
+              message: t("wallet.withdrawModal.accountNumberFormat"),
             },
           })}
         />
 
         <FormField
-          label="Ngân hàng"
+          label={t("wallet.withdrawModal.bank")}
           htmlFor={bankId}
           required
           error={errors.bankName?.message}
@@ -144,7 +154,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
           <Controller
             name="bankName"
             control={control}
-            rules={{ required: "Vui lòng chọn ngân hàng" }}
+            rules={{ required: t("wallet.withdrawModal.bankRequired") }}
             defaultValue=""
             render={({ field }) => (
               <BankSelect
@@ -159,20 +169,20 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
         </FormField>
 
         <Input
-          label="Tên chủ tài khoản"
+          label={t("wallet.withdrawModal.holder")}
           required
           type="text"
           autoComplete="off"
-          placeholder="Tên như trên thẻ ngân hàng"
+          placeholder={t("wallet.withdrawModal.holderPlaceholder")}
           disabled={isSubmitting}
           error={errors.accountHolderName?.message}
           {...register("accountHolderName", {
-            required: "Vui lòng nhập tên chủ tài khoản",
+            required: t("wallet.withdrawModal.holderRequired"),
             setValueAs: (v: string) =>
               typeof v === "string" ? v.trim().replace(/\s+/g, " ") : v,
             pattern: {
               value: /^[\p{L} ]{2,50}$/u,
-              message: "Tên chủ tài khoản chỉ gồm chữ cái, 2–50 ký tự",
+              message: t("wallet.withdrawModal.holderFormat"),
             },
           })}
         />
@@ -186,11 +196,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
             className="mt-0.5 size-5 shrink-0 text-warning-text"
             aria-hidden="true"
           />
-          <p>
-            Vui lòng kiểm tra kỹ thông tin ngân hàng trước khi gửi. Số tiền sẽ
-            được trừ khỏi ví ngay lập tức. Admin sẽ xử lý và chuyển khoản trong
-            vòng 1–3 ngày làm việc.
-          </p>
+          <p>{t("wallet.withdrawModal.warning")}</p>
         </div>
 
         <div>
@@ -205,12 +211,15 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
               aria-invalid={Boolean(errors.confirmInformation)}
               className="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary"
               {...register("confirmInformation", {
-                required: "Vui lòng xác nhận thông tin trước khi gửi yêu cầu",
+                required: t("wallet.withdrawModal.confirmRequired"),
               })}
             />
             <span className="text-sm text-text-secondary">
-              Tôi xác nhận thông tin rút tiền và tài khoản ngân hàng đã nhập là{" "}
-              <strong className="text-text">chính xác</strong>.
+              {t("wallet.withdrawModal.confirmBefore")}{" "}
+              <strong className="text-text">
+                {t("wallet.withdrawModal.confirmStrong")}
+              </strong>
+              .
             </span>
           </label>
           {errors.confirmInformation && (
@@ -227,10 +236,10 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
             onClick={handleClose}
             disabled={isSubmitting}
           >
-            Hủy
+            {t("common.cancel")}
           </Button>
           <Button type="submit" loading={isSubmitting}>
-            Gửi yêu cầu rút tiền
+            {t("wallet.withdrawModal.submit")}
           </Button>
         </div>
       </form>

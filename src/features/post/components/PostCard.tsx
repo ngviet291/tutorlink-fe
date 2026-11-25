@@ -72,9 +72,10 @@ export function PostCard({
             {" "}
             {post.budgetUnit
               ? BUDGET_UNIT_LABEL[post.budgetUnit]
-              : "Chưa có đơn vị"}
+              : t("post.budgetUnitNotSpecified")}
           </span>
         </div>
+
         <div className="flex items-center gap-1.5">
           <MapPin className="size-3.5 shrink-0" />
           <span className="truncate">
@@ -83,15 +84,18 @@ export function PostCard({
               .join(", ") || t("common.notSpecified")}
           </span>
         </div>
+
         <div className="flex items-center gap-1.5">
           <Wifi className="size-3.5 shrink-0" />
           {TEACHING_MODE_LABEL[post.teachingMode]}
         </div>
+
         <div className="flex items-center gap-1.5">
           <Clock className="size-3.5 shrink-0" />
           {post.sessionsPerWeek} {t("post.sessionsPerWeek")} ·{" "}
           {post.durationMinutes}'
         </div>
+
         <div className="flex items-center gap-1.5">
           <CalendarDays className="size-3.5 shrink-0" />
           {t("post.deadline")} {formatDate(post.deadline)}
@@ -109,6 +113,7 @@ export function PostCard({
             {post.author.fullName}
           </span>
         </span>
+
         <span className="flex shrink-0 items-center gap-2 text-xs text-text-secondary">
           <Badge tone="gray">
             {EDUCATION_LEVEL_LABEL[post.educationLevel]}
@@ -118,7 +123,7 @@ export function PostCard({
             (onViewApplications ? (
               <button
                 type="button"
-                title="Xem lượt đăng ký"
+                title={t("post.viewApplications")}
                 onClick={handleClick(onViewApplications)}
                 className="flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-primary/10 hover:text-primary"
               >
@@ -133,8 +138,8 @@ export function PostCard({
           {onRemove && (
             <button
               type="button"
-              title="Gỡ bài"
-              aria-label="Gỡ bài"
+              title={t("post.remove")}
+              aria-label={t("post.remove")}
               onClick={handleClick(onRemove)}
               className="flex size-10 items-center justify-center rounded-md text-danger-text hover:bg-danger/10 focus-visible:outline-2 focus-visible:outline-danger"
             >

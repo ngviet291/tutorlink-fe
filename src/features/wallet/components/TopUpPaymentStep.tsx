@@ -1,15 +1,17 @@
 import { CheckCircle2, Copy, ExternalLink, XCircle } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { Spinner } from "@/shared/components/ui/Spinner";
 import { formatVnd } from "@/shared/utils/currency";
 import type { TopUpResponse } from "../types/wallet.types";
 
-const VIETQR_STEPS = [
-  "Mở app ngân hàng và chọn quét mã QR",
-  "Quét mã và kiểm tra đúng số tiền",
-  "Xác nhận chuyển, số dư tự cập nhật khi tiền về",
-];
+// Chỉ giữ khóa dịch; chữ được dịch lúc render để đổi VI/EN có hiệu lực ngay.
+const VIETQR_STEP_KEYS = [
+  "wallet.topUpPaymentStep.step1",
+  "wallet.topUpPaymentStep.step2",
+  "wallet.topUpPaymentStep.step3",
+] as const;
 
 interface Props {
   session: TopUpResponse;
@@ -34,6 +36,7 @@ function Result({
   amount: number;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const Icon = success ? CheckCircle2 : XCircle;
   return (
     <div className="flex flex-col items-center gap-3 py-4 text-center">
@@ -42,19 +45,24 @@ function Result({
           success
             ? "flex size-20 items-center justify-center rounded-full bg-success/10 text-success-text"
             : "flex size-20 items-center justify-center rounded-full bg-danger/10 text-danger-text"
-        }>
+        }
+      >
         <Icon className="size-11" />
       </span>
       <h3 className="text-lg font-bold text-text">
-        {success ? "Nạp ví thành công" : "Giao dịch không thành công"}
+        {success
+          ? t("wallet.topUpModal.success")
+          : t("wallet.topUpPaymentStep.failedTitle")}
       </h3>
       <p className="text-sm text-text-secondary">
         {success
-          ? `${formatVnd(amount)} đã được cộng vào ví của bạn.`
-          : "Vui lòng thử lại hoặc chọn phương thức khác."}
+          ? t("wallet.topUpPaymentStep.successDesc", {
+              amount: formatVnd(amount),
+            })
+          : t("wallet.topUpPaymentStep.failedDesc")}
       </p>
       <Button fullWidth onClick={onClose}>
-        Đóng
+        {t("wallet.topUpModal.close")}
       </Button>
     </div>
   );
@@ -74,6 +82,7 @@ export function TopUpPaymentStep({
   onCopy,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
   const { transaction } = session;
   if (done || failed) {
     return (
@@ -88,7 +97,7 @@ export function TopUpPaymentStep({
     <div className="flex flex-col items-center gap-4 text-center">
       <div className="w-full rounded-2xl bg-primary-light px-4 py-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
-          Số tiền cần thanh toán
+          {t("wallet.topUpPaymentStep.amountDue")}
         </p>
         <p className="mt-1 text-3xl font-extrabold text-primary">
           {formatVnd(transaction.amount)}
@@ -98,14 +107,15 @@ export function TopUpPaymentStep({
       {isDemo && (
         <p
           role="status"
-          className="w-full rounded-xl bg-warning/10 px-3 py-2 text-sm font-semibold text-warning-text">
-          CHẾ ĐỘ DEMO: tiền giả lập, chỉ dùng với dữ liệu phát triển.
+          className="w-full rounded-xl bg-warning/10 px-3 py-2 text-sm font-semibold text-warning-text"
+        >
+          {t("wallet.topUpPaymentStep.demoNotice")}
         </p>
       )}
 
       {isDemo ? (
         <Button fullWidth loading={demoLoading} onClick={onDemoConfirm}>
-          Xác nhận thanh toán demo thành công
+          {t("wallet.topUpModal.demoConfirm")}
         </Button>
       ) : isVietQr ? (
         <div className="flex w-full flex-col items-center gap-4">
@@ -116,12 +126,12 @@ export function TopUpPaymentStep({
           ) : session.paymentLink ? (
             <img
               src={session.paymentLink}
-              alt="Mã QR VietQR"
+              alt={t("wallet.topUpModal.qrAlt")}
               className="size-60 rounded-2xl border border-border bg-white object-contain p-3 shadow-sm"
             />
           ) : (
             <p className="text-sm text-danger-text">
-              Chưa nhận được mã QR. Vui lòng đóng và thử lại.
+              {t("wallet.topUpModal.qrMissing")}
             </p>
           )}
 
@@ -129,43 +139,45 @@ export function TopUpPaymentStep({
             <button
               type="button"
               onClick={() => onCopy(orderId)}
-              className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-hover px-3 py-1.5 text-xs font-semibold text-text">
-              Mã đơn: {orderId}
+              className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-hover px-3 py-1.5 text-xs font-semibold text-text"
+            >
+              {t("wallet.topUpModal.orderId", { id: orderId })}
               <Copy className="size-3.5" />
             </button>
           )}
 
           <ol className="w-full space-y-2 rounded-xl border border-border bg-surface p-3 text-left text-sm text-text">
-            {VIETQR_STEPS.map((step, i) => (
-              <li key={step} className="flex gap-3">
+            {VIETQR_STEP_KEYS.map((key, i) => (
+              <li key={key} className="flex gap-3">
                 <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">
                   {i + 1}
                 </span>
-                <span>{step}</span>
+                <span>{t(key)}</span>
               </li>
             ))}
           </ol>
 
           <p className="w-full rounded-xl bg-warning/10 px-3 py-2 text-xs text-warning-text">
-            Chuyển đúng số tiền và không sửa nội dung. Chuyển sai số tiền sẽ cần
-            đối soát thủ công.
+            {t("wallet.topUpModal.transferWarning")}
           </p>
         </div>
       ) : (
         <div className="flex w-full flex-col items-center gap-3">
           <p className="text-sm text-text-secondary">
             {session.paymentLink
-              ? "Bấm nút bên dưới để mở trang thanh toán. Số dư sẽ cập nhật tự động sau khi hoàn tất."
-              : "Chưa nhận được liên kết thanh toán. Vui lòng đóng và thử lại."}
+              ? t("wallet.topUpPaymentStep.openHint")
+              : t("wallet.topUpModal.noPaymentLink")}
           </p>
           {session.paymentLink && (
             <a
               href={session.paymentLink}
               target="_blank"
               rel="noreferrer"
-              className="w-full">
+              className="w-full"
+            >
               <Button fullWidth>
-                <ExternalLink className="size-4" /> Mở trang thanh toán
+                <ExternalLink className="size-4" />{" "}
+                {t("wallet.topUpModal.openPayment")}
               </Button>
             </a>
           )}
@@ -175,28 +187,27 @@ export function TopUpPaymentStep({
       {expired ? (
         <div role="alert" className="flex w-full flex-col items-center gap-2">
           <p className="text-sm text-warning-text">
-            Chưa nhận được thanh toán. Nếu bạn đã chuyển tiền, hãy kiểm tra lại
-            sau ít phút.
+            {t("wallet.topUpModal.notReceived")}
           </p>
           <Button variant="outline" fullWidth onClick={onRecheck}>
-            Kiểm tra lại
+            {t("wallet.topUpModal.recheck")}
           </Button>
         </div>
       ) : statusError ? (
         <div role="alert" className="flex w-full flex-col items-center gap-2">
           <p className="text-sm text-danger-text">{statusError}</p>
           <Button variant="outline" fullWidth onClick={onRecheck}>
-            Kiểm tra lại
+            {t("wallet.topUpModal.recheck")}
           </Button>
         </div>
       ) : (
         <p className="flex items-center gap-2 text-xs text-text-secondary">
-          <Spinner size="sm" /> Đang chờ xác nhận thanh toán…
+          <Spinner size="sm" /> {t("wallet.topUpPaymentStep.waiting")}
         </p>
       )}
 
       <Button variant="ghost" onClick={onClose}>
-        Để sau
+        {t("wallet.topUpModal.later")}
       </Button>
     </div>
   );

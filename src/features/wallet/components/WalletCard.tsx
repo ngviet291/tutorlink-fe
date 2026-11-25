@@ -1,14 +1,16 @@
-import {  Plus, Wallet, ArrowDownToLine } from "lucide-react";
+import { Plus, Wallet, ArrowDownToLine } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
 import { formatVnd } from "@/shared/utils/currency";
 import { useWallet } from "../hooks/useWallet";
 
-export function WalletCard({ 
-  onTopUp, 
-  onWithdraw 
-}: { 
+const MIN_WITHDRAW_BALANCE = 10000;
+
+export function WalletCard({
+  onTopUp,
+  onWithdraw,
+}: {
   onTopUp: () => void;
   onWithdraw: () => void;
 }) {
@@ -49,14 +51,17 @@ export function WalletCard({
           variant="secondary"
           onClick={onWithdraw}
           className="bg-white/10 text-white hover:bg-white/20"
-          disabled={!data || data.balance < 10000}
+          disabled={!data || data.balance < MIN_WITHDRAW_BALANCE}
         >
-          <ArrowDownToLine className="size-4" /> Rút tiền
+          <ArrowDownToLine className="size-4" />{" "}
+          {t("wallet.walletCard.withdraw")}
         </Button>
       </div>
-      {data && data.balance < 10000 && (
+      {data && data.balance < MIN_WITHDRAW_BALANCE && (
         <p className="mt-3 text-sm text-white/90">
-          Cần số dư tối thiểu 10,000 VND để rút tiền.
+          {t("wallet.walletCard.minBalanceHint", {
+            amount: formatVnd(MIN_WITHDRAW_BALANCE),
+          })}
         </p>
       )}
     </section>

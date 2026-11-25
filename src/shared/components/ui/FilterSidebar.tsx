@@ -7,7 +7,11 @@ import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { BudgetUnit, TeachingMode } from "@/shared/types/common.types";
 import type { EducationLevel } from "@/constants/enums";
 
-import { BUDGET_UNIT_LABEL, EDUCATION_LEVELS, EDUCATION_LEVEL_LABEL } from "@/constants/enums";
+import {
+  BUDGET_UNIT_LABEL,
+  EDUCATION_LEVELS,
+  EDUCATION_LEVEL_LABEL,
+} from "@/constants/enums";
 import { useProvinces, useWards } from "@/shared/hooks/useAddress";
 
 export interface FilterValues {
@@ -23,7 +27,10 @@ export interface FilterValues {
 }
 
 /** Khoảng giá hợp lý cho từng đơn vị học phí. */
-export const BUDGET_RANGE_BY_UNIT: Record<BudgetUnit, { max: number; step: number }> = {
+export const BUDGET_RANGE_BY_UNIT: Record<
+  BudgetUnit,
+  { max: number; step: number }
+> = {
   PER_SESSION: { max: 1_000_000, step: 50_000 },
   PER_MONTH: { max: 10_000_000, step: 100_000 },
   PER_HOUR: { max: 500_000, step: 10_000 },
@@ -57,6 +64,7 @@ export function emptyFilter(rangeMax: number): FilterValues {
 interface FilterSidebarProps {
   value: FilterValues;
   onChange: (v: FilterValues) => void;
+  /** Nếu không truyền, dùng nhãn mặc định "Mức giá" theo ngôn ngữ hiện tại. */
   rangeLabel?: string;
   rangeMax?: number;
   rangeStep?: number;
@@ -74,7 +82,7 @@ interface FilterSidebarProps {
 export function FilterSidebar({
   value,
   onChange,
-  rangeLabel = "Mức giá",
+  rangeLabel,
   rangeMax = 1_000_000,
   rangeStep = 10_000,
   budgetUnitMode = false,
@@ -86,6 +94,8 @@ export function FilterSidebar({
   hideEducationLevels = false,
 }: FilterSidebarProps) {
   const { t } = useTranslation();
+  // Giá trị mặc định phải tính lúc render để đổi VI/EN có hiệu lực ngay
+  const priceLabel = rangeLabel ?? t("shared.filterSidebar.priceRange");
 
   const subjects = useSubjects();
 
@@ -109,7 +119,7 @@ export function FilterSidebar({
     >
       <div>
         <label className="mb-1 block text-xs font-semibold text-text-secondary">
-          Môn học
+          {t("shared.filterSidebar.subject")}
         </label>
 
         <select
@@ -117,7 +127,7 @@ export function FilterSidebar({
           value={value.subjectId}
           onChange={(e) => set({ subjectId: e.target.value })}
         >
-          <option value="">Tất cả môn</option>
+          <option value="">{t("shared.filterSidebar.allSubjects")}</option>
 
           {(subjects.data ?? []).map((s) => (
             <option key={s.id} value={s.id}>
@@ -129,7 +139,7 @@ export function FilterSidebar({
       {!hideProvince && (
         <div>
           <label className="mb-1 block text-xs font-semibold text-text-secondary">
-            Tỉnh / Thành phố
+            {t("shared.filterSidebar.province")}
           </label>
 
           <select
@@ -137,7 +147,7 @@ export function FilterSidebar({
             value={value.province}
             onChange={(e) => set({ province: e.target.value, ward: "" })}
           >
-            <option value="">Tất cả tỉnh/thành</option>
+            <option value="">{t("shared.filterSidebar.allProvinces")}</option>
 
             {provinces.map((p) => (
               <option key={p.code} value={p.name}>
@@ -150,7 +160,7 @@ export function FilterSidebar({
       {!hideProvince && !hideWard && value.province && (
         <div>
           <label className="mb-1 block text-xs font-semibold text-text-secondary">
-            Phường / Xã
+            {t("shared.filterSidebar.ward")}
           </label>
 
           <select
@@ -160,7 +170,9 @@ export function FilterSidebar({
             onChange={(e) => set({ ward: e.target.value })}
           >
             <option value="">
-              {wardsLoading ? "Đang tải..." : "Tất cả phường/xã"}
+              {wardsLoading
+                ? t("common.loading")
+                : t("shared.filterSidebar.allWards")}
             </option>
 
             {wards.map((w) => (
@@ -174,7 +186,7 @@ export function FilterSidebar({
       {!hideTeachingMode && (
         <div>
           <label className="mb-1 block text-xs font-semibold text-text-secondary">
-            Hình thức dạy
+            {t("shared.filterSidebar.teachingMode")}
           </label>
 
           <select
@@ -186,10 +198,10 @@ export function FilterSidebar({
               })
             }
           >
-            <option value="">Tất cả</option>
-            <option value="ONLINE">Online</option>
-            <option value="OFFLINE">Offline</option>
-            <option value="BOTH">Cả hai</option>
+            <option value="">{t("shared.filterSidebar.all")}</option>
+            <option value="ONLINE">{t("common.teachingMode.ONLINE")}</option>
+            <option value="OFFLINE">{t("common.teachingMode.OFFLINE")}</option>
+            <option value="BOTH">{t("shared.filterSidebar.both")}</option>
           </select>
         </div>
       )}
@@ -197,7 +209,7 @@ export function FilterSidebar({
       {!hideEducationLevels && (
         <div>
           <p className="mb-2 text-xs font-semibold text-text-secondary">
-            Cấp học
+            {t("shared.filterSidebar.educationLevel")}
           </p>
 
           <div className="flex flex-wrap gap-2">
@@ -226,7 +238,7 @@ export function FilterSidebar({
       {budgetUnitMode ? (
         <div>
           <p className="mb-2 text-xs font-semibold text-text-secondary">
-            {rangeLabel}
+            {priceLabel}
           </p>
           <div className="flex flex-wrap gap-2">
             {UNIT_ORDER.map((u) => {
@@ -240,7 +252,11 @@ export function FilterSidebar({
                     set(
                       active
                         ? { budgetUnit: "", min: 0, max: rangeMax }
-                        : { budgetUnit: u, min: 0, max: BUDGET_RANGE_BY_UNIT[u].max },
+                        : {
+                            budgetUnit: u,
+                            min: 0,
+                            max: BUDGET_RANGE_BY_UNIT[u].max,
+                          },
                     )
                   }
                   className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
@@ -265,14 +281,14 @@ export function FilterSidebar({
             />
           ) : (
             <p className="mt-2 text-xs text-text-secondary">
-              Chọn đơn vị để lọc theo khoảng học phí.
+              {t("shared.filterSidebar.pickUnitHint")}
             </p>
           )}
         </div>
       ) : (
         <div>
           <label className="mb-1 block text-xs font-semibold text-text-secondary">
-            {rangeLabel}
+            {priceLabel}
           </label>
           <RangeSlider
             min={value.min}
@@ -291,9 +307,7 @@ export function FilterSidebar({
         onClick={() => onChange(emptyFilter(rangeMax))}
         className="mt-1"
       >
-        {t("common.reset", {
-          defaultValue: "Đặt lại bộ lọc",
-        })}
+        {t("shared.filterSidebar.reset")}
       </Button>
     </aside>
   );

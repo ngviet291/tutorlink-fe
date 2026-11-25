@@ -1,74 +1,95 @@
-import { useForm } from 'react-hook-form'
-import { Button } from '@/shared/components/ui/Button'
-import { Modal } from '@/shared/components/ui/Modal'
-import { Textarea } from '@/shared/components/ui/Textarea'
-import { useToast } from '@/shared/hooks/useToast'
-import { getErrorMessage } from '@/shared/utils/errors'
-import { useReviewMutations } from '../hooks/useReviews'
-import type { ReviewResponse } from '../types/review.types'
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/shared/components/ui/Button";
+import { Modal } from "@/shared/components/ui/Modal";
+import { Textarea } from "@/shared/components/ui/Textarea";
+import { useToast } from "@/shared/hooks/useToast";
+import { useReviewMutations } from "../hooks/useReviews";
+import type { ReviewResponse } from "../types/review.types";
 
 interface Props {
-  review: ReviewResponse | null
-  onClose: () => void
+  review: ReviewResponse | null;
+  onClose: () => void;
 }
 
 interface FormValues {
-  reason: string
+  reason: string;
 }
 
+const REASON_MIN_LENGTH = 10;
+
 export function ComplaintModal({ review, onClose }: Props) {
-  const toast = useToast()
-  const { complain } = useReviewMutations()
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>()
+  const { t } = useTranslation();
+  const toast = useToast();
+  const { complain } = useReviewMutations();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>();
 
   const close = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
 
   const submit = handleSubmit(({ reason }) => {
-    if (!review) return
+    if (!review) return;
     complain.mutate(
       { reviewId: review.id, reason },
       {
         onSuccess: () => {
-          toast.success('Đã gửi khiếu nại. Admin sẽ xem xét đánh giá này.')
-          close()
+          toast.success(t("review.complaintModal.sent"));
+          close();
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => toast.apiError(e),
       },
-    )
-  })
+    );
+  });
 
   return (
     <Modal
       open={Boolean(review)}
       onClose={close}
-      title="Khiếu nại đánh giá"
+      title={t("review.complaintModal.title")}
       footer={
         <>
-          <Button variant="ghost" onClick={close}>Hủy</Button>
-          <Button onClick={() => void submit()} loading={complain.isPending}>Gửi khiếu nại</Button>
+          <Button variant="ghost" onClick={close}>
+            {t("common.cancel")}
+          </Button>
+          <Button onClick={() => void submit()} loading={complain.isPending}>
+            {t("review.complaintModal.submit")}
+          </Button>
         </>
       }
     >
       {review && (
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4">
           <blockquote className="rounded-xl bg-surface-hover p-3 text-sm text-text-secondary">
-            “{review.comment}” — {review.rating}★ từ {review.student.fullName}
+            {t("review.complaintModal.quote", {
+              comment: review.comment,
+              rating: review.rating,
+              name: review.student.fullName,
+            })}
           </blockquote>
           <Textarea
-            label="Lý do khiếu nại"
+            label={t("review.complaintModal.reasonLabel")}
             required
-            placeholder="Giải thích vì sao đánh giá này không chính xác hoặc vi phạm quy định..."
+            placeholder={t("review.complaintModal.reasonPlaceholder")}
             error={errors.reason?.message}
-            {...register('reason', {
-              required: 'Vui lòng nhập lý do',
-              minLength: { value: 10, message: 'Lý do tối thiểu 10 ký tự' },
+            {...register("reason", {
+              required: t("review.complaintModal.reasonRequired"),
+              minLength: {
+                value: REASON_MIN_LENGTH,
+                message: t("review.complaintModal.reasonMin", {
+                  min: REASON_MIN_LENGTH,
+                }),
+              },
             })}
           />
         </form>
       )}
     </Modal>
-  )
+  );
 }

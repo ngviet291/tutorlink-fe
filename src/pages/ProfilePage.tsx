@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ChangeEvent } from "react";
 import { Camera } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
@@ -9,7 +10,7 @@ import { Avatar } from "@/shared/components/ui/Avatar";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
+import { useServerFormErrors } from "@/shared/hooks/useServerFormErrors";
 import { rules } from "@/features/auth/validation/auth.validation";
 import {
   useChangePassword,
@@ -19,6 +20,7 @@ import {
 import type { UpdateProfilePayload } from "@/features/user/types/user.types";
 
 const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+const NO_KNOWN_FIELDS = [] as const;
 
 interface PwForm {
   currentPassword: string;
@@ -27,6 +29,7 @@ interface PwForm {
 }
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
   const toast = useToast();
   const update = useUpdateProfile();
@@ -39,16 +42,18 @@ export default function ProfilePage() {
     e.target.value = ""; // cho phép chọn lại cùng một file
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      toast.error("Vui lòng chọn file ảnh");
+      toast.error(t("profile.chooseImage"));
       return;
     }
     if (file.size > AVATAR_MAX_BYTES) {
-      toast.error("Ảnh tối đa 5MB");
+      toast.error(
+        t("profile.avatarTooLarge", { max: AVATAR_MAX_BYTES / 1024 / 1024 }),
+      );
       return;
     }
     uploadAvatar.mutate(file, {
-      onSuccess: () => toast.success("Đã cập nhật ảnh đại diện"),
-      onError: (er) => toast.error(getErrorMessage(er)),
+      onSuccess: () => toast.success(t("profile.avatarUpdated")),
+      onError: (er) => toast.apiError(er),
     });
   };
 
@@ -63,6 +68,10 @@ export default function ProfilePage() {
     },
   });
   const pw = useForm<PwForm>();
+
+  // Khi đổi ngôn ngữ: validate lại các ô đang lỗi để chữ lỗi đổi theo.
+  useServerFormErrors(info, NO_KNOWN_FIELDS);
+  useServerFormErrors(pw, NO_KNOWN_FIELDS);
 
   // Phải gọi trước `return null` (quy tắc hooks)
   const {
@@ -108,16 +117,17 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader title="Tài khoản" />
+      <PageHeader title={t("profile.title")} />
 
       <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
         <div className="mb-4 flex items-center gap-3">
           <button
             type="button"
-            aria-label="Đổi ảnh đại diện"
+            aria-label={t("profile.changeAvatar")}
             disabled={uploadAvatar.isPending}
             onClick={() => fileRef.current?.click()}
-            className="group relative shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60">
+            className="group relative shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          >
             <Avatar name={user.fullName} src={user.avatarUrl} size="xl" />
             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
               <Camera className="size-5" aria-hidden="true" />
@@ -145,26 +155,29 @@ export default function ProfilePage() {
           onSubmit={(e) =>
             void info.handleSubmit((v) =>
               update.mutate(v, {
-                onSuccess: () => toast.success("Đã cập nhật thông tin"),
-                onError: (er) => toast.error(getErrorMessage(er)),
+                onSuccess: () => toast.success(t("profile.infoUpdated")),
+                onError: (er) => toast.apiError(er),
               }),
             )(e)
-          }>
+          }
+        >
           <Input
-            label="Họ và tên"
+            label={t("profile.fullName")}
             required
             error={info.formState.errors.fullName?.message}
-            {...info.register("fullName", { required: "Vui lòng nhập họ và tên" })}
+            {...info.register("fullName", {
+              required: t("profile.fullNameRequired"),
+            })}
           />
           <Input
             label="Email"
             value={user.email}
             disabled
             readOnly
-            hint="Email không thể thay đổi"
+            hint={t("profile.emailHint")}
           />
           <Input
-            label="Số điện thoại"
+            label={t("profile.phone")}
             required
             error={info.formState.errors.phone?.message}
             {...info.register("phone", rules.phone)}
@@ -174,18 +187,18 @@ export default function ProfilePage() {
             {manualEntry ? (
               <>
                 <Input
-                  label="Tỉnh / Thành phố"
+                  label={t("common.province")}
                   {...info.register("address.province")}
                 />
                 <Input
-                  label="Phường / Xã"
+                  label={t("profile.ward")}
                   {...info.register("address.ward")}
                 />
               </>
             ) : (
               <>
                 <Select
-                  label="Tỉnh / Thành phố"
+                  label={t("common.province")}
                   options={provinceOptions}
                   disabled={isLoadingProvinces}
                   {...info.register("address.province", {
@@ -193,7 +206,7 @@ export default function ProfilePage() {
                   })}
                 />
                 <Select
-                  label="Phường / Xã"
+                  label={t("profile.ward")}
                   options={wardOptions}
                   disabled={wardDisabled}
                   {...info.register("address.ward")}
@@ -203,14 +216,16 @@ export default function ProfilePage() {
           </div>
           <div className="flex justify-end">
             <Button type="submit" loading={update.isPending}>
-              Lưu thay đổi
+              {t("profile.save")}
             </Button>
           </div>
         </form>
       </section>
 
       <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
-        <h2 className="mb-4 text-lg font-bold text-text">Đổi mật khẩu</h2>
+        <h2 className="mb-4 text-lg font-bold text-text">
+          {t("profile.changePasswordTitle")}
+        </h2>
         <form
           noValidate
           className="flex flex-col gap-4"
@@ -223,24 +238,27 @@ export default function ProfilePage() {
                 },
                 {
                   onSuccess: () => {
-                    toast.success("Đã đổi mật khẩu");
+                    toast.success(t("profile.passwordChanged"));
                     pw.reset();
                   },
-                  onError: (er) => toast.error(getErrorMessage(er)),
+                  onError: (er) => toast.apiError(er),
                 },
               ),
             )(e)
-          }>
+          }
+        >
           <Input
-            label="Mật khẩu hiện tại"
+            label={t("profile.currentPassword")}
             type="password"
             autoComplete="current-password"
             required
             error={pw.formState.errors.currentPassword?.message}
-            {...pw.register("currentPassword", { required: "Vui lòng nhập mật khẩu hiện tại" })}
+            {...pw.register("currentPassword", {
+              required: t("profile.currentPasswordRequired"),
+            })}
           />
           <Input
-            label="Mật khẩu mới"
+            label={t("profile.newPassword")}
             type="password"
             autoComplete="new-password"
             required
@@ -248,20 +266,21 @@ export default function ProfilePage() {
             {...pw.register("newPassword", rules.password)}
           />
           <Input
-            label="Nhập lại mật khẩu mới"
+            label={t("profile.confirmPassword")}
             type="password"
             autoComplete="new-password"
             required
             error={pw.formState.errors.confirm?.message}
             {...pw.register("confirm", {
-              required: "Vui lòng nhập lại mật khẩu mới",
+              required: t("profile.confirmRequired"),
               validate: (v) =>
-                v === pw.getValues("newPassword") || "Mật khẩu không khớp",
+                v === pw.getValues("newPassword") ||
+                t("profile.passwordMismatch"),
             })}
           />
           <div className="flex justify-end">
             <Button type="submit" loading={change.isPending}>
-              Đổi mật khẩu
+              {t("profile.changePasswordButton")}
             </Button>
           </div>
         </form>

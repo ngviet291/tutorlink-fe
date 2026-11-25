@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/shared/components/ui/Button";
@@ -15,6 +16,7 @@ import type { PostStatus } from "@/shared/types/common.types";
 type Filter = PostStatus | "ALL";
 
 export default function MyPostsPage() {
+  const { t } = useTranslation();
   const {
     data,
     isLoading,
@@ -36,12 +38,12 @@ export default function MyPostsPage() {
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5">
       <PageHeader
-        title="Bài đăng của tôi"
-        description="Lịch sử bài đăng và các lớp đã kết nối."
+        title={t("myPosts.title")}
+        description={t("myPosts.description")}
         actions={
           <Link to={ROUTES.POST_CREATE}>
             <Button>
-              <Plus className="size-4" /> Đăng bài mới
+              <Plus className="size-4" /> {t("myPosts.newPost")}
             </Button>
           </Link>
         }
@@ -50,11 +52,11 @@ export default function MyPostsPage() {
         value={tab}
         onChange={setTab}
         items={[
-          { value: "ALL", label: "Tất cả" },
-          { value: "DRAFT", label: "Bản nháp" },
-          { value: "PUBLISHED", label: "Đang tuyển" },
-          { value: "PENDING", label: "Chờ duyệt" },
-          { value: "CLOSED", label: "Đã đóng" },
+          { value: "ALL", label: t("myPosts.tabAll") },
+          { value: "DRAFT", label: t("myPosts.tabDraft") },
+          { value: "PUBLISHED", label: t("myPosts.tabPublished") },
+          { value: "PENDING", label: t("myPosts.tabPending") },
+          { value: "CLOSED", label: t("myPosts.tabClosed") },
         ]}
       />
       {isLoading ? (
@@ -63,10 +65,10 @@ export default function MyPostsPage() {
         <ErrorState onRetry={() => void refetch()} />
       ) : list.length === 0 && !hasNextPage ? (
         <EmptyState
-          title="Chưa có bài đăng"
+          title={t("myPosts.emptyTitle")}
           action={
             <Link to={ROUTES.POST_CREATE}>
-              <Button>Tạo bài đăng đầu tiên</Button>
+              <Button>{t("myPosts.createFirst")}</Button>
             </Link>
           }
         />
