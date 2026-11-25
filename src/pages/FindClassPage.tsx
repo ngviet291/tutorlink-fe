@@ -106,12 +106,11 @@ export default function FindClassPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto max-w-screen-2xl px-4 py-8">
       <h1 className="text-3xl font-extrabold text-text">
         {isStudent ? t("findClass.titleStudent") : t("findClass.titleTutor")}
       </h1>
       <p className="mt-1 text-text-secondary">{t("findClass.subtitle")}</p>
-      {role && !hasSearch && <RecommendedPosts />}
       {!lockedType && (
         <div className="mt-5">
           <Segmented value={type} onChange={setPicked} items={typeItems} />
@@ -170,6 +169,12 @@ export default function FindClassPage() {
             )}
           </div>
         </div>
+
+        {role && !hasSearch && (
+          <aside className="min-w-0 lg:w-64 lg:shrink-0 xl:w-72">
+            <RecommendedPosts />
+          </aside>
+        )}
       </div>
     </div>
   );

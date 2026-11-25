@@ -18,7 +18,7 @@ export function RecommendedPosts({ limit = 5 }: { limit?: number }) {
   if (!isLoading && !data?.length) return null;
 
   return (
-    <section aria-labelledby="recommended-heading" className="mt-6">
+    <section aria-labelledby="recommended-heading" className="mt-6 lg:mt-0">
       <h2
         id="recommended-heading"
         className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text">
@@ -29,13 +29,13 @@ export function RecommendedPosts({ limit = 5 }: { limit?: number }) {
       {isLoading ? (
         <CardGridSkeleton count={limit} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4">
           {data?.map(({ post, score, warnings }) => {
             const warning = describeWarnings(warnings, post.type);
             return (
               <div key={post.id} className="flex flex-col gap-2">
-                <PostCard post={post} />
-                <div className="flex items-start justify-between gap-2 px-1 text-xs">
+                <PostCard post={post} compact />
+                <div className="flex flex-col items-start gap-1 px-1 text-xs">
                   <Badge tone="green">
                     {t("findClass.matchScore", "Phù hợp")} {toPercent(score)}%
                   </Badge>
