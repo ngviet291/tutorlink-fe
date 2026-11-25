@@ -92,7 +92,9 @@ export function AdminCertificatesPanel() {
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-text">{c.tutorName}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  {c.subjectName && <SubjectTag name={c.subjectName} />}
+                  {c.subjectName && (
+                    <SubjectTag name={c.subjectName} />
+                  )}
                   <span className="truncate text-xs text-text-secondary">
                     {c.name}
                   </span>

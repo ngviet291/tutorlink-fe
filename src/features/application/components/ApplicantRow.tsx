@@ -84,7 +84,8 @@ export function ApplicantRow({
           {showAi && a.aiRank !== undefined && (
             <span
               className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-white"
-              aria-label={t("application.rank", { rank: a.aiRank })}>
+              aria-label={t("application.rank", { rank: a.aiRank })}
+            >
               {a.aiRank}
             </span>
           )}
@@ -169,7 +170,8 @@ export function ApplicantRow({
                 ? ROUTES.TUTOR_DETAIL(applicant.id)
                 : ROUTES.STUDENT_DETAIL(applicant.id)
             }
-            state={{ section: showAi ? "TOP" : "OTHERS", rank: a.aiRank }}>
+            state={{ section: showAi ? "TOP" : "OTHERS", rank: a.aiRank }}
+          >
             <Button variant="outline" size="sm" fullWidth>
               {t("tutor.viewProfile")}
             </Button>

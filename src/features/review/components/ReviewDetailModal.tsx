@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Flag } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Modal } from '@/shared/components/ui/Modal'
 import { Button } from '@/shared/components/ui/Button'
 import { RatingStars } from '@/shared/components/ui/RatingStars'
@@ -20,6 +21,7 @@ interface Props {
 // Modal xem lại đánh giá của 1 đơn FINISHED.
 // Gia sư xem được đánh giá học viên để lại và có thể khiếu nại (ComplaintModal).
 export function ReviewDetailModal({ applicationId, tutorId, open, onClose }: Props) {
+  const { t } = useTranslation()
   const { data, isLoading } = useTutorReviews(open ? tutorId : undefined)
   const review = data?.find((r) => r.applicationId === applicationId)
   const user = useSelector((state: RootState) => state.auth.user)
@@ -30,36 +32,54 @@ export function ReviewDetailModal({ applicationId, tutorId, open, onClose }: Pro
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title="Đánh giá">
+      <Modal open={open} onClose={onClose} title={t('review.detail.title')}>
         {isLoading ? (
           <ListSkeleton rows={2} />
         ) : !review ? (
-          <p className="text-sm text-text-secondary">Không tìm thấy đánh giá.</p>
+          <p className="text-sm text-text-secondary">
+            {t('review.detail.notFound')}
+          </p>
         ) : (
           <div className="flex flex-col gap-3">
             {review.student?.fullName && (
-              <p className="text-sm font-medium text-text">{review.student.fullName}</p>
+              <p className="text-sm font-medium text-text">
+                {review.student.fullName}
+              </p>
             )}
+
             <RatingStars value={review.rating} showValue />
-            {review.comment && <p className="text-sm text-text">{review.comment}</p>}
-            {review.createdAt && (
-              <p className="text-xs text-text-secondary">{formatDate(review.createdAt)}</p>
+
+            {review.comment && (
+              <p className="text-sm text-text">{review.comment}</p>
             )}
+
+            {review.createdAt && (
+              <p className="text-xs text-text-secondary">
+                {formatDate(review.createdAt)}
+              </p>
+            )}
+
             {isTutor &&
               (complained ? (
                 <p className="text-xs text-text-secondary">
-                  Bạn đã gửi khiếu nại cho đánh giá này.
+                  {t('review.detail.alreadyComplained')}
                 </p>
               ) : (
                 <div>
-                  <Button size="sm" variant="outline" onClick={() => setComplainOpen(true)}>
-                    <Flag className="size-4" /> Khiếu nại đánh giá
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setComplainOpen(true)}
+                  >
+                    <Flag className="size-4" />
+                    {t('review.detail.complain')}
                   </Button>
                 </div>
               ))}
           </div>
         )}
       </Modal>
+
       <ComplaintModal
         review={complainOpen ? (review ?? null) : null}
         onClose={() => setComplainOpen(false)}

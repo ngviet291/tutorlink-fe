@@ -6,6 +6,8 @@ import {
   FileText,
   RotateCw,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { cn } from "@/shared/utils/cn";
 import { formatDateTime } from "@/shared/utils/date";
 import type { ChatMessage, MediaPayload } from "../types/chat.types";
@@ -21,23 +23,27 @@ interface Props {
 function MessageMedia({
   media,
   dimmed,
+  t,
 }: {
   media: MediaPayload;
   dimmed: boolean;
+  t: TFunction;
 }) {
   const common = cn("rounded-xl", dimmed && "opacity-60");
+
   switch (media.mediaType) {
     case "IMAGE":
       return (
         <a href={media.url} target="_blank" rel="noreferrer">
           <img
             src={media.url}
-            alt="Ảnh đính kèm"
+            alt={t("chat.messageBubble.attachedImage")}
             loading="lazy"
             className={cn(common, "max-h-64 min-h-32 max-w-full object-cover")}
           />
         </a>
       );
+
     case "VIDEO":
       return (
         <video
@@ -47,10 +53,12 @@ function MessageMedia({
           className={cn(common, "max-h-64 max-w-full")}
         />
       );
+
     case "AUDIO":
       return (
         <audio src={media.url} controls className={cn(common, "max-w-full")} />
       );
+
     default:
       return (
         <a
@@ -60,8 +68,10 @@ function MessageMedia({
           className={cn(
             common,
             "inline-flex items-center gap-2 border border-border bg-surface px-3 py-2 text-sm text-text hover:underline",
-          )}>
-          <FileText className="size-4" aria-hidden="true" /> Tệp đính kèm
+          )}
+        >
+          <FileText className="size-4" aria-hidden="true" />
+          {t("chat.messageBubble.attachedFile")}
         </a>
       );
   }
@@ -73,6 +83,8 @@ export function MessageBubble({
   showReadReceipt,
   onResend,
 }: Props) {
+  const { t } = useTranslation();
+
   const failed = message.status === "failed";
   const sending = message.status === "sending";
   const mediaList = message.media ?? [];
@@ -82,10 +94,12 @@ export function MessageBubble({
       className={cn(
         "flex max-w-[80%] flex-col gap-1",
         mine ? "items-end self-end" : "items-start self-start",
-      )}>
+      )}
+    >
       {mediaList.map((m) => (
-        <MessageMedia key={m.publicId} media={m} dimmed={sending} />
+        <MessageMedia key={m.publicId} media={m} dimmed={sending} t={t} />
       ))}
+
       {message.content && (
         <p
           className={cn(
@@ -95,34 +109,51 @@ export function MessageBubble({
               : "rounded-bl-md border border-border bg-surface text-text",
             sending && "opacity-60",
             failed && "bg-danger",
-          )}>
+          )}
+        >
           {message.content}
         </p>
       )}
+
       <div className="mt-0.5 flex items-center gap-1 text-[10px] text-text-secondary">
         {failed ? (
           <>
-            <AlertCircle className="size-3 text-danger-text" aria-hidden="true" />
-            <span className="text-danger-text">Gửi thất bại</span>
+            <AlertCircle
+              className="size-3 text-danger-text"
+              aria-hidden="true"
+            />
+
+            <span className="text-danger-text">
+              {t("chat.messageBubble.sendFailed")}
+            </span>
+
             <button
               type="button"
               onClick={() => onResend(message)}
-              className="inline-flex items-center gap-0.5 font-semibold text-primary hover:underline">
-              <RotateCw className="size-3" aria-hidden="true" /> Gửi lại
+              className="inline-flex items-center gap-0.5 font-semibold text-primary hover:underline"
+            >
+              <RotateCw className="size-3" aria-hidden="true" />
+              {t("chat.messageBubble.resend")}
             </button>
           </>
         ) : (
           <>
             <span>
-              {sending ? "Đang gửi..." : formatDateTime(message.sentAt)}
+              {sending
+                ? t("chat.messageBubble.sending")
+                : formatDateTime(message.sentAt)}
             </span>
+
             {mine && sending && <Clock className="size-3" aria-hidden="true" />}
+
             {mine && message.status === "sent" && (
               <Check className="size-3" aria-hidden="true" />
             )}
+
             {mine && showReadReceipt && (
               <span className="inline-flex items-center gap-0.5 font-semibold text-primary">
-                <CheckCheck className="size-3" aria-hidden="true" /> Đã xem
+                <CheckCheck className="size-3" aria-hidden="true" />
+                {t("chat.messageBubble.seen")}
               </span>
             )}
           </>

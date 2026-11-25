@@ -18,7 +18,7 @@ import { Textarea } from "@/shared/components/ui/Textarea";
 
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { PostPayload, PostResponse } from "../types/post.types";
-import type { BudgetUnit, PostType } from "@/shared/types/common.types";
+import type { PostType } from "@/shared/types/common.types";
 
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 import { useAppSelector } from "@/shared/hooks/useAppStore";

@@ -748,6 +748,9 @@ const vi = {
       CLOSED: "Đã đóng",
       REMOVED: "Đã gỡ",
     },
+    budgetUnitNotSpecified: "Chưa có đơn vị",
+    viewApplications: "Xem lượt đăng ký",
+    remove: "Gỡ bài",
   },
   postEdit: {
     publishFailed: "Đã lưu thay đổi nhưng chưa đăng được bài. {{error}}",
@@ -1244,6 +1247,37 @@ const vi = {
   },
   chatbot: {
     greeting: "Xin chào! Mình là trợ lý TutorLink. Bạn cần hỗ trợ gì?",
+    title: "Trợ lý TutorLink",
+    close: "Đóng",
+    retry: "Thử lại",
+    send: "Gửi",
+
+    aria: {
+      dialog: "Trợ lý TutorLink",
+      openAssistant: "Mở trợ lý TutorLink",
+      closeAssistant: "Đóng trợ lý",
+    },
+
+    input: {
+      placeholder: "Nhập câu hỏi...",
+      message: "Nội dung tin nhắn",
+    },
+
+    history: {
+      title: "Lịch sử trò chuyện",
+      back: "Quay lại trò chuyện",
+      newConversation: "Cuộc trò chuyện mới",
+      empty: "Bạn chưa có cuộc trò chuyện nào được lưu.",
+      conversation: "Cuộc trò chuyện",
+    },
+
+    clear: {
+      open: "Xóa cuộc trò chuyện",
+      title: "Xóa cuộc trò chuyện?",
+      message:
+        "Toàn bộ tin nhắn trong cuộc trò chuyện này sẽ bị xóa và không thể khôi phục.",
+      error: "Không xóa được cuộc trò chuyện. Vui lòng thử lại.",
+    },
   },
   chat: {
     open: "Mở chat",
@@ -1256,6 +1290,32 @@ const vi = {
         "Thông tin liên hệ và chat sẽ mở sau khi gia sư thanh toán phí nhận lớp.",
       viewProfile: "Xem hồ sơ",
       goToPayment: "Đến trang thanh toán phí",
+    },
+    connectionStatus: {
+      connected: "Đã kết nối",
+      connecting: "Đang kết nối...",
+      disconnected: "Mất kết nối, đang thử lại",
+      error: "Lỗi kết nối",
+    },
+    messageBubble: {
+      attachedImage: "Ảnh đính kèm",
+      attachedFile: "Tệp đính kèm",
+      sendFailed: "Gửi thất bại",
+      resend: "Gửi lại",
+      sending: "Đang gửi...",
+      seen: "Đã xem",
+    },
+    messageComposer: {
+      uploadFailed: "Tải tệp lên thất bại, vui lòng thử lại.",
+      attachedImage: "Ảnh đính kèm",
+      removeAttachment: "Bỏ tệp đính kèm",
+      attachFile: "Đính kèm tệp",
+      messageContent: "Nội dung tin nhắn",
+      placeholder: "Nhập tin nhắn...",
+      send: "Gửi",
+    },
+    messageList: {
+      empty: "Hãy gửi lời chào đầu tiên 👋",
     },
   },
   chatInbox: {
@@ -1293,6 +1353,22 @@ const vi = {
         "Giải thích vì sao đánh giá này không chính xác hoặc vi phạm quy định...",
       reasonRequired: "Vui lòng nhập lý do",
       reasonMin: "Lý do tối thiểu {{min}} ký tự",
+    },
+    detail: {
+      title: "Đánh giá",
+      notFound: "Không tìm thấy đánh giá.",
+      alreadyComplained: "Bạn đã gửi khiếu nại cho đánh giá này.",
+      complain: "Khiếu nại đánh giá",
+    },
+    list: {
+      empty: {
+        title: "Chưa có đánh giá",
+        description: "Đánh giá sẽ xuất hiện sau khi lớp học kết thúc.",
+      },
+      complaintOpen: "Đang bị khiếu nại",
+      complaintResolved: "Admin đã giữ lại",
+      decisionNote: "Kết quả xử lý",
+      complain: "Khiếu nại",
     },
   },
   subjectEditor: {
@@ -2367,6 +2443,9 @@ const en = {
       CLOSED: "Filled",
       REMOVED: "Removed",
     },
+    budgetUnitNotSpecified: "Unit not specified",
+    viewApplications: "View applications",
+    remove: "Remove post",
   },
   adminFee: {
     title: "Placement fee rate settings",
@@ -2961,6 +3040,37 @@ const en = {
   },
   chatbot: {
     greeting: "Hello! I’m the TutorLink assistant. How can I help you?",
+    title: "TutorLink Assistant",
+    close: "Close",
+    retry: "Retry",
+    send: "Send",
+
+    aria: {
+      dialog: "TutorLink Assistant",
+      openAssistant: "Open TutorLink Assistant",
+      closeAssistant: "Close assistant",
+    },
+
+    input: {
+      placeholder: "Type your question...",
+      message: "Message content",
+    },
+
+    history: {
+      title: "Chat history",
+      back: "Back to chat",
+      newConversation: "New conversation",
+      empty: "You don't have any saved conversations.",
+      conversation: "Conversation",
+    },
+
+    clear: {
+      open: "Clear conversation",
+      title: "Clear conversation?",
+      message:
+        "All messages in this conversation will be deleted and cannot be recovered.",
+      error: "Failed to clear the conversation. Please try again.",
+    },
   },
   chat: {
     open: "Open chat",
@@ -2973,6 +3083,32 @@ const en = {
         "Contact details and chat unlock once the tutor pays the placement fee.",
       viewProfile: "View profile",
       goToPayment: "Go to fee payment",
+    },
+    connectionStatus: {
+      connected: "Connected",
+      connecting: "Connecting...",
+      disconnected: "Disconnected, retrying",
+      error: "Connection error",
+    },
+    messageBubble: {
+      attachedImage: "Attached image",
+      attachedFile: "Attached file",
+      sendFailed: "Failed to send",
+      resend: "Resend",
+      sending: "Sending...",
+      seen: "Seen",
+    },
+    messageComposer: {
+      uploadFailed: "Failed to upload file, please try again.",
+      attachedImage: "Attached image",
+      removeAttachment: "Remove attachment",
+      attachFile: "Attach file",
+      messageContent: "Message content",
+      placeholder: "Type a message...",
+      send: "Send",
+    },
+    messageList: {
+      empty: "Send the first message 👋",
     },
   },
   chatInbox: {
@@ -3012,6 +3148,23 @@ const en = {
         "Explain why this review is inaccurate or violates the rules...",
       reasonRequired: "Please enter a reason",
       reasonMin: "The reason must be at least {{min}} characters",
+    },
+    detail: {
+      title: "Review",
+      notFound: "Review not found.",
+      alreadyComplained:
+        "You have already submitted a complaint for this review.",
+      complain: "Report review",
+    },
+    list: {
+      empty: {
+        title: "No reviews yet",
+        description: "Reviews will appear after the class ends.",
+      },
+      complaintOpen: "Under complaint",
+      complaintResolved: "Admin kept the review",
+      decisionNote: "Decision",
+      complain: "Report",
     },
   },
   subjectEditor: {
