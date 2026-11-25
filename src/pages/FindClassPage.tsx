@@ -8,7 +8,6 @@ import {
   type FilterValues,
 } from "@/shared/components/ui/FilterSidebar";
 import { Input } from "@/shared/components/ui/Input";
-import { Button } from "@/shared/components/ui/Button";
 import { CardGridSkeleton } from "@/shared/components/ui/Skeleton";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { Segmented } from "@/shared/components/ui/Tabs";
@@ -17,6 +16,7 @@ import { usePosts } from "@/features/post/hooks/usePosts";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import type { PostType } from "@/shared/types/common.types";
 import type { PostFilter } from "@/features/post/types/post.types";
 import { useSearchTracking } from "@/features/tracking/hooks";
@@ -78,6 +78,11 @@ export default function FindClassPage() {
   } = usePosts(query);
 
   const items = data?.pages.flatMap((p) => p.content) ?? [];
+
+  const sentinelRef = useInfiniteScroll(
+    () => void fetchNextPage(),
+    !!hasNextPage && !isFetchingNextPage,
+  );
 
   const hasSearch = Boolean(
     debounced ||
@@ -150,16 +155,8 @@ export default function FindClassPage() {
                     <PostCard key={p.id} post={p} />
                   ))}
                 </div>
-                {hasNextPage && (
-                  <div className="mt-8 text-center">
-                    <Button
-                      variant="outline"
-                      loading={isFetchingNextPage}
-                      onClick={() => void fetchNextPage()}>
-                      {t("findClass.loadMore")}
-                    </Button>
-                  </div>
-                )}
+                {hasNextPage && <div ref={sentinelRef} className="mt-8 h-1" aria-hidden />}
+                {isFetchingNextPage && <CardGridSkeleton />}
               </>
             ) : (
               <EmptyState
