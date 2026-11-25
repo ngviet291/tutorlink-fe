@@ -1,6 +1,7 @@
 import type {
   BudgetUnit,
   EducationLevel,
+  MatchWarning,
   PostStatus,
   PostType,
   Role,
@@ -114,4 +115,12 @@ export interface PostApplicationResponse {
 export interface PostStatisticsByStatus {
   status: PostStatus;
   count: number;
+}
+
+/** BE: post/dto/response/RecommendedPostResponse.java */
+export interface RecommendedPostResponse {
+  post: PostResponse;
+  score: number;
+  breakdown?: Record<string, number>;
+  warnings?: MatchWarning[];
 }

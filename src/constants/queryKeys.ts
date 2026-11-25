@@ -3,6 +3,8 @@ export const queryKeys = {
     me: ["auth", "me"] as const,
   },
   posts: {
+    recommended: (limit?: number) =>
+      ["posts", "recommended", limit ?? "default"] as const,
     all: ["posts"] as const,
     list: (params: object) => ["posts", "list", params] as const,
     mine: ["posts", "mine"] as const,

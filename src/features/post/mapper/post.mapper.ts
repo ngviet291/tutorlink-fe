@@ -97,6 +97,19 @@ export function toPostPage<D, M>(
   };
 }
 
+import type { RecommendedPostResponse } from "../types/post.dto";
+import type { RecommendedPost } from "../types/post.types";
+
+export function toRecommendedPost(
+  dto: RecommendedPostResponse,
+): RecommendedPost {
+  return {
+    post: toPost(dto.post),
+    score: dto.score,
+    breakdown: dto.breakdown ?? {},
+    warnings: dto.warnings ?? [],
+  };
+}
 /** Chỉ giữ các key BE nhận, bỏ rỗng/NaN. */
 export function toQueryParams(
   source: object,

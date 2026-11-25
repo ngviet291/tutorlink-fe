@@ -10,6 +10,7 @@ import type {
   PostApplicationResponse,
   PostResponse,
   PostStatisticsByStatus,
+  RecommendedPostResponse,
   RemovePostRequest,
   UpdatePostRequest,
 } from "../types/post.dto";
@@ -97,5 +98,10 @@ export class HttpPostGateway implements PostGateway {
     return this.http.get<PostStatisticsByStatus[]>(
       `${BASE}/statistics/posts-by-status`,
     );
+  }
+  listRecommended(limit?: number) {
+    return this.http.get<RecommendedPostResponse[]>(`${BASE}/me/recommended`, {
+      params: toQueryParams({ limit }, ["limit"]),
+    });
   }
 }

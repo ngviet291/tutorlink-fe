@@ -4,6 +4,7 @@ import type {
   PostApplicationResponse,
   PostResponse,
   PostStatisticsByStatus,
+  RecommendedPostResponse,
   UpdatePostRequest,
 } from "../types/post.dto";
 import type {
@@ -31,4 +32,5 @@ export interface PostGateway {
   removeByAdmin(postId: string, reason?: string): Promise<void>;
   statisticsByStatus(): Promise<PostStatisticsByStatus[]>;
   getByIdForAdmin(postId: string): Promise<PostResponse>;
+  listRecommended(limit?: number): Promise<RecommendedPostResponse[]>;
 }

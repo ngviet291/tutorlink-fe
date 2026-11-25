@@ -3,6 +3,7 @@ import type { PostGateway } from "../api/post.gateway";
 import {
   toCreatePostRequest,
   toPost,
+  toRecommendedPost,
   toUpdatePostRequest,
 } from "../mapper/post.mapper";
 import type {
@@ -13,6 +14,7 @@ import type {
   PostPayload,
   PostResponse,
   PostStatistic,
+  RecommendedPost,
 } from "../types/post.types";
 
 /** Map content sang model UI, giữ nguyên hasNext và nextCursor. */
@@ -35,13 +37,8 @@ export class PostService {
   // PUBLIC POSTS
   // ─────────────────────────────────────────────────────────────────────────
 
-  async getPosts(
-    filter: PostFilter,
-  ): Promise<CursorResponse<PostResponse>> {
-    return mapPage(
-      await this.gateway.list(filter),
-      toPost,
-    );
+  async getPosts(filter: PostFilter): Promise<CursorResponse<PostResponse>> {
+    return mapPage(await this.gateway.list(filter), toPost);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -51,10 +48,7 @@ export class PostService {
   async getMyPosts(
     filter: MyPostFilter,
   ): Promise<CursorResponse<PostResponse>> {
-    return mapPage(
-      await this.gateway.listMine(filter),
-      toPost,
-    );
+    return mapPage(await this.gateway.listMine(filter), toPost);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -64,10 +58,7 @@ export class PostService {
   async getAdminPosts(
     filter: AdminPostFilter,
   ): Promise<CursorResponse<PostResponse>> {
-    return mapPage(
-      await this.gateway.listAdmin(filter),
-      toPost,
-    );
+    return mapPage(await this.gateway.listAdmin(filter), toPost);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -78,12 +69,8 @@ export class PostService {
    * GET /v1/posts/:id
    * Chi tiết bài đăng công khai.
    */
-  async getPostById(
-    postId: string,
-  ): Promise<PostResponse> {
-    return toPost(
-      await this.gateway.getById(postId),
-    );
+  async getPostById(postId: string): Promise<PostResponse> {
+    return toPost(await this.gateway.getById(postId));
   }
 
   /**
@@ -93,24 +80,16 @@ export class PostService {
    * Dùng cho DRAFT / CLOSED / REMOVED hoặc các bài
    * mà public endpoint không cho xem.
    */
-  async getPostByIdForMe(
-    postId: string,
-  ): Promise<PostResponse> {
-    return toPost(
-      await this.gateway.getByIdForMe(postId),
-    );
+  async getPostByIdForMe(postId: string): Promise<PostResponse> {
+    return toPost(await this.gateway.getByIdForMe(postId));
   }
 
   /**
    * GET /v1/admin/posts/:id
    * Chi tiết bài đăng dành cho ADMIN.
    */
-  async getPostByIdForAdmin(
-    postId: string,
-  ): Promise<PostResponse> {
-    return toPost(
-      await this.gateway.getByIdForAdmin(postId),
-    );
+  async getPostByIdForAdmin(postId: string): Promise<PostResponse> {
+    return toPost(await this.gateway.getByIdForAdmin(postId));
   }
 
   async getPostApplications(
@@ -118,11 +97,7 @@ export class PostService {
     cursor?: string,
     limit?: number,
   ): Promise<CursorResponse<PostApplication>> {
-    return this.gateway.listApplications(
-      postId,
-      cursor,
-      limit,
-    );
+    return this.gateway.listApplications(postId, cursor, limit);
   }
 
   async createPost(
@@ -130,12 +105,7 @@ export class PostService {
     asDraft = false,
   ): Promise<PostResponse> {
     return toPost(
-      await this.gateway.create(
-        toCreatePostRequest(
-          payload,
-          asDraft,
-        ),
-      ),
+      await this.gateway.create(toCreatePostRequest(payload, asDraft)),
     );
   }
 
@@ -144,42 +114,30 @@ export class PostService {
     payload: PostPayload,
   ): Promise<PostResponse> {
     return toPost(
-      await this.gateway.update(
-        postId,
-        toUpdatePostRequest(payload),
-      ),
+      await this.gateway.update(postId, toUpdatePostRequest(payload)),
     );
   }
 
-  async publishPost(
-    postId: string,
-  ): Promise<PostResponse> {
-    return toPost(
-      await this.gateway.publish(postId),
-    );
+  async publishPost(postId: string): Promise<PostResponse> {
+    return toPost(await this.gateway.publish(postId));
   }
 
-  async closePost(
-    postId: string,
-  ): Promise<void> {
+  async closePost(postId: string): Promise<void> {
     return this.gateway.close(postId);
   }
 
-  async deletePost(
-    postId: string,
-  ): Promise<void> {
+  async deletePost(postId: string): Promise<void> {
     return this.gateway.delete(postId);
   }
-  async removePostByAdmin(
-    postId: string,
-    reason?: string,
-  ): Promise<void> {
-    return this.gateway.removeByAdmin(
-      postId,
-      reason,
-    );
+  async removePostByAdmin(postId: string, reason?: string): Promise<void> {
+    return this.gateway.removeByAdmin(postId, reason);
   }
   getStatistics(): Promise<PostStatistic[]> {
     return this.gateway.statisticsByStatus();
+  }
+
+  async getRecommendedPosts(limit?: number): Promise<RecommendedPost[]> {
+    const res = await this.gateway.listRecommended(limit);
+    return res.map(toRecommendedPost);
   }
 }

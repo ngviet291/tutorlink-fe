@@ -20,6 +20,7 @@ import { useDebounce } from "@/shared/hooks/useDebounce";
 import type { PostType } from "@/shared/types/common.types";
 import type { PostFilter } from "@/features/post/types/post.types";
 import { useSearchTracking } from "@/features/tracking/hooks";
+import { RecommendedPosts } from "@/features/post/components/RecommendedPosts";
 
 const BUDGET_MAX = 10_000_000;
 
@@ -110,7 +111,7 @@ export default function FindClassPage() {
         {isStudent ? t("findClass.titleStudent") : t("findClass.titleTutor")}
       </h1>
       <p className="mt-1 text-text-secondary">{t("findClass.subtitle")}</p>
-
+      {role && !hasSearch && <RecommendedPosts />}
       {!lockedType && (
         <div className="mt-5">
           <Segmented value={type} onChange={setPicked} items={typeItems} />
@@ -155,8 +156,7 @@ export default function FindClassPage() {
                     <Button
                       variant="outline"
                       loading={isFetchingNextPage}
-                      onClick={() => void fetchNextPage()}
-                    >
+                      onClick={() => void fetchNextPage()}>
                       {t("findClass.loadMore")}
                     </Button>
                   </div>
