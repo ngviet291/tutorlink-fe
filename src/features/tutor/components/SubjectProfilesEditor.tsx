@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useFieldArray, useForm, type UseFormReturn } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { BadgeCheck, Clock, Plus, Trash2 } from "lucide-react";
 import { CertificateUpload } from "@/features/auth/components/CertificateUpload";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
@@ -18,7 +19,7 @@ import { Select } from "@/shared/components/ui/Select";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
+import { useServerFormErrors } from "@/shared/hooks/useServerFormErrors";
 import type {
   DayOfWeek,
   EducationLevel,
@@ -39,7 +40,7 @@ import {
 
 const TEACHING_LEVELS: EducationLevel[] = [...EDUCATION_LEVELS, "OTHER"];
 const DAYS = Object.keys(DAY_LABEL) as DayOfWeek[];
-
+const NO_KNOWN_FIELDS = [] as const;
 interface SubjectFormValues {
   subjectId: string;
   subjectName: string;
@@ -138,18 +139,19 @@ function CertificateItem({
   onDelete: () => void;
   deleting: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <li className="flex items-center gap-3 rounded-xl border border-border p-3">
       <a href={certificate.fileUrl} target="_blank" rel="noreferrer">
         <img
           src={certificate.fileUrl}
-          alt={certificate.name ?? "Ảnh chứng chỉ"}
+          alt={certificate.name ?? t("subjectEditor.certAlt")}
           className="size-14 rounded-lg border border-border object-cover"
         />
       </a>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-text">
-          {certificate.name ?? "Đang chờ hệ thống đọc thông tin..."}
+          {certificate.name ?? t("subjectEditor.certPending")}
         </p>
         {certificate.issuedBy && (
           <p className="truncate text-xs text-text-secondary">
@@ -160,16 +162,16 @@ function CertificateItem({
       </div>
       {certificate.verified ? (
         <Badge tone="green" icon={<BadgeCheck className="size-3" />}>
-          Đã xác thực
+          {t("subjectEditor.certVerified")}
         </Badge>
       ) : (
         <Badge tone="yellow" icon={<Clock className="size-3" />}>
-          Đang duyệt
+          {t("subjectEditor.certReviewing")}
         </Badge>
       )}
       <Button
         variant="ghost"
-        aria-label="Xóa chứng chỉ"
+        aria-label={t("subjectEditor.deleteCertAria")}
         loading={deleting}
         onClick={onDelete}
       >
@@ -178,8 +180,8 @@ function CertificateItem({
     </li>
   );
 }
-
 function SlotsEditor({ form }: { form: Form }) {
+  const { t } = useTranslation();
   const {
     register,
     control,
@@ -194,7 +196,7 @@ function SlotsEditor({ form }: { form: Form }) {
   return (
     <fieldset className="flex flex-col gap-3">
       <legend className="mb-1 text-sm font-medium text-text">
-        Lịch rảnh trong tuần
+        {t("subjectEditor.scheduleLegend")}
       </legend>
       {fields.map((f, i) => (
         <div
@@ -202,27 +204,34 @@ function SlotsEditor({ form }: { form: Form }) {
           className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_1fr_auto]"
         >
           <Select
-            aria-label="Thứ"
+            aria-label={t("subjectEditor.dayAria")}
             options={DAYS.map((d) => ({ value: d, label: DAY_LABEL[d] }))}
             {...register(`schedule.${i}.day`)}
           />
           <Input
-            aria-label="Từ giờ"
+            aria-label={t("subjectEditor.fromAria")}
             type="time"
             error={errors.schedule?.[i]?.from?.message}
-            {...register(`schedule.${i}.from`, { required: "Nhập giờ" })}
+            {...register(`schedule.${i}.from`, {
+              required: t("subjectEditor.enterTime"),
+            })}
           />
           <Input
-            aria-label="Đến giờ"
+            aria-label={t("subjectEditor.toAria")}
             type="time"
             error={errors.schedule?.[i]?.to?.message}
             {...register(`schedule.${i}.to`, {
-              required: "Nhập giờ",
+              required: t("subjectEditor.enterTime"),
               validate: (to) =>
-                to > getValues(`schedule.${i}.from`) || "Phải sau giờ bắt đầu",
+                to > getValues(`schedule.${i}.from`) ||
+                t("subjectEditor.mustBeAfterStart"),
             })}
           />
-          <Button variant="ghost" aria-label="Xóa ca" onClick={() => remove(i)}>
+          <Button
+            variant="ghost"
+            aria-label={t("subjectEditor.deleteSlotAria")}
+            onClick={() => remove(i)}
+          >
             <Trash2 className="size-4 text-danger-text" />
           </Button>
         </div>
@@ -233,14 +242,13 @@ function SlotsEditor({ form }: { form: Form }) {
         className="w-fit"
         onClick={() => append({ day: "MONDAY", from: "18:00", to: "20:00" })}
       >
-        <Plus className="size-4" /> Thêm ca rảnh
+        <Plus className="size-4" /> {t("subjectEditor.addSlot")}
       </Button>
     </fieldset>
   );
 }
-
-/** Khối thông tin chung của gia sư, nằm trên cùng. */
 function CommonInfoCard({ form }: { form: Form }) {
+  const { t } = useTranslation();
   const {
     register,
     formState: { errors },
@@ -248,35 +256,41 @@ function CommonInfoCard({ form }: { form: Form }) {
   return (
     <section
       className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6"
-      aria-label="Thông tin chung"
+      aria-label={t("subjectEditor.commonInfo")}
     >
-      <h2 className="text-lg font-bold text-text">Thông tin chung</h2>
+      <h2 className="text-lg font-bold text-text">
+        {t("subjectEditor.commonInfo")}
+      </h2>
       <Input
-        label="Học vấn"
+        label={t("subjectEditor.education")}
         required
-        placeholder="VD: Cử nhân Sư phạm Toán — ĐH Sư phạm"
+        placeholder={t("subjectEditor.educationPlaceholder")}
         error={errors.education?.message}
-        {...register("education", { required: "Bắt buộc" })}
+        {...register("education", { required: t("subjectEditor.required") })}
       />
       <Textarea
-        label="Giới thiệu bản thân"
+        label={t("subjectEditor.bio")}
         required
         rows={5}
         error={errors.bio?.message}
         {...register("bio", {
-          required: "Bắt buộc",
-          minLength: { value: 30, message: "Tối thiểu 30 ký tự" },
+          required: t("subjectEditor.required"),
+          minLength: {
+            value: 30,
+            message: t("subjectEditor.bioMin", { min: 30 }),
+          },
         })}
       />
       <Input
-        label="Khu vực nhận dạy"
+        label={t("subjectEditor.areas")}
         required
-        placeholder="VD: Gò Vấp, Quận 1, Thủ Đức (cách nhau bằng dấu phẩy)"
+        placeholder={t("subjectEditor.areasPlaceholder")}
         {...register("teachingAreasText")}
       />
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium text-text">
-          Cấp học nhận dạy <span className="text-danger-text">*</span>
+          {t("subjectEditor.levels")}{" "}
+          <span className="text-danger-text">*</span>
         </legend>
         <div className="flex flex-wrap gap-x-5 gap-y-2">
           {TEACHING_LEVELS.map((level) => (
@@ -299,7 +313,6 @@ function CommonInfoCard({ form }: { form: Form }) {
     </section>
   );
 }
-
 interface SubjectCardProps {
   form: Form;
   index: number;
@@ -329,6 +342,7 @@ function SubjectCard({
   onDeleteCertificate,
   deletingCertificateId,
 }: SubjectCardProps) {
+  const { t } = useTranslation();
   const {
     register,
     watch,
@@ -343,17 +357,19 @@ function SubjectCard({
     return (
       <section
         className="flex flex-col gap-3 rounded-3xl border border-dashed border-border bg-surface p-5 sm:p-6"
-        aria-label="Môn học mới"
+        aria-label={t("subjectEditor.newSubject")}
       >
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-lg font-bold text-text">Môn học mới</h3>
+          <h3 className="text-lg font-bold text-text">
+            {t("subjectEditor.newSubject")}
+          </h3>
           <Button variant="ghost" onClick={onRemoveSubject}>
-            Hủy
+            {t("subjectEditor.cancel")}
           </Button>
         </div>
         <Select
-          label="Môn học"
-          placeholder="Chọn môn học"
+          label={t("subjectEditor.subject")}
+          placeholder={t("subjectEditor.pickSubject")}
           value=""
           onChange={(ev) => onPickSubject(ev.target.value)}
           options={subjectOptions}
@@ -365,26 +381,28 @@ function SubjectCard({
   return (
     <section
       className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6"
-      aria-label={`Môn ${subjectName}`}
+      aria-label={t("subjectEditor.subjectAria", { name: subjectName })}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-lg font-bold text-text">{subjectName}</h3>
           {isNew ? (
-            <Badge tone="yellow">Môn mới, chưa lưu</Badge>
+            <Badge tone="yellow">{t("subjectEditor.unsavedBadge")}</Badge>
           ) : verified ? (
             <Badge tone="green" icon={<BadgeCheck className="size-3" />}>
-              Môn đã xác nhận
+              {t("subjectEditor.confirmedBadge")}
             </Badge>
           ) : (
             <Badge tone="yellow" icon={<Clock className="size-3" />}>
-              Chưa xác nhận
+              {t("subjectEditor.unconfirmedBadge")}
             </Badge>
           )}
         </div>
         <Button
           variant="ghost"
-          aria-label={`Xóa môn ${subjectName}`}
+          aria-label={t("subjectEditor.removeSubjectAria", {
+            name: subjectName,
+          })}
           onClick={onRemoveSubject}
         >
           <Trash2 className="size-4 text-danger-text" />
@@ -393,19 +411,22 @@ function SubjectCard({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
-          label="Số năm kinh nghiệm"
+          label={t("subjectEditor.experienceYears")}
           type="number"
           required
           error={e?.experienceYears?.message}
           {...register(`subjects.${index}.experienceYears`, {
             valueAsNumber: true,
-            required: "Bắt buộc",
-            min: { value: 0, message: "Không âm" },
-            max: { value: 50, message: "Tối đa 50" },
+            required: t("subjectEditor.required"),
+            min: { value: 0, message: t("subjectEditor.notNegative") },
+            max: {
+              value: 50,
+              message: t("subjectEditor.maxValue", { max: 50 }),
+            },
           })}
         />
         <Select
-          label="Hình thức dạy"
+          label={t("subjectEditor.teachingMode")}
           options={TEACHING_MODES.map((m) => ({
             value: m,
             label: TEACHING_MODE_LABEL[m],
@@ -416,7 +437,8 @@ function SubjectCard({
 
       <div className="flex flex-col gap-2 border-t border-border pt-4">
         <h4 className="text-sm font-medium text-text">
-          Chứng chỉ của môn này <span className="text-danger-text">*</span>
+          {t("subjectEditor.subjectCert")}{" "}
+          <span className="text-danger-text">*</span>
         </h4>
         {certificates.length > 0 ? (
           <ul className="flex flex-col gap-2">
@@ -432,8 +454,7 @@ function SubjectCard({
         ) : (
           <>
             <p className="text-xs text-text-secondary">
-              Tải 1 ảnh chứng chỉ / bằng cấp. Chưa có chứng chỉ thì môn này chưa
-              được xác nhận.
+              {t("subjectEditor.certHint")}
             </p>
             <CertificateUpload
               value={files}
@@ -448,6 +469,7 @@ function SubjectCard({
 }
 
 export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
+  const { t } = useTranslation();
   const toast = useToast();
   const save = useSaveTutorProfile();
   const upload = useUploadCertificates();
@@ -473,6 +495,7 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
     },
   });
   const { control, handleSubmit, reset, getValues } = form;
+  useServerFormErrors(form, NO_KNOWN_FIELDS);
   const {
     fields,
     append,
@@ -496,8 +519,8 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
 
   const handleDeleteCertificate = (id: string) =>
     removeCertificate.mutate(id, {
-      onSuccess: () => toast.success("Đã xóa chứng chỉ"),
-      onError: (err) => toast.error(getErrorMessage(err)),
+      onSuccess: () => toast.success(t("subjectEditor.certDeleted")),
+      onError: (err) => toast.apiError(err),
     });
 
   const handleRemoveSubject = (index: number) => {
@@ -519,21 +542,26 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
 
   const submit = handleSubmit(async (values) => {
     if (values.subjects.length === 0) {
-      toast.error("Hãy thêm ít nhất 1 môn học");
+      toast.error(t("subjectEditor.addAtLeastOne"));
       return;
     }
     if (values.subjects.some((s) => !s.subjectId)) {
-      toast.error("Hãy chọn môn học cho thẻ môn mới hoặc bấm Hủy");
+      toast.error(t("subjectEditor.pickOrCancel"));
       return;
     }
     // Hồ sơ đã duyệt: phải bổ sung đủ thì mới nhận lớp / đăng bài được
     if (data.verificationStatus === "APPROVED") {
       const lacking: string[] = [];
-      if (parseAreas(values.teachingAreasText).length === 0) lacking.push("khu vực nhận dạy");
-      if (!values.educationLevels?.length) lacking.push("cấp học nhận dạy");
-      if (!values.schedule?.length) lacking.push("lịch rảnh trong tuần");
+      if (parseAreas(values.teachingAreasText).length === 0)
+        lacking.push(t("subjectEditor.lackAreas"));
+      if (!values.educationLevels?.length)
+        lacking.push(t("subjectEditor.lackLevels"));
+      if (!values.schedule?.length)
+        lacking.push(t("subjectEditor.lackSchedule"));
       if (lacking.length > 0) {
-        toast.error(`Hồ sơ đã duyệt cần bổ sung: ${lacking.join(", ")}`);
+        toast.error(
+          t("subjectEditor.approvedNeedMore", { items: lacking.join(", ") }),
+        );
         return;
       }
     }
@@ -543,7 +571,9 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
     const missing = values.subjects.filter((s) => !hasCertificate(s.subjectId));
     if (missing.length > 0) {
       toast.error(
-        `Môn ${missing.map((m) => m.subjectName).join(", ")} cần có 1 ảnh chứng chỉ`,
+        t("subjectEditor.missingCert", {
+          names: missing.map((m) => m.subjectName).join(", "),
+        }),
       );
       return;
     }
@@ -570,11 +600,11 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
       setFiles({});
       toast.success(
         data.verificationStatus === "APPROVED"
-          ? "Đã cập nhật hồ sơ"
-          : "Đã gửi hồ sơ, vui lòng chờ Admin duyệt",
+          ? t("subjectEditor.updated")
+          : t("subjectEditor.submitted"),
       );
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toast.apiError(err);
     }
   });
 
@@ -595,19 +625,18 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
             role="alert"
             className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-text"
           >
-            Hồ sơ đã được duyệt. Hãy bổ sung đủ giới thiệu bản thân, khu vực
-            nhận dạy, cấp học nhận dạy và lịch rảnh trong tuần để đăng bài và
-            nhận lớp.
+            {t("subjectEditor.approvedBanner")}
           </p>
         )}
 
       <CommonInfoCard form={form} />
 
       <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-bold text-text">Môn học</h2>
+        <h2 className="text-lg font-bold text-text">
+          {t("subjectEditor.subjectsTitle")}
+        </h2>
         <p className="text-xs text-text-secondary">
-          Mỗi môn có số năm kinh nghiệm và hình thức dạy riêng, và cần 1 chứng
-          chỉ. Môn có chứng chỉ đã xác thực mới đăng bài và nhận lớp được.
+          {t("subjectEditor.subjectsHint")}
         </p>
       </div>
 
@@ -615,7 +644,7 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
 
       {fields.length === 0 && (
         <p className="text-sm text-text-secondary">
-          Chưa có môn học nào. Hãy thêm môn học ở bên dưới.
+          {t("subjectEditor.noSubjects")}
         </p>
       )}
 
@@ -650,7 +679,7 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
       {orphans.length > 0 && (
         <div className="flex flex-col gap-2">
           <p className="text-xs text-text-secondary">
-            Chứng chỉ chưa gắn môn (hãy xóa và tải lại ở đúng môn):
+            {t("subjectEditor.orphanCerts")}
           </p>
           <ul className="flex flex-col gap-2">
             {orphans.map((c) => (
@@ -673,14 +702,14 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
         }
         onClick={() => append(newSubjectValues("", ""))}
       >
-        <Plus className="size-4" /> Thêm môn học mới
+        <Plus className="size-4" /> {t("subjectEditor.addSubject")}
       </Button>
 
       <div className="flex justify-end border-t border-border pt-4">
         <Button type="submit" loading={save.isPending || upload.isPending}>
           {data.verificationStatus === "REJECTED"
-            ? "Gửi lại để duyệt"
-            : "Lưu hồ sơ"}
+            ? t("subjectEditor.resubmit")
+            : t("subjectEditor.saveProfile")}
         </Button>
       </div>
 
@@ -689,10 +718,12 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
         onClose={() => setSubjectToRemove(null)}
         onConfirm={confirmRemoveSubject}
         danger
-        title={`Xóa môn ${subjectToRemove?.subjectName ?? ""}?`}
-        confirmText="Xóa môn học"
-        cancelText="Giữ lại"
-        description="Khi lưu hồ sơ, thông tin và chứng chỉ của môn này sẽ bị xóa."
+        title={t("subjectEditor.removeTitle", {
+          name: subjectToRemove?.subjectName ?? "",
+        })}
+        confirmText={t("subjectEditor.removeConfirm")}
+        cancelText={t("subjectEditor.keep")}
+        description={t("subjectEditor.removeDesc")}
       />
     </form>
   );

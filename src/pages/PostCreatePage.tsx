@@ -22,7 +22,9 @@ export default function PostCreatePage() {
       navigate(asDraft ? ROUTES.MY_POSTS : ROUTES.POST_DETAIL(post.id));
     } catch (err) {
       toast.error(getErrorMessage(err));
-      return err instanceof ApiError ? err.fieldErrors : undefined;
+      return err instanceof ApiError
+        ? (err.rawFieldErrors ?? err.fieldErrors)
+        : undefined;
     }
   };
 

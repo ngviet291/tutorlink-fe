@@ -56,7 +56,9 @@ export default function PostEditPage() {
     } catch (err) {
       toast.error(getErrorMessage(err));
 
-      return err instanceof ApiError ? err.fieldErrors : undefined;
+      return err instanceof ApiError
+        ? (err.rawFieldErrors ?? err.fieldErrors)
+        : undefined;
     }
   };
 

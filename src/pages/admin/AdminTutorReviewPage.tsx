@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Check, X } from "lucide-react";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { Button } from "@/shared/components/ui/Button";
@@ -9,7 +10,6 @@ import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { formatVnd } from "@/shared/utils/currency";
-import { getErrorMessage } from "@/shared/utils/errors";
 import { useToast } from "@/shared/hooks/useToast";
 import {
   useAdminMutations,
@@ -19,24 +19,28 @@ import { TutorCertificateGallery } from "@/features/admin/components/TutorCertif
 import { AdminCertificatesPanel } from "@/features/admin/components/AdminCertificatesPanel";
 import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 
+const MIN_REJECT_NOTE = 5;
+
 export default function AdminTutorReviewPage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const { data, isLoading, isError, refetch } = usePendingTutors();
   const { reviewTutor } = useAdminMutations();
   const [detail, setDetail] = useState<TutorResponse | null>(null);
   const [note, setNote] = useState("");
-  const [noteError, setNoteError] = useState("");
+  // Lưu cờ thay vì chữ để câu lỗi đổi theo ngôn ngữ
+  const [noteInvalid, setNoteInvalid] = useState(false);
 
   const close = () => {
     setDetail(null);
     setNote("");
-    setNoteError("");
+    setNoteInvalid(false);
   };
 
   const decide = (decision: "APPROVED" | "REJECTED") => {
     if (!detail) return;
-    if (decision === "REJECTED" && note.trim().length < 5) {
-      setNoteError("Vui lòng nhập lý do từ chối (tối thiểu 5 ký tự)");
+    if (decision === "REJECTED" && note.trim().length < MIN_REJECT_NOTE) {
+      setNoteInvalid(true);
       return;
     }
     reviewTutor.mutate(
@@ -44,11 +48,13 @@ export default function AdminTutorReviewPage() {
       {
         onSuccess: () => {
           toast.success(
-            decision === "APPROVED" ? "Đã duyệt hồ sơ" : "Đã từ chối hồ sơ",
+            decision === "APPROVED"
+              ? t("adminTutorReview.approved")
+              : t("adminTutorReview.rejected"),
           );
           close();
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => toast.apiError(e),
       },
     );
   };
@@ -56,42 +62,45 @@ export default function AdminTutorReviewPage() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5">
       <PageHeader
-        title="Duyệt hồ sơ gia sư"
-        description="Hồ sơ ở trạng thái Chờ duyệt."
+        title={t("adminTutorReview.title")}
+        description={t("adminTutorReview.description")}
       />
       {isLoading ? (
         <ListSkeleton />
       ) : isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : !data?.length ? (
-        <EmptyState title="Không có hồ sơ nào chờ duyệt" />
+        <EmptyState title={t("adminTutorReview.empty")} />
       ) : (
         <ul className="flex flex-col gap-3">
-          {data.map((t) => (
+          {data.map((tutor) => (
             <li
-              key={t.id}
+              key={tutor.id}
               className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center"
             >
-              <Avatar name={t.fullName} src={t.avatarUrl} size="lg" />
+              <Avatar name={tutor.fullName} src={tutor.avatarUrl} size="lg" />
               <div className="min-w-0 flex-1">
-                <p className="font-bold text-text">{t.fullName}</p>
+                <p className="font-bold text-text">{tutor.fullName}</p>
                 <p className="text-xs text-text-secondary">
-                  {t.experienceYears} năm KN · {formatVnd(t.hourlyRate)}/giờ
+                  {t("adminTutorReview.summary", {
+                    years: tutor.experienceYears,
+                    fee: formatVnd(tutor.hourlyRate),
+                  })}
                 </p>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {t.subjects?.length ? (
-                    t.subjects.map((s) => (
+                  {tutor.subjects?.length ? (
+                    tutor.subjects.map((s) => (
                       <SubjectTag key={s.id} name={s.name} />
                     ))
                   ) : (
                     <span className="text-xs text-text-secondary">
-                      Chưa chọn môn
+                      {t("adminTutorReview.noSubject")}
                     </span>
                   )}
                 </div>
               </div>
-              <Button variant="outline" onClick={() => setDetail(t)}>
-                Xem & duyệt
+              <Button variant="outline" onClick={() => setDetail(tutor)}>
+                {t("adminTutorReview.viewAndReview")}
               </Button>
             </li>
           ))}
@@ -103,7 +112,9 @@ export default function AdminTutorReviewPage() {
       <Modal
         open={Boolean(detail)}
         onClose={close}
-        title={`Hồ sơ: ${detail?.fullName ?? ""}`}
+        title={t("adminTutorReview.modalTitle", {
+          name: detail?.fullName ?? "",
+        })}
         size="lg"
         footer={
           <>
@@ -112,13 +123,13 @@ export default function AdminTutorReviewPage() {
               loading={reviewTutor.isPending}
               onClick={() => decide("REJECTED")}
             >
-              <X className="size-4" /> Từ chối
+              <X className="size-4" /> {t("adminTutorReview.reject")}
             </Button>
             <Button
               loading={reviewTutor.isPending}
               onClick={() => decide("APPROVED")}
             >
-              <Check className="size-4" /> Duyệt
+              <Check className="size-4" /> {t("adminTutorReview.approve")}
             </Button>
           </>
         }
@@ -127,13 +138,17 @@ export default function AdminTutorReviewPage() {
           <div className="flex flex-col gap-4 text-sm">
             <dl className="grid gap-2 sm:grid-cols-2">
               <div>
-                <dt className="text-xs text-text-secondary">Học vấn</dt>
+                <dt className="text-xs text-text-secondary">
+                  {t("adminTutorReview.education")}
+                </dt>
                 <dd className="font-semibold text-text">
                   {detail.education || "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-text-secondary">Khu vực</dt>
+                <dt className="text-xs text-text-secondary">
+                  {t("adminTutorReview.area")}
+                </dt>
                 <dd className="font-semibold text-text">
                   {(detail.teachingAreas?.length
                     ? detail.teachingAreas
@@ -144,13 +159,19 @@ export default function AdminTutorReviewPage() {
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-text-secondary">Kinh nghiệm</dt>
+                <dt className="text-xs text-text-secondary">
+                  {t("adminTutorReview.experience")}
+                </dt>
                 <dd className="font-semibold text-text">
-                  {detail.experienceYears} năm
+                  {t("adminTutorReview.experienceValue", {
+                    years: detail.experienceYears,
+                  })}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-text-secondary">Giá / giờ</dt>
+                <dt className="text-xs text-text-secondary">
+                  {t("adminTutorReview.pricePerHour")}
+                </dt>
                 <dd className="font-semibold text-text">
                   {formatVnd(detail.hourlyRate)}
                 </dd>
@@ -158,7 +179,9 @@ export default function AdminTutorReviewPage() {
             </dl>
             <div>
               <div>
-                <p className="text-xs text-text-secondary">Môn dạy</p>
+                <p className="text-xs text-text-secondary">
+                  {t("adminTutorReview.subjects")}
+                </p>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {detail.subjects?.length ? (
                     detail.subjects.map((s) => (
@@ -169,23 +192,31 @@ export default function AdminTutorReviewPage() {
                   )}
                 </div>
               </div>
-              <p className="text-xs text-text-secondary">Giới thiệu</p>
+              <p className="text-xs text-text-secondary">
+                {t("adminTutorReview.bio")}
+              </p>
               <p className="text-text">{detail.bio || "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-text-secondary">Chứng chỉ</p>
+              <p className="text-xs text-text-secondary">
+                {t("adminTutorReview.certificates")}
+              </p>
               <TutorCertificateGallery tutorId={detail.id} />
             </div>
 
             <Textarea
-              label="Ghi chú cho gia sư"
+              label={t("adminTutorReview.noteLabel")}
               value={note}
               onChange={(e) => {
                 setNote(e.target.value);
-                setNoteError("");
+                setNoteInvalid(false);
               }}
-              error={noteError}
-              hint="Bắt buộc khi từ chối; gia sư sẽ thấy ghi chú này."
+              error={
+                noteInvalid
+                  ? t("adminTutorReview.noteRequired", { min: MIN_REJECT_NOTE })
+                  : undefined
+              }
+              hint={t("adminTutorReview.noteHint")}
             />
           </div>
         )}

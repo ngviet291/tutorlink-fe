@@ -96,17 +96,17 @@ export function TopUpModal({ open, onClose }: Props) {
         amount: simulateAmount,
       })
         .then(() => status.refetch())
-        .catch((e) => toast.error(getErrorMessage(e)));
+        .catch((e) => toast.apiError(e));
     }, VIETQR_SIMULATE_DELAY_MS);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, simulateOrderId, simulateAmount, simulateIsVietQr, isDemo]);
-  
+
   const copy = (value: string) => {
     navigator.clipboard
       ?.writeText(value)
-      .then(() => toast.success("Đã sao chép"))
-      .catch(() => toast.error("Không sao chép được"));
+      .then(() => toast.success(t("wallet.topUpModal.copied")))
+      .catch(() => toast.error(t("wallet.topUpModal.copyFailed")));
   };
 
   const close = () => {
@@ -118,14 +118,19 @@ export function TopUpModal({ open, onClose }: Props) {
 
   const create = () => {
     if (!valid) {
-      toast.error(`Số tiền nạp từ ${formatVnd(MIN)} đến ${formatVnd(MAX)}`);
+      toast.error(
+        t("wallet.topUpModal.amountRange", {
+          min: formatVnd(MIN),
+          max: formatVnd(MAX),
+        }),
+      );
       return;
     }
     topUp.mutate(
       { amount: finalAmount, paymentMethod: method },
       {
         onSuccess: setSession,
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => toast.apiError(e),
       },
     );
   };
@@ -136,24 +141,31 @@ export function TopUpModal({ open, onClose }: Props) {
     const done = finalStatus === "SUCCESS";
     const failed = finalStatus === "FAILED" || finalStatus === "CANCELLED";
     return (
-      <Modal open={open} onClose={close} title="Thanh toán nạp ví">
+      <Modal
+        open={open}
+        onClose={close}
+        title={t("wallet.topUpModal.paymentTitle")}
+      >
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-2xl font-extrabold text-primary">
             {formatVnd(session.transaction.amount)}
           </p>
           {isDemo && (
-            <p role="status" className="text-sm font-semibold text-warning-text">
-              CHẾ ĐỘ DEMO — tiền giả lập, không thanh toán thật. Chỉ dùng
-              với dữ liệu phát triển.
+            <p
+              role="status"
+              className="text-sm font-semibold text-warning-text"
+            >
+              {t("wallet.topUpModal.demoNotice")}
             </p>
           )}
           {done ? (
             <p className="flex items-center gap-2 font-semibold text-success-text">
-              <CheckCircle2 className="size-5" /> Nạp ví thành công
+              <CheckCircle2 className="size-5" />{" "}
+              {t("wallet.topUpModal.success")}
             </p>
           ) : failed ? (
             <p className="font-semibold text-danger-text">
-              Giao dịch không thành công. Vui lòng thử lại.
+              {t("wallet.topUpModal.failed")}
             </p>
           ) : (
             <>
@@ -166,30 +178,31 @@ export function TopUpModal({ open, onClose }: Props) {
                   ) : session.paymentLink ? (
                     <img
                       src={session.paymentLink}
-                      alt="Mã QR VietQR"
+                      alt={t("wallet.topUpModal.qrAlt")}
                       className="size-52 rounded-xl border border-border bg-white object-contain p-2"
                     />
                   ) : (
                     <p className="text-sm text-danger-text">
-                      Chưa nhận được mã QR. Vui lòng đóng và thử lại.
+                      {t("wallet.topUpModal.qrMissing")}
                     </p>
                   )}
                   <p className="text-sm text-text-secondary">
-                    Mở app ngân hàng, quét mã QR và chuyển đúng số tiền. Số dư
-                    được cập nhật tự động khi tiền về.
+                    {t("wallet.topUpModal.qrInstruction")}
                   </p>
                   {session.transaction.providerOrderId && (
                     <button
                       type="button"
                       onClick={() => copy(session.transaction.providerOrderId!)}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-hover px-3 py-1.5 text-xs font-semibold text-text">
-                      Mã đơn: {session.transaction.providerOrderId}
+                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-hover px-3 py-1.5 text-xs font-semibold text-text"
+                    >
+                      {t("wallet.topUpModal.orderId", {
+                        id: session.transaction.providerOrderId,
+                      })}
                       <Copy className="size-3.5" />
                     </button>
                   )}
                   <p className="text-xs text-warning-text">
-                    Chuyển đúng số tiền và không sửa nội dung. Chuyển sai số
-                    tiền sẽ cần đối soát thủ công.
+                    {t("wallet.topUpModal.transferWarning")}
                   </p>
                 </div>
               ) : isDemo ? (
@@ -197,29 +210,31 @@ export function TopUpModal({ open, onClose }: Props) {
                   loading={demoConfirm.isPending}
                   onClick={() =>
                     demoConfirm.mutate(session.transaction.id, {
-                      onError: (error) => toast.error(getErrorMessage(error)),
+                      onError: (error) => toast.apiError(error),
                     })
-                  }>
-                  Xác nhận thanh toán demo thành công
+                  }
+                >
+                  {t("wallet.topUpModal.demoConfirm")}
                 </Button>
               ) : (
                 <>
                   <p className="text-sm text-text-secondary">
-                    Hoàn tất thanh toán, số dư sẽ được cập nhật tự
-                    động.
+                    {t("wallet.topUpModal.completeAuto")}
                   </p>
-                                    <p className="text-sm text-text-secondary">
+                  <p className="text-sm text-text-secondary">
                     {session.paymentLink
-                      ? "Bấm mở trang thanh toán để xem mã QR."
-                      : "Chưa nhận được liên kết thanh toán. Vui lòng đóng và thử lại."}
+                      ? t("wallet.topUpModal.openPaymentHint")
+                      : t("wallet.topUpModal.noPaymentLink")}
                   </p>
                   {session.paymentLink && (
                     <a
                       href={session.paymentLink}
                       target="_blank"
-                      rel="noreferrer">
+                      rel="noreferrer"
+                    >
                       <Button>
-                        <ExternalLink className="size-4" /> Mở trang thanh toán
+                        <ExternalLink className="size-4" />{" "}
+                        {t("wallet.topUpModal.openPayment")}
                       </Button>
                     </a>
                   )}
@@ -228,16 +243,16 @@ export function TopUpModal({ open, onClose }: Props) {
               {expired ? (
                 <div role="alert" className="flex flex-col items-center gap-2">
                   <p className="text-sm text-warning-text">
-                    Chưa nhận được thanh toán. Nếu bạn đã chuyển tiền, hãy kiểm
-                    tra lại sau ít phút.
+                    {t("wallet.topUpModal.notReceived")}
                   </p>
                   <Button
                     variant="outline"
                     onClick={() => {
                       setExpired(false);
                       void status.refetch();
-                    }}>
-                    Kiểm tra lại
+                    }}
+                  >
+                    {t("wallet.topUpModal.recheck")}
                   </Button>
                 </div>
               ) : status.isError ? (
@@ -247,21 +262,25 @@ export function TopUpModal({ open, onClose }: Props) {
                   </p>
                   <Button
                     variant="outline"
-                    onClick={() => void status.refetch()}>
-                    Kiểm tra lại
+                    onClick={() => void status.refetch()}
+                  >
+                    {t("wallet.topUpModal.recheck")}
                   </Button>
                 </div>
               ) : (
                 <p className="flex items-center gap-2 text-xs text-text-secondary">
-                  <Spinner size="sm" /> Đang chờ xác nhận…
+                  <Spinner size="sm" /> {t("wallet.topUpModal.waiting")}
                 </p>
               )}
             </>
           )}
           <Button
             variant={done || failed ? "primary" : "ghost"}
-            onClick={close}>
-            {done || failed ? "Đóng" : "Để sau"}
+            onClick={close}
+          >
+            {done || failed
+              ? t("wallet.topUpModal.close")
+              : t("wallet.topUpModal.later")}
           </Button>
         </div>
       </Modal>
@@ -286,7 +305,8 @@ export function TopUpModal({ open, onClose }: Props) {
                 amount === p && !custom
                   ? "border-primary bg-primary text-white"
                   : "border-border bg-surface text-text hover:border-primary hover:text-primary",
-              )}>
+              )}
+            >
               {formatVnd(p)}
             </button>
           ))}
@@ -309,12 +329,13 @@ export function TopUpModal({ open, onClose }: Props) {
         </div>
         <div>
           <p className="mb-1 text-xs font-semibold text-text-secondary">
-            Phương thức thanh toán
+            {t("wallet.topUpModal.method")}
           </p>
           <div
             className="grid grid-cols-2 gap-2"
             role="radiogroup"
-            aria-label="Phương thức thanh toán">
+            aria-label={t("wallet.topUpModal.method")}
+          >
             {METHODS.map((m) => (
               <button
                 key={m.value}
@@ -327,7 +348,8 @@ export function TopUpModal({ open, onClose }: Props) {
                   method === m.value
                     ? "border-primary bg-primary-light text-primary"
                     : "border-border text-text hover:border-primary",
-                )}>
+                )}
+              >
                 {m.label}
               </button>
             ))}

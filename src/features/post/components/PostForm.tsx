@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
-import { useForm, Controller, type Path } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 import {
   EDUCATION_LEVELS,
@@ -21,14 +22,21 @@ import type { PostType } from "@/shared/types/common.types";
 
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
-import { markPostFormCompleted, usePostFormAbandonTracking } from "@/features/tracking/hooks";
+import { useServerFormErrors } from "@/shared/hooks/useServerFormErrors";
 
-// Dữ liệu test khi DEV + tạo mới.
-const TEST_DEFAULTS: Record<PostType, Partial<PostPayload>> = {
+import {
+  markPostFormCompleted,
+  usePostFormAbandonTracking,
+} from "@/features/tracking/hooks";
+import { intlLocale } from "@/shared/utils/locale";
+
+// Dữ liệu test khi DEV + tạo mới (tính theo ngôn ngữ hiện tại).
+const getTestDefaults = (
+  t: TFunction,
+): Record<PostType, Partial<PostPayload>> => ({
   FIND_TUTOR: {
-    title: "Tìm gia sư Toán lớp 10 tại Quận 7",
-    content:
-      "Em đang học lớp 10, cần gia sư Toán củng cố kiến thức nền và ôn thi học kỳ. Ưu tiên gia sư có kinh nghiệm dạy cấp 3, kiên nhẫn.",
+    title: t("post.postForm.dev.findTutorTitle"),
+    content: t("post.postForm.dev.findTutorContent"),
     educationLevel: "HIGH_SCHOOL",
     teachingMode: "BOTH",
     budgetUnit: "PER_SESSION",
@@ -39,9 +47,8 @@ const TEST_DEFAULTS: Record<PostType, Partial<PostPayload>> = {
   },
 
   FIND_STUDENT: {
-    title: "Gia sư Toán nhận học viên cấp 2, cấp 3",
-    content:
-      "Mình có 3 năm kinh nghiệm dạy Toán, phương pháp đi từ nền tảng đến nâng cao. Nhận dạy kèm 1-1, lịch linh hoạt buổi tối và cuối tuần.",
+    title: t("post.postForm.dev.findStudentTitle"),
+    content: t("post.postForm.dev.findStudentContent"),
     educationLevel: "HIGH_SCHOOL",
     teachingMode: "ONLINE",
     budgetUnit: "PER_SESSION",
@@ -50,17 +57,28 @@ const TEST_DEFAULTS: Record<PostType, Partial<PostPayload>> = {
     sessionsPerWeek: 2,
     durationMinutes: 120,
   },
-};
+});
 
-const BUDGET_UNIT_OPTIONS = [
-  {
-    value: "PER_SESSION",
-    label: "Theo buổi",
-  },
-  {
-    value: "PER_MONTH",
-    label: "Theo tháng",
-  },
+/** Khớp BudgetRangeValidator của BE. */
+const BUDGET_MIN_EXCLUSIVE = 10000;
+const BUDGET_MAX = 5000000;
+
+/** Tên input trong form; field BE trả về ngoài danh sách này sẽ hiện ở root.server. */
+const FORM_FIELDS = [
+  "title",
+  "content",
+  "subjectId",
+  "educationLevel",
+  "teachingMode",
+  "budgetUnit",
+  "minBudget",
+  "maxBudget",
+  "sessionsPerWeek",
+  "durationMinutes",
+  "deadline",
+  "address.street",
+  "address.ward",
+  "address.province",
 ] as const;
 
 const TITLE_MAX = 255;
@@ -99,18 +117,9 @@ export function PostForm({
   const isCreate = !defaultValues;
 
   const testValues: Partial<PostPayload> =
-    import.meta.env.DEV && isCreate ? TEST_DEFAULTS[postType] : {};
+    import.meta.env.DEV && isCreate ? getTestDefaults(t)[postType] : {};
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    setValue,
-    getValues,
-    setError,
-    watch,
-    formState: { errors, isDirty },
-  } = useForm<PostPayload>({
+  const form = useForm<PostPayload>({
     defaultValues: {
       type: postType,
 
@@ -153,11 +162,25 @@ export function PostForm({
     },
   });
 
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    getValues,
+    clearErrors,
+    watch,
+    formState: { errors, isDirty },
+  } = form;
+
+  // Gắn lỗi BE vào form, nhớ lỗi gốc để dịch lại khi đổi ngôn ngữ.
+  const applyServer = useServerFormErrors(form, FORM_FIELDS);
+
   const teachingMode = watch("teachingMode");
 
   const budgetUnit = watch("budgetUnit");
 
-  const minBudget = watch("minBudget");
+  const budgetFmt = (n: number) => n.toLocaleString(intlLocale());
 
   const province = watch("address.province");
 
@@ -166,10 +189,16 @@ export function PostForm({
   // Địa chỉ bắt buộc với OFFLINE/BOTH.
   const addressRequired = teachingMode === "OFFLINE" || teachingMode === "BOTH";
 
+  // Nhãn tính trong component để đổi theo ngôn ngữ hiện tại.
+  const budgetUnitOptions = [
+    { value: "PER_SESSION", label: t("post.postForm.budgetPerSession") },
+    { value: "PER_MONTH", label: t("post.postForm.budgetPerMonth") },
+  ] as const;
+
   const budgetUnitLabel =
-    BUDGET_UNIT_OPTIONS.find(
-      (item) => item.value === budgetUnit,
-    )?.label.toLowerCase() ?? "";
+    budgetUnitOptions
+      .find((item) => item.value === budgetUnit)
+      ?.label.toLowerCase() ?? "";
 
   // ─────────────────────────────────────
   // ADDRESS
@@ -229,16 +258,26 @@ export function PostForm({
     }
 
     if (!getValues("address.street")) {
-      setValue("address.street", "123 Nguyễn Văn Linh");
+      setValue("address.street", t("post.postForm.dev.street"));
     }
-  }, [subjects, provinceOptions, wardOptions, isCreate, getValues, setValue]);
+  }, [
+    subjects,
+    provinceOptions,
+    wardOptions,
+    isCreate,
+    getValues,
+    setValue,
+    t,
+  ]);
 
   // ─────────────────────────────────────
   // SUBMIT
   // ─────────────────────────────────────
 
-  const submitAs = (asDraft: boolean) =>
-    handleSubmit(async (data) => {
+  const submitAs = (asDraft: boolean) => {
+    // Lỗi từ BE lần trước không tự mất nếu field không có rule FE -> xóa để submit lại được.
+    clearErrors();
+    return handleSubmit(async (data) => {
       const fieldErrors = await onSubmit(
         {
           ...data,
@@ -251,40 +290,40 @@ export function PostForm({
         asDraft,
       );
 
-      // Gắn lỗi BE vào đúng field.
+      // Gắn lỗi BE vào đúng field (hook tự dịch lại khi đổi ngôn ngữ).
       if (fieldErrors) {
-        Object.entries(fieldErrors).forEach(([name, message]) => {
-          setError(name as Path<PostPayload>, {
-            type: "server",
-            message,
-          });
-        });
+        applyServer(fieldErrors);
       } else if (!asDraft) {
         // Track: form submission completed successfully
         markPostFormCompleted();
       }
     })();
+  };
 
   // Track: form abandoned when leaving with unsaved changes
   usePostFormAbandonTracking(isDirty);
 
   const requiredIfOffline = {
     validate: (value?: string) =>
-      !addressRequired || Boolean(value?.trim()) || t("validation.required"),
+      !addressRequired ||
+      Boolean(value?.trim()) ||
+      t("validation.addressRequired"),
   };
 
   return (
     <form className="space-y-5" noValidate>
       {/* Loại bài đăng */}
       <div className="rounded-xl border border-border bg-primary-light px-4 py-3 text-sm text-text">
-        <span className="text-text-secondary">Loại bài đăng: </span>
+        <span className="text-text-secondary">
+          {t("post.postForm.postTypeLabel")}:{" "}
+        </span>
 
         <strong>{POST_TYPE_LABEL[postType]}</strong>
 
         <p className="mt-0.5 text-xs text-text-secondary">
           {postType === "FIND_TUTOR"
-            ? "Bạn là học viên: bài đăng này dùng để tìm gia sư."
-            : "Bạn là gia sư: bài đăng này dùng để tìm học viên."}
+            ? t("post.postForm.studentHint")
+            : t("post.postForm.tutorHint")}
         </p>
       </div>
 
@@ -295,14 +334,14 @@ export function PostForm({
         error={errors.title?.message}
         maxLength={TITLE_MAX}
         {...register("title", {
-          required: t("validation.required"),
+          required: t("validation.titleRequired"),
 
           validate: (value) =>
-            value.trim().length > 0 || t("validation.required"),
+            value.trim().length > 0 || t("validation.titleRequired"),
 
           maxLength: {
             value: TITLE_MAX,
-            message: `Tiêu đề tối đa ${TITLE_MAX} ký tự`,
+            message: t("validation.titleMax", { max: TITLE_MAX }),
           },
         })}
       />
@@ -312,18 +351,18 @@ export function PostForm({
         label={t("post.description")}
         required
         error={errors.content?.message}
-        hint={`Tối đa ${CONTENT_MAX} ký tự. Mô tả rõ mục tiêu, trình độ và lịch học mong muốn.`}
+        hint={t("post.postForm.contentHint", { max: CONTENT_MAX })}
         rows={5}
         maxLength={CONTENT_MAX}
         {...register("content", {
-          required: t("validation.required"),
+          required: t("validation.contentRequired"),
 
           validate: (value) =>
-            value.trim().length > 0 || t("validation.required"),
+            value.trim().length > 0 || t("validation.contentRequired"),
 
           maxLength: {
             value: CONTENT_MAX,
-            message: `Nội dung tối đa ${CONTENT_MAX} ký tự`,
+            message: t("validation.contentMax", { max: CONTENT_MAX }),
           },
         })}
       />
@@ -333,12 +372,12 @@ export function PostForm({
         name="subjectId"
         control={control}
         rules={{
-          required: t("validation.required"),
+          required: t("validation.subjectRequired"),
         }}
         render={({ field }) => (
           <Select
             label={t("post.subject")}
-        required
+            required
             error={errors.subjectId?.message}
             value={field.value}
             onChange={field.onChange}
@@ -360,12 +399,12 @@ export function PostForm({
           name="educationLevel"
           control={control}
           rules={{
-            required: t("validation.required"),
+            required: t("validation.levelRequired"),
           }}
           render={({ field }) => (
             <Select
               label={t("post.educationLevel")}
-        required
+              required
               error={errors.educationLevel?.message}
               value={field.value}
               onChange={field.onChange}
@@ -383,12 +422,12 @@ export function PostForm({
           name="teachingMode"
           control={control}
           rules={{
-            required: t("validation.required"),
+            required: t("validation.modeRequired"),
           }}
           render={({ field }) => (
             <Select
               label={t("post.teachingMode")}
-        required
+              required
               error={errors.teachingMode?.message}
               value={field.value}
               onChange={field.onChange}
@@ -409,11 +448,11 @@ export function PostForm({
         control={control}
         render={({ field }) => (
           <Select
-            label="Đơn vị ngân sách"
+            label={t("post.postForm.budgetUnitLabel")}
             value={field.value ?? "PER_SESSION"}
             onChange={field.onChange}
           >
-            {BUDGET_UNIT_OPTIONS.map((option) => (
+            {budgetUnitOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -425,38 +464,51 @@ export function PostForm({
       {/* Budget */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Input
-          label={`Ngân sách tối thiểu (${budgetUnitLabel})`}
+          label={t("post.postForm.minBudgetLabel", { unit: budgetUnitLabel })}
           type="number"
-          min={0}
+          min={BUDGET_MIN_EXCLUSIVE + 1}
           error={errors.minBudget?.message}
           {...register("minBudget", {
             valueAsNumber: true,
 
-            min: {
-              value: 0,
-              message: t("validation.minZero"),
-            },
+            validate: (min) =>
+              (!Number.isNaN(min) && min > BUDGET_MIN_EXCLUSIVE) ||
+              t("validation.minBudget", {
+                min: budgetFmt(BUDGET_MIN_EXCLUSIVE),
+              }),
+
+            // đổi min thì kiểm tra lại max
+            deps: ["maxBudget"],
           })}
         />
 
         <Input
-          label={`Ngân sách tối đa (${budgetUnitLabel})`}
+          label={t("post.postForm.maxBudgetLabel", { unit: budgetUnitLabel })}
           type="number"
-          min={0}
+          min={BUDGET_MIN_EXCLUSIVE + 1}
+          max={BUDGET_MAX}
           error={errors.maxBudget?.message}
           {...register("maxBudget", {
             valueAsNumber: true,
 
-            min: {
-              value: 0,
-              message: t("validation.minZero"),
+            validate: (max) => {
+              if (Number.isNaN(max) || max <= BUDGET_MIN_EXCLUSIVE) {
+                return t("validation.maxBudgetMin", {
+                  min: budgetFmt(BUDGET_MIN_EXCLUSIVE),
+                });
+              }
+              if (max > BUDGET_MAX) {
+                return t("validation.maxBudgetMax", {
+                  max: budgetFmt(BUDGET_MAX),
+                });
+              }
+              // getValues: luôn là giá trị min mới nhất, kể cả khi validate chạy do deps
+              const min = getValues("minBudget");
+              if (!Number.isNaN(min) && max <= min) {
+                return t("validation.maxBudgetOrder");
+              }
+              return true;
             },
-
-            validate: (max) =>
-              Number.isNaN(max) ||
-              Number.isNaN(minBudget) ||
-              max >= minBudget ||
-              "Ngân sách tối đa phải lớn hơn hoặc bằng tối thiểu",
           })}
         />
       </div>
@@ -473,7 +525,7 @@ export function PostForm({
 
             min: {
               value: 1,
-              message: "Tối thiểu 1 buổi mỗi tuần",
+              message: t("validation.sessionsMin"),
             },
           })}
         />
@@ -488,7 +540,7 @@ export function PostForm({
 
             min: {
               value: 15,
-              message: "Mỗi buổi tối thiểu 15 phút",
+              message: t("validation.durationMin"),
             },
           })}
         />
@@ -502,10 +554,9 @@ export function PostForm({
         error={errors.deadline?.message}
         min={today}
         {...register("deadline", {
-          required: t("validation.required"),
+          required: t("validation.deadlineRequired"),
 
-          validate: (value) =>
-            value >= today || "Hạn chót phải từ hôm nay trở đi",
+          validate: (value) => value >= today || t("validation.deadlinePast"),
         })}
       />
 
@@ -551,7 +602,7 @@ export function PostForm({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {manualEntry ? (
               <Input
-                label="Phường / Xã"
+                label={t("post.postForm.ward")}
                 required={addressRequired}
                 error={errors.address?.ward?.message}
                 maxLength={100}
@@ -564,7 +615,7 @@ export function PostForm({
                 rules={requiredIfOffline}
                 render={({ field }) => (
                   <Select
-                    label="Phường / Xã"
+                    label={t("post.postForm.ward")}
                     required={addressRequired}
                     error={errors.address?.ward?.message}
                     value={field.value ?? ""}
@@ -572,7 +623,9 @@ export function PostForm({
                     disabled={!province || isLoadingWards}
                   >
                     <option value="">
-                      {province ? "Chọn phường / xã" : "Chọn tỉnh trước"}
+                      {province
+                        ? t("post.postForm.selectWard")
+                        : t("post.postForm.selectProvinceFirst")}
                     </option>
 
                     {wardOptions
@@ -588,7 +641,7 @@ export function PostForm({
             )}
 
             <Input
-              label="Số nhà, đường"
+              label={t("post.postForm.street")}
               required={addressRequired}
               error={errors.address?.street?.message}
               maxLength={255}
@@ -596,6 +649,15 @@ export function PostForm({
             />
           </div>
         </>
+      )}
+
+      {errors.root?.server && (
+        <p
+          role="alert"
+          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
+        >
+          {errors.root.server.message}
+        </p>
       )}
 
       {/* Actions */}
@@ -609,7 +671,7 @@ export function PostForm({
               loading={isSubmitting}
               className="sm:flex-1"
             >
-              Lưu nháp
+              {t("post.postForm.saveDraft")}
             </Button>
 
             <Button
@@ -628,9 +690,7 @@ export function PostForm({
             loading={isSubmitting}
             className="w-full"
           >
-            {t("post.saveChanges", {
-              defaultValue: "Lưu thay đổi",
-            })}
+            {t("post.postForm.saveChanges")}
           </Button>
         )}
       </div>

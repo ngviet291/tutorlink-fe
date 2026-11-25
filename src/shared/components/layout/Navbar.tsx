@@ -10,6 +10,7 @@ import { Avatar } from '@/shared/components/ui/Avatar'
 import { Button } from '@/shared/components/ui/Button'
 import { Dropdown, dropdownItemClass } from '@/shared/components/ui/Dropdown'
 import { Logo } from '@/shared/components/ui/Logo'
+import { LanguageSwitcher } from '@/shared/components/ui/LanguageSwitcher'
 import { NotificationBell } from '@/features/notification/components/NotificationBell'
 import { useLogout } from '@/features/auth/hooks/useAuth'
 import { getPublicNav } from './navItems'
@@ -42,6 +43,7 @@ export function Navbar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <LanguageSwitcher />
           <button
             type="button"
             onClick={toggle}

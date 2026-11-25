@@ -7,7 +7,6 @@ import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { Textarea } from "@/shared/components/ui/Textarea";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
 import { useAdminMutations, usePendingCertificates } from "../hooks/useAdmin";
 import type { PendingCertificate } from "../types/admin.types";
 
@@ -36,7 +35,7 @@ export function AdminCertificatesPanel() {
           );
           closeReject();
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => toast.apiError(e),
       },
     );
 

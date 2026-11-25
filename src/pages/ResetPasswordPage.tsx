@@ -8,6 +8,7 @@ import { Input } from '@/shared/components/ui/Input'
 import { Button } from '@/shared/components/ui/Button'
 import { useToast } from '@/shared/hooks/useToast'
 import { getErrorMessage } from '@/shared/utils/errors'
+import { rules } from '@/features/auth/validation/auth.validation'
 
 interface ResetForm {
   password: string
@@ -76,9 +77,11 @@ export default function ResetPasswordPage() {
               label={t('auth.password')}
               type="password"
               error={errors.password?.message}
+              hint={t('validation.passwordHint')}
               {...register('password', {
-                required: t('validation.required'),
-                minLength: { value: 8, message: t('validation.minLength', { min: 8 }) },
+                ...rules.password,
+                // đổi mật khẩu thì kiểm tra lại ô xác nhận
+                deps: ['confirmPassword'],
               })}
             />
 
@@ -87,8 +90,8 @@ export default function ResetPasswordPage() {
               type="password"
               error={errors.confirmPassword?.message}
               {...register('confirmPassword', {
-                required: t('validation.required'),
-                validate: (v) => v === password || t('validation.passwordMismatch'),
+                required: t('validation.confirmRequired'),
+                validate: (v) => v === password || t('validation.confirmMismatch'),
               })}
             />
 

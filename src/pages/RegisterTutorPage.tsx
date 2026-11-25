@@ -1,17 +1,20 @@
 import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Controller, FormProvider, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
+import { useServerFormErrors } from "@/shared/hooks/useServerFormErrors";
 import { useRegister } from "@/features/auth/hooks/useAuth";
 import { RegisterLayout } from "@/features/auth/components/RegisterLayout";
 import {
   buildBasePayload,
   COMMON_DEFAULTS,
+  COMMON_REGISTER_FIELDS,
+  REGISTER_ERROR_ALIASES,
   CommonRegisterFields,
   type CommonRegisterValues,
 } from "@/features/auth/components/CommonRegisterFields";
@@ -26,6 +29,14 @@ interface TutorFormValues extends CommonRegisterValues {
   teachingLevels: EducationLevel[];
   subjectIds: string[];
 }
+
+const KNOWN = [
+  ...COMMON_REGISTER_FIELDS,
+  "education",
+  "experienceYears",
+  "teachingLevels",
+  "subjectIds",
+] as const;
 
 /** Khối có đánh số bước, cùng kiểu thẻ với trang Hồ sơ giảng dạy. */
 function Step({
@@ -59,13 +70,13 @@ function Step({
 }
 
 export default function RegisterTutorPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
   const registerMutation = useRegister("TUTOR");
   const { data: subjects = [] } = useSubjects();
-  // Mỗi môn đúng 1 ảnh chứng chỉ, giống trang Hồ sơ giảng dạy
   const [files, setFiles] = useState<Record<string, File[]>>({});
-  const [certErrors, setCertErrors] = useState<Record<string, string>>({});
+  const [certErrors, setCertErrors] = useState<Record<string, boolean>>({});
 
   const methods = useForm<TutorFormValues>({
     defaultValues: {
@@ -83,6 +94,11 @@ export default function RegisterTutorPage() {
     watch,
     formState: { errors },
   } = methods;
+  const applyServer = useServerFormErrors(
+    methods,
+    KNOWN,
+    REGISTER_ERROR_ALIASES,
+  );
   const selectedIds = watch("subjectIds");
   const withCertificate = selectedIds.filter(
     (id) => (files[id]?.length ?? 0) > 0,
@@ -97,10 +113,8 @@ export default function RegisterTutorPage() {
     // Mỗi môn đã chọn phải có đúng 1 ảnh chứng chỉ
     const missing = v.subjectIds.filter((id) => !files[id]?.length);
     if (missing.length > 0) {
-      setCertErrors(
-        Object.fromEntries(missing.map((id) => [id, "Môn này cần 1 ảnh chứng chỉ"])),
-      );
-      toast.error("Mỗi môn học cần có 1 ảnh chứng chỉ / bằng cấp");
+      setCertErrors(Object.fromEntries(missing.map((id) => [id, true])));
+      toast.error(t("registerTutor.certMissingToast"));
       return;
     }
     setCertErrors({});
@@ -117,11 +131,10 @@ export default function RegisterTutorPage() {
       },
       {
         onSuccess: () => {
-          toast.info(
-            "Hồ sơ đang chờ Admin duyệt. Hãy hoàn thiện hồ sơ giảng dạy của bạn.",
-          );
+          toast.info(t("registerTutor.pendingToast"));
           navigate(ROUTES.TUTOR_PROFILE, { replace: true });
         },
+        onError: applyServer,
       },
     );
   });
@@ -134,75 +147,83 @@ export default function RegisterTutorPage() {
           className="flex flex-col gap-5"
           noValidate
         >
-          <Step no={1} title="Thông tin tài khoản">
+          <Step no={1} title={t("registerTutor.step1Title")}>
             <CommonRegisterFields />
           </Step>
 
           <Step
             no={2}
-            title="Học vấn và kinh nghiệm"
-            hint="Giới thiệu, khu vực, lịch rảnh, giá và kinh nghiệm từng môn bạn bổ sung ở Hồ sơ giảng dạy; cần hoàn thiện đủ sau khi được duyệt mới nhận lớp được."
+            title={t("registerTutor.step2Title")}
+            hint={t("registerTutor.step2Hint")}
           >
             <Input
-              label="Trường / Học vấn"
+              label={t("registerTutor.educationLabel")}
               required
-              placeholder="VD: Cử nhân Sư phạm Toán, ĐH Sư phạm TP.HCM"
+              placeholder={t("registerTutor.educationPlaceholder")}
               error={errors.education?.message}
-              {...register("education", { required: "Nhập học vấn" })}
+              {...register("education", {
+                required: t("validation.educationRequired"),
+                validate: (v) =>
+                  v.trim().length > 0 || t("validation.educationRequired"),
+              })}
             />
             <Input
-              label="Tổng số năm kinh nghiệm"
+              label={t("registerTutor.expLabel")}
               type="number"
               min={0}
               required
-              placeholder="Ví dụ: 3"
+              placeholder={t("registerTutor.expPlaceholder")}
               error={errors.experienceYears?.message}
               {...register("experienceYears", {
                 valueAsNumber: true,
-                required: "Nhập số năm kinh nghiệm",
-                min: { value: 0, message: "Không được âm" },
-                max: { value: 50, message: "Tối đa 50" },
+                required: t("validation.expRequired"),
+                min: { value: 0, message: t("validation.expMin") },
+                max: { value: 50, message: t("validation.expMax") },
               })}
             />
             <Controller
               name="teachingLevels"
               control={control}
               rules={{
-                validate: (v) => v.length > 0 || "Chọn ít nhất một cấp học",
+                validate: (v) =>
+                  v.length > 0 || t("validation.teachingLevelsRequired"),
               }}
               render={({ field }) => (
                 <fieldset className="flex flex-col gap-2">
                   <legend className="text-sm font-medium text-text">
-                    Cấp học nhận dạy <span className="text-danger-text">*</span>
+                    {t("registerTutor.teachingLevelsLegend")}{" "}
+                    <span className="text-danger-text">*</span>
                   </legend>
                   <div className="flex flex-wrap gap-2">
-                    {[...EDUCATION_LEVELS, "OTHER" as EducationLevel].map((lv) => {
-                      const checked = field.value.includes(lv);
-                      return (
-                        <label
-                          key={lv}
-                          className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                            checked
-                              ? "border-primary bg-primary-light text-primary"
-                              : "border-border text-text-secondary hover:border-primary/50"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() =>
-                              field.onChange(
-                                checked
-                                  ? field.value.filter((x) => x !== lv)
-                                  : [...field.value, lv],
-                              )
-                            }
-                            className="accent-primary"
-                          />
-                          {EDUCATION_LEVEL_LABEL[lv]}
-                        </label>
-                      );
-                    })}
+                    {[...EDUCATION_LEVELS, "OTHER" as EducationLevel].map(
+                      (lv) => {
+                        const checked = field.value.includes(lv);
+                        return (
+                          <label
+                            key={lv}
+                            className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                              checked
+                                ? "border-primary bg-primary-light text-primary"
+                                : "border-border text-text-secondary hover:border-primary/50"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                field.onChange(
+                                  checked
+                                    ? field.value.filter((x) => x !== lv)
+                                    : [...field.value, lv],
+                                )
+                              }
+                              className="accent-primary"
+                            />
+                            {EDUCATION_LEVEL_LABEL[lv]}
+                          </label>
+                        );
+                      },
+                    )}
                   </div>
                   {errors.teachingLevels && (
                     <p role="alert" className="text-xs text-danger-text">
@@ -216,19 +237,21 @@ export default function RegisterTutorPage() {
 
           <Step
             no={3}
-            title="Môn giảng dạy và chứng chỉ"
-            hint="Chọn môn bạn dạy, mỗi môn cần 1 ảnh chứng chỉ / bằng cấp. Hệ thống sẽ tự kiểm tra; chứng chỉ nào chưa xác thực được sẽ do Admin duyệt."
+            title={t("registerTutor.step3Title")}
+            hint={t("registerTutor.step3Hint")}
           >
             <Controller
               name="subjectIds"
               control={control}
               rules={{
-                validate: (v) => v.length > 0 || "Chọn ít nhất một môn dạy",
+                validate: (v) =>
+                  v.length > 0 || t("validation.subjectsRequired"),
               }}
               render={({ field }) => (
                 <fieldset className="flex flex-col gap-2">
                   <legend className="text-sm font-medium text-text">
-                    Môn giảng dạy <span className="text-danger-text">*</span>
+                    {t("registerTutor.subjectsLegend")}{" "}
+                    <span className="text-danger-text">*</span>
                   </legend>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {subjects.map((s) => {
@@ -272,8 +295,10 @@ export default function RegisterTutorPage() {
             {selectedIds.length > 0 && (
               <>
                 <p className="text-xs text-text-secondary">
-                  Đã chọn {selectedIds.length} môn · {withCertificate}/
-                  {selectedIds.length} môn đã có chứng chỉ
+                  {t("registerTutor.selectedSummary", {
+                    selected: selectedIds.length,
+                    withCert: withCertificate,
+                  })}
                 </p>
                 <ul className="flex flex-col gap-3">
                   {selectedIds.map((id) => {
@@ -285,11 +310,14 @@ export default function RegisterTutorPage() {
                       >
                         <div className="flex items-center justify-between gap-2">
                           <h3 className="font-semibold text-text">
-                            {subject?.name ?? "Môn học"}
+                            {subject?.name ??
+                              t("registerTutor.subjectFallback")}
                           </h3>
                           <Button
                             variant="ghost"
-                            aria-label={`Bỏ môn ${subject?.name ?? ""}`}
+                            aria-label={t("registerTutor.removeSubject", {
+                              name: subject?.name ?? "",
+                            })}
                             onClick={() => {
                               removeFiles(id);
                               methods.setValue(
@@ -305,10 +333,16 @@ export default function RegisterTutorPage() {
                           value={files[id] ?? []}
                           onChange={(next) => {
                             setFiles((prev) => ({ ...prev, [id]: next }));
-                            setCertErrors(({ [id]: _cleared, ...rest }) => rest);
+                            setCertErrors(
+                              ({ [id]: _cleared, ...rest }) => rest,
+                            );
                           }}
                           maxFiles={1}
-                          error={certErrors[id]}
+                          error={
+                            certErrors[id]
+                              ? t("registerTutor.certMissing")
+                              : undefined
+                          }
                         />
                       </li>
                     );
@@ -318,12 +352,12 @@ export default function RegisterTutorPage() {
             )}
           </Step>
 
-          {registerMutation.isError && (
+          {errors.root?.server && (
             <p
               role="alert"
               className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
             >
-              {getErrorMessage(registerMutation.error)}
+              {errors.root.server.message}
             </p>
           )}
           <Button
@@ -332,11 +366,10 @@ export default function RegisterTutorPage() {
             fullWidth
             loading={registerMutation.isPending}
           >
-            Đăng ký gia sư
+            {t("registerTutor.submit")}
           </Button>
           <p className="text-center text-xs text-text-secondary">
-            Sau khi đăng ký, bạn sẽ được chuyển tới Hồ sơ giảng dạy để bổ sung
-            giới thiệu, khu vực, lịch rảnh và thông tin riêng từng môn.
+            {t("registerTutor.footnote")}
           </p>
         </form>
       </FormProvider>

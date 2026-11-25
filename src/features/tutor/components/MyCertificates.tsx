@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { BadgeCheck, Clock, Plus, ShieldQuestion, Trash2 } from "lucide-react";
 import { CertificateUpload } from "@/features/auth/components/CertificateUpload";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
@@ -7,7 +8,6 @@ import { Button } from "@/shared/components/ui/Button";
 import { Select } from "@/shared/components/ui/Select";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
 import type { CertificateResponse } from "@/features/user/types/user.dto";
 import {
   useDeleteCertificate,
@@ -32,22 +32,23 @@ function CertificateItem({
   onDelete: () => void;
   deleting: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <li className="flex items-center gap-3 rounded-xl border border-border p-3">
       <a href={certificate.fileUrl} target="_blank" rel="noreferrer">
         <img
           src={certificate.fileUrl}
-          alt={certificate.name ?? "Ảnh chứng chỉ"}
+          alt={certificate.name ?? t("subjectEditor.certAlt")}
           className="size-14 rounded-lg border border-border object-cover"
         />
       </a>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-text">
-          {certificate.name ?? "Đang chờ hệ thống đọc thông tin..."}
+          {certificate.name ?? t("subjectEditor.certPending")}
         </p>
         {certificate.pendingAdminReview && !certificate.verified && (
           <p className="text-xs text-text-secondary">
-            Hệ thống chưa tự xác thực được, admin sẽ xem xét thủ công.
+            {t("myCertificates.adminReviewNote")}
           </p>
         )}
         {certificate.issuedBy && (
@@ -59,20 +60,20 @@ function CertificateItem({
       </div>
       {certificate.verified ? (
         <Badge tone="green" icon={<BadgeCheck className="size-3" />}>
-          Đã xác thực
+          {t("subjectEditor.certVerified")}
         </Badge>
       ) : certificate.pendingAdminReview ? (
         <Badge tone="blue" icon={<ShieldQuestion className="size-3" />}>
-          Chờ admin duyệt
+          {t("myCertificates.pendingAdmin")}
         </Badge>
       ) : (
         <Badge tone="yellow" icon={<Clock className="size-3" />}>
-          Đang duyệt
+          {t("subjectEditor.certReviewing")}
         </Badge>
       )}
       <Button
         variant="ghost"
-        aria-label="Xóa chứng chỉ"
+        aria-label={t("subjectEditor.deleteCertAria")}
         loading={deleting}
         onClick={onDelete}
       >
@@ -84,6 +85,7 @@ function CertificateItem({
 
 /** Thêm môn học mới: bấm nút mới hiện form, mỗi môn đúng 1 chứng chỉ (1 ảnh). */
 function AddSubject({ takenIds, room }: { takenIds: string[]; room: number }) {
+  const { t } = useTranslation();
   const toast = useToast();
   const { data: subjects = [] } = useSubjects();
   const upload = useUploadCertificates();
@@ -107,19 +109,16 @@ function AddSubject({ takenIds, room }: { takenIds: string[]; room: number }) {
       {
         onSuccess: () => {
           close();
-          toast.success(
-            "Đã thêm môn học, chứng chỉ đang được kiểm tra. Nếu hệ thống chưa tự xác thực được, admin sẽ duyệt giúp bạn",
-          );
+          toast.success(t("myCertificates.added"));
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => toast.apiError(e),
       },
     );
 
   if (room <= 0) {
     return (
       <p className="text-xs text-text-secondary">
-        Đã đạt tối đa {MAX_CERTIFICATES} chứng chỉ, hãy xóa bớt trước khi thêm
-        môn mới.
+        {t("myCertificates.maxReached", { max: MAX_CERTIFICATES })}
       </p>
     );
   }
@@ -132,17 +131,19 @@ function AddSubject({ takenIds, room }: { takenIds: string[]; room: number }) {
         className="w-fit"
         onClick={() => setOpen(true)}
       >
-        <Plus className="size-4" /> Thêm môn học mới
+        <Plus className="size-4" /> {t("subjectEditor.addSubject")}
       </Button>
     );
   }
 
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-border p-4">
-      <h3 className="font-semibold text-text">Thêm môn học mới</h3>
+      <h3 className="font-semibold text-text">
+        {t("subjectEditor.addSubject")}
+      </h3>
       <Select
-        label="Môn học"
-        placeholder="Chọn môn học"
+        label={t("subjectEditor.subject")}
+        placeholder={t("subjectEditor.pickSubject")}
         value={subjectId}
         onChange={(e) => setSubjectId(e.target.value)}
         options={options}
@@ -150,8 +151,7 @@ function AddSubject({ takenIds, room }: { takenIds: string[]; room: number }) {
       {subjectId && (
         <>
           <p className="text-xs text-text-secondary">
-            Tải 1 ảnh chứng chỉ / bằng cấp cho môn này. Chưa có chứng chỉ thì
-            môn học chưa được xác nhận.
+            {t("myCertificates.uploadHint")}
           </p>
           <CertificateUpload
             value={pending}
@@ -166,10 +166,10 @@ function AddSubject({ takenIds, room }: { takenIds: string[]; room: number }) {
           loading={upload.isPending}
           onClick={submit}
         >
-          Tải lên và thêm môn
+          {t("myCertificates.uploadAndAdd")}
         </Button>
         <Button variant="ghost" disabled={upload.isPending} onClick={close}>
-          Hủy
+          {t("subjectEditor.cancel")}
         </Button>
       </div>
     </div>
@@ -177,6 +177,7 @@ function AddSubject({ takenIds, room }: { takenIds: string[]; room: number }) {
 }
 
 export function MyCertificates() {
+  const { t } = useTranslation();
   const toast = useToast();
   const { data = [], isLoading } = useMyCertificates();
   const remove = useDeleteCertificate();
@@ -185,8 +186,8 @@ export function MyCertificates() {
 
   const handleDelete = (id: string) =>
     remove.mutate(id, {
-      onSuccess: () => toast.success("Đã xóa chứng chỉ"),
-      onError: (e) => toast.error(getErrorMessage(e)),
+      onSuccess: () => toast.success(t("subjectEditor.certDeleted")),
+      onError: (e) => toast.apiError(e),
     });
 
   // Gom chứng chỉ theo môn; chứng chỉ cũ chưa gắn môn để riêng
@@ -201,7 +202,7 @@ export function MyCertificates() {
     if (!group) {
       group = {
         id: c.subjectId,
-        name: c.subjectName ?? "Môn học",
+        name: c.subjectName ?? t("myCertificates.subjectFallback"),
         certificates: [],
       };
       groups.push(group);
@@ -210,12 +211,14 @@ export function MyCertificates() {
   }
 
   return (
-    <section className="flex flex-col gap-3" aria-label="Môn học và chứng chỉ">
-      <h2 className="text-sm font-medium text-text">Môn học và chứng chỉ</h2>
-      <p className="text-xs text-text-secondary">
-        Mỗi môn học cần có chứng chỉ. Môn có chứng chỉ đã xác thực mới đăng bài
-        và nhận lớp được.
-      </p>
+    <section
+      className="flex flex-col gap-3"
+      aria-label={t("myCertificates.title")}
+    >
+      <h2 className="text-sm font-medium text-text">
+        {t("myCertificates.title")}
+      </h2>
+      <p className="text-xs text-text-secondary">{t("myCertificates.hint")}</p>
 
       {isLoading ? (
         <Skeleton className="h-16 w-full" />
@@ -223,7 +226,7 @@ export function MyCertificates() {
         <>
           {groups.length === 0 && orphans.length === 0 && (
             <p className="text-sm text-text-secondary">
-              Chưa có môn học nào. Hãy thêm môn học và chứng chỉ ở bên dưới.
+              {t("myCertificates.empty")}
             </p>
           )}
 
@@ -240,18 +243,18 @@ export function MyCertificates() {
                       tone="green"
                       icon={<BadgeCheck className="size-3" />}
                     >
-                      Môn đã xác nhận
+                      {t("subjectEditor.confirmedBadge")}
                     </Badge>
                   ) : g.certificates.some((c) => c.pendingAdminReview) ? (
                     <Badge
                       tone="blue"
                       icon={<ShieldQuestion className="size-3" />}
                     >
-                      Chờ admin duyệt
+                      {t("myCertificates.pendingAdmin")}
                     </Badge>
                   ) : (
                     <Badge tone="yellow" icon={<Clock className="size-3" />}>
-                      Chờ xác nhận chứng chỉ
+                      {t("myCertificates.awaitingCert")}
                     </Badge>
                   )}
                 </div>
@@ -272,7 +275,7 @@ export function MyCertificates() {
           {orphans.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-xs text-text-secondary">
-                Chứng chỉ chưa gắn môn (hãy xóa và tải lại ở đúng môn):
+                {t("subjectEditor.orphanCerts")}
               </p>
               <ul className="flex flex-col gap-2">
                 {orphans.map((c) => (

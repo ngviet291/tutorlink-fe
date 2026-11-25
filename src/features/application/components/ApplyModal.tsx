@@ -8,7 +8,6 @@ import { BUDGET_UNIT_LABEL } from '@/constants/enums'
 import type { BudgetUnit } from '@/shared/types/common.types'
 import { Textarea } from '@/shared/components/ui/Textarea'
 import { useToast } from '@/shared/hooks/useToast'
-import { getErrorMessage } from '@/shared/utils/errors'
 import { useApplicationMutations } from '../hooks/useApplications'
 
 interface Props {
@@ -58,7 +57,7 @@ export function ApplyModal({ postId, minBudget, maxBudget, budgetUnit, open, onC
           setFee('')
           onClose()
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => toast.apiError(e),
       },
     )
   }

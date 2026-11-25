@@ -11,7 +11,6 @@ import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { RatingStars } from "@/shared/components/ui/RatingStars";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
 import { useApplicationMutations } from "../hooks/useApplications";
 import { ExpiryCountdown } from "./ExpiryCountdown";
 import { NextStepHint } from "./NextStepHint";
@@ -69,11 +68,11 @@ export function ApplicantRow({
     pay.mutate(a.id, {
       onSuccess: () => {
         setPayOpen(false);
-        toast.success("Đã thanh toán phí nhận lớp");
+        toast.success(t("application.applicantRow.paidToast"));
       },
       onError: (e) => {
         setPayOpen(false);
-        toast.error(getErrorMessage(e));
+        toast.apiError(e);
       },
     });
   };
@@ -129,7 +128,9 @@ export function ApplicantRow({
             )}
             {a.proposedFee !== undefined && (
               <p className="mt-2 text-sm font-semibold text-primary">
-                Đề xuất: {formatVnd(a.proposedFee)}
+                {t("application.applicantRow.proposed", {
+                  fee: formatVnd(a.proposedFee),
+                })}
               </p>
             )}
             {a.message && (
@@ -148,10 +149,10 @@ export function ApplicantRow({
                 expiresAt={a.expiresAt}
                 actionLabel={
                   a.paid
-                    ? "xác nhận"
+                    ? t("application.applicantRow.actionConfirm")
                     : isTutorPost
-                      ? "gia sư thanh toán"
-                      : "thanh toán"
+                      ? t("application.applicantRow.actionTutorPay")
+                      : t("application.applicantRow.actionPay")
                 }
                 onExpire={onExpire}
                 className="mt-1"
@@ -175,7 +176,7 @@ export function ApplicantRow({
           </Link>
           {canPay && (
             <Button size="sm" onClick={() => setPayOpen(true)}>
-              Thanh toán phí nhận lớp
+              {t("application.applicantRow.payFee")}
             </Button>
           )}
           {canConfirm && (
@@ -184,12 +185,15 @@ export function ApplicantRow({
               loading={confirm.isPending}
               onClick={() =>
                 confirm.mutate(a.id, {
-                  onSuccess: () => toast.success("Đã xác nhận"),
-                  onError: (e) => toast.error(getErrorMessage(e)),
+                  onSuccess: () =>
+                    toast.success(t("application.applicantRow.confirmedToast")),
+                  onError: (e) => toast.apiError(e),
                 })
               }
             >
-              {isTutorPost ? "Xác nhận gia sư" : "Xác nhận học viên"}
+              {isTutorPost
+                ? t("application.applicantRow.confirmTutor")
+                : t("application.applicantRow.confirmStudent")}
             </Button>
           )}
           {canSelect && a.applicationStatus === "PENDING" && (
@@ -204,12 +208,13 @@ export function ApplicantRow({
               loading={reject.isPending}
               onClick={() =>
                 reject.mutate(a.id, {
-                  onSuccess: () => toast.success("Đã từ chối ứng viên"),
-                  onError: (e) => toast.error(getErrorMessage(e)),
+                  onSuccess: () =>
+                    toast.success(t("application.applicantRow.rejectedToast")),
+                  onError: (e) => toast.apiError(e),
                 })
               }
             >
-              Từ chối
+              {t("application.applicantRow.reject")}
             </Button>
           )}
           {/* BE không cho hủy chọn sau khi đã trả phí */}
@@ -220,12 +225,15 @@ export function ApplicantRow({
               loading={unselect.isPending}
               onClick={() =>
                 unselect.mutate(a.id, {
-                  onSuccess: () => toast.success("Đã hủy chọn ứng viên"),
-                  onError: (e) => toast.error(getErrorMessage(e)),
+                  onSuccess: () =>
+                    toast.success(
+                      t("application.applicantRow.unselectedToast"),
+                    ),
+                  onError: (e) => toast.apiError(e),
                 })
               }
             >
-              Hủy chọn
+              {t("application.applicantRow.unselect")}
             </Button>
           )}
         </div>
@@ -234,11 +242,11 @@ export function ApplicantRow({
       <ConfirmDialog
         open={payOpen}
         onClose={() => setPayOpen(false)}
-        title="Thanh toán phí nhận lớp?"
-        confirmText="Thanh toán"
+        title={t("application.applicantRow.payDialog.title")}
+        confirmText={t("application.applicantRow.payDialog.confirm")}
         loading={pay.isPending}
         onConfirm={onPay}
-        description="Phí nhận lớp sẽ được trừ từ ví của bạn. Nếu số dư không đủ, bạn cần nạp thêm tiền vào ví trước."
+        description={t("application.applicantRow.payDialog.description")}
       />
     </li>
   );

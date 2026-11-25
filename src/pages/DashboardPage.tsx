@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   BookOpenCheck,
   CheckCircle2,
@@ -39,7 +40,6 @@ import { PayFeeModal } from "@/features/wallet/components/PayFeeModal";
 import { useWallet } from "@/features/wallet/hooks/useWallet";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
 
 function Stat({
   icon: Icon,
@@ -79,6 +79,7 @@ function TodoSection({
   isTutor: boolean;
   onPay: (a: ApplicationResponse) => void;
 }) {
+  const { t } = useTranslation();
   const toast = useToast();
   const apps = useMyApplications();
   const posts = useMyPosts();
@@ -90,9 +91,9 @@ function TodoSection({
   const myApps = (apps.data ?? []).filter(
     (a) => a.applicationStatus === "ACCEPTED" && needsMyAction(a, userId),
   );
-  const postsWaiting = (posts.data?.pages.flatMap((p) => p.content) ?? []).filter(
-    (p) => p.status === "PUBLISHED" && (p.applicationCount ?? 0) > 0,
-  );
+  const postsWaiting = (
+    posts.data?.pages.flatMap((p) => p.content) ?? []
+  ).filter((p) => p.status === "PUBLISHED" && (p.applicationCount ?? 0) > 0);
   const profileRejected =
     isTutor && profile.data?.verificationStatus === "REJECTED";
   const total = myApps.length + postsWaiting.length + (profileRejected ? 1 : 0);
@@ -114,7 +115,7 @@ function TodoSection({
         className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text"
       >
         <ClipboardList className="size-5 text-primary" aria-hidden="true" />
-        Việc cần xử lý
+        {t("dashboard.todoTitle")}
         {total > 0 && (
           <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-white">
             {total}
@@ -127,23 +128,26 @@ function TodoSection({
       ) : isError ? (
         <ErrorState
           className="py-6"
-          message="Không tải được danh sách việc cần xử lý. Vui lòng thử lại."
+          message={t("dashboard.todoLoadError")}
           onRetry={retry}
         />
       ) : total === 0 ? (
         <p className="flex items-center gap-2 py-2 text-sm text-text-secondary">
-          <CheckCircle2 className="size-5 text-success-text" aria-hidden="true" />
-          Bạn đã xử lý hết mọi việc. Khi có việc mới, nó sẽ hiện ở đây.
+          <CheckCircle2
+            className="size-5 text-success-text"
+            aria-hidden="true"
+          />
+          {t("dashboard.todoEmpty")}
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
           {profileRejected && (
             <li className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-bold text-primary">
-                Hồ sơ gia sư bị từ chối — cập nhật và gửi lại để được duyệt
+                {t("dashboard.todoProfileRejected")}
               </p>
               <Link to={ROUTES.TUTOR_PROFILE}>
-                <Button size="sm">Cập nhật hồ sơ</Button>
+                <Button size="sm">{t("dashboard.updateProfile")}</Button>
               </Link>
             </li>
           )}
@@ -157,11 +161,13 @@ function TodoSection({
                 <p className="truncate font-semibold text-text">{p.title}</p>
                 <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-primary">
                   <Users className="size-4 shrink-0" aria-hidden="true" />
-                  Có {p.applicationCount} ứng viên đang chờ bạn chọn
+                  {t("dashboard.waitingApplicants", {
+                    count: p.applicationCount,
+                  })}
                 </p>
               </div>
               <Link to={ROUTES.POST_DETAIL(p.id)}>
-                <Button size="sm">Xem ứng viên</Button>
+                <Button size="sm">{t("dashboard.viewApplicants")}</Button>
               </Link>
             </li>
           ))}
@@ -169,7 +175,8 @@ function TodoSection({
           {myApps.map((a) => {
             const accepted = a.applicationStatus === "ACCEPTED";
             const canPay = accepted && !a.paid && isFeePayer(a, userId);
-            const canConfirm = accepted && Boolean(a.paid) && isApplicant(a, userId);
+            const canConfirm =
+              accepted && Boolean(a.paid) && isApplicant(a, userId);
             return (
               <li
                 key={a.id}
@@ -182,26 +189,33 @@ function TodoSection({
                   >
                     {a.post.title}
                   </Link>
-                  <NextStepHint application={a} userId={userId} className="mt-1" />
+                  <NextStepHint
+                    application={a}
+                    userId={userId}
+                    className="mt-1"
+                  />
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
                   {canPay && (
                     <>
                       <Button size="sm" onClick={() => onPay(a)}>
-                        Thanh toán phí
+                        {t("dashboard.payFee")}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
-                        loading={decline.isPending && decline.variables === a.id}
+                        loading={
+                          decline.isPending && decline.variables === a.id
+                        }
                         onClick={() =>
                           decline.mutate(a.id, {
-                            onSuccess: () => toast.success("Đã từ chối lời mời"),
-                            onError: (e) => toast.error(getErrorMessage(e)),
+                            onSuccess: () =>
+                              toast.success(t("dashboard.declined")),
+                            onError: (e) => toast.apiError(e),
                           })
                         }
                       >
-                        Từ chối
+                        {t("dashboard.decline")}
                       </Button>
                     </>
                   )}
@@ -211,12 +225,13 @@ function TodoSection({
                       loading={confirm.isPending && confirm.variables === a.id}
                       onClick={() =>
                         confirm.mutate(a.id, {
-                          onSuccess: () => toast.success("Đã xác nhận lớp học"),
-                          onError: (e) => toast.error(getErrorMessage(e)),
+                          onSuccess: () =>
+                            toast.success(t("dashboard.classConfirmed")),
+                          onError: (e) => toast.apiError(e),
                         })
                       }
                     >
-                      Xác nhận lớp học
+                      {t("dashboard.confirmClass")}
                     </Button>
                   )}
                 </div>
@@ -230,6 +245,7 @@ function TodoSection({
 }
 
 function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const iAmStudent =
     (a.post.type === "FIND_TUTOR" ? a.post.author.id : a.tutor.id) === myId;
@@ -248,21 +264,23 @@ function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
           {a.post.title}
         </Link>
         <p className="text-xs text-text-secondary">
-          Kết nối với {partner.fullName}
+          {t("dashboard.connectedWith", { name: partner.fullName })}
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-2">
         <Link to={ROUTES.CHAT_WITH(partner.id)}>
           <Button size="sm" variant="secondary">
-            Mở chat
+            {t("dashboard.openChat")}
           </Button>
         </Link>
         {iAmStudent && !reviewed.data && (
           <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-            <Star className="size-4" /> Kết thúc lớp & đánh giá
+            <Star className="size-4" /> {t("dashboard.endAndReview")}
           </Button>
         )}
-        {iAmStudent && reviewed.data && <Badge tone="green">Đã đánh giá</Badge>}
+        {iAmStudent && reviewed.data && (
+          <Badge tone="green">{t("dashboard.reviewed")}</Badge>
+        )}
       </div>
       {iAmStudent && (
         <ReviewForm
@@ -277,6 +295,7 @@ function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
 }
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
   const isTutor = user?.role === "TUTOR";
   const isStudent = user?.role === "STUDENT";
@@ -294,21 +313,23 @@ export default function DashboardPage() {
   const myPosts = posts.data?.pages.flatMap((p) => p.content) ?? [];
   const unread = notifications.data?.filter((n) => !n.read).length ?? 0;
   const recentPosts = myPosts.slice(0, 4);
+  const createPostLabel = isTutor
+    ? t("dashboard.createPostTutor")
+    : t("dashboard.createPostStudent");
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <PageHeader
-        title={`Xin chào, ${user.fullName}`}
+        title={t("dashboard.greeting", { name: user.fullName })}
         description={
           isTutor
-            ? "Quản lý lớp, đơn ứng tuyển và ví của bạn."
-            : "Theo dõi bài đăng, ứng viên và các lớp đã kết nối."
+            ? t("dashboard.subtitleTutor")
+            : t("dashboard.subtitleStudent")
         }
         actions={
           <Link to={ROUTES.POST_CREATE}>
             <Button>
-              <Plus className="size-4" />{" "}
-              {isTutor ? "Đăng tìm học viên" : "Đăng bài tìm gia sư"}
+              <Plus className="size-4" /> {createPostLabel}
             </Button>
           </Link>
         }
@@ -322,7 +343,7 @@ export default function DashboardPage() {
           to={ROUTES.TUTOR_PROFILE}
           className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm font-semibold text-text hover:opacity-90"
         >
-          Hồ sơ gia sư đang chờ duyệt — xem chi tiết →
+          {t("dashboard.profilePendingLink")}
         </Link>
       )}
 
@@ -330,13 +351,13 @@ export default function DashboardPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           icon={FileText}
-          label="Bài đăng của tôi"
+          label={t("dashboard.statMyPosts")}
           value={posts.isError ? "—" : posts.data ? myPosts.length : undefined}
           to={ROUTES.MY_POSTS}
         />
         <Stat
           icon={Users}
-          label="Đơn đã ứng tuyển"
+          label={t("dashboard.statApplied")}
           value={apps.isError ? "—" : apps.data ? apps.data.length : undefined}
           to={ROUTES.MY_APPLICATIONS}
         />
@@ -344,7 +365,7 @@ export default function DashboardPage() {
         {isTutor ? (
           <Stat
             icon={Wallet}
-            label="Số dư ví"
+            label={t("dashboard.statBalance")}
             value={
               wallet.isError
                 ? "—"
@@ -357,7 +378,7 @@ export default function DashboardPage() {
         ) : (
           <Stat
             icon={Heart}
-            label="Gia sư yêu thích"
+            label={t("dashboard.statFavorites")}
             value={
               isStudent
                 ? favorites.isError
@@ -372,7 +393,7 @@ export default function DashboardPage() {
         )}
         <Stat
           icon={Inbox}
-          label="Thông báo chưa đọc"
+          label={t("dashboard.statUnread")}
           value={
             notifications.isError
               ? "—"
@@ -387,12 +408,14 @@ export default function DashboardPage() {
       {/* 3. Hoạt động gần đây */}
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-extrabold text-text">Bài đăng gần đây</h2>
+          <h2 className="text-lg font-extrabold text-text">
+            {t("dashboard.recentPosts")}
+          </h2>
           <Link
             to={ROUTES.MY_POSTS}
             className="text-sm font-semibold text-primary hover:underline"
           >
-            Xem tất cả
+            {t("common.viewAll")}
           </Link>
         </div>
         {posts.isLoading ? (
@@ -400,19 +423,18 @@ export default function DashboardPage() {
         ) : posts.isError ? (
           <ErrorState
             className="py-8"
-            message="Không tải được bài đăng. Vui lòng thử lại."
+            message={t("dashboard.postsLoadError")}
             onRetry={() => void posts.refetch()}
           />
         ) : recentPosts.length === 0 ? (
           <EmptyState
             className="py-8"
-            title="Bạn chưa có bài đăng"
-            description="Đăng bài đầu tiên để bắt đầu nhận ứng viên."
+            title={t("dashboard.noPostsTitle")}
+            description={t("dashboard.noPostsDesc")}
             action={
               <Link to={ROUTES.POST_CREATE}>
                 <Button size="sm">
-                  <Plus className="size-4" />{" "}
-                  {isTutor ? "Đăng tìm học viên" : "Đăng bài tìm gia sư"}
+                  <Plus className="size-4" /> {createPostLabel}
                 </Button>
               </Link>
             }
@@ -443,25 +465,29 @@ export default function DashboardPage() {
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text">
           <BookOpenCheck className="size-5 text-primary" aria-hidden="true" />{" "}
-          {isTutor ? "Lớp đang dạy" : "Lớp đã kết nối"}
+          {isTutor
+            ? t("dashboard.classesTutor")
+            : t("dashboard.classesStudent")}
         </h2>
         {connections.isLoading ? (
           <Skeleton className="h-20 w-full" />
         ) : connections.isError ? (
           <ErrorState
             className="py-8"
-            message="Không tải được danh sách lớp. Vui lòng thử lại."
+            message={t("dashboard.classesLoadError")}
             onRetry={() => void connections.refetch()}
           />
         ) : !connections.data?.length ? (
           <EmptyState
             className="py-8"
-            title="Chưa có lớp nào được kết nối"
-            description="Lớp sẽ xuất hiện ở đây sau khi gia sư thanh toán phí nhận lớp."
+            title={t("dashboard.noClassesTitle")}
+            description={t("dashboard.noClassesDesc")}
             action={
               <Link to={isTutor ? ROUTES.FIND_CLASS : ROUTES.FIND_TUTOR}>
                 <Button size="sm">
-                  {isTutor ? "Tìm lớp ngay" : "Tìm gia sư"}
+                  {isTutor
+                    ? t("dashboard.findClassNow")
+                    : t("dashboard.findTutorNow")}
                 </Button>
               </Link>
             }

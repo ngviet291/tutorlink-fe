@@ -1,44 +1,48 @@
-import { useForm } from 'react-hook-form'
-import { Button } from '@/shared/components/ui/Button'
-import { Modal } from '@/shared/components/ui/Modal'
-import { Textarea } from '@/shared/components/ui/Textarea'
-import { useToast } from '@/shared/hooks/useToast'
-import { getErrorMessage } from '@/shared/utils/errors'
-import { useReviewMutations } from '../hooks/useReviews'
-import type { ReviewResponse } from '../types/review.types'
+import { useForm } from "react-hook-form";
+import { Button } from "@/shared/components/ui/Button";
+import { Modal } from "@/shared/components/ui/Modal";
+import { Textarea } from "@/shared/components/ui/Textarea";
+import { useToast } from "@/shared/hooks/useToast";
+import { useReviewMutations } from "../hooks/useReviews";
+import type { ReviewResponse } from "../types/review.types";
 
 interface Props {
-  review: ReviewResponse | null
-  onClose: () => void
+  review: ReviewResponse | null;
+  onClose: () => void;
 }
 
 interface FormValues {
-  reason: string
+  reason: string;
 }
 
 export function ComplaintModal({ review, onClose }: Props) {
-  const toast = useToast()
-  const { complain } = useReviewMutations()
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>()
+  const toast = useToast();
+  const { complain } = useReviewMutations();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>();
 
   const close = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
 
   const submit = handleSubmit(({ reason }) => {
-    if (!review) return
+    if (!review) return;
     complain.mutate(
       { reviewId: review.id, reason },
       {
         onSuccess: () => {
-          toast.success('Đã gửi khiếu nại. Admin sẽ xem xét đánh giá này.')
-          close()
+          toast.success("Đã gửi khiếu nại. Admin sẽ xem xét đánh giá này.");
+          close();
         },
-        onError: (e) => toast.error(getErrorMessage(e)),
+        onError: (e) => toast.apiError(e),
       },
-    )
-  })
+    );
+  });
 
   return (
     <Modal
@@ -47,8 +51,12 @@ export function ComplaintModal({ review, onClose }: Props) {
       title="Khiếu nại đánh giá"
       footer={
         <>
-          <Button variant="ghost" onClick={close}>Hủy</Button>
-          <Button onClick={() => void submit()} loading={complain.isPending}>Gửi khiếu nại</Button>
+          <Button variant="ghost" onClick={close}>
+            Hủy
+          </Button>
+          <Button onClick={() => void submit()} loading={complain.isPending}>
+            Gửi khiếu nại
+          </Button>
         </>
       }
     >
@@ -62,13 +70,13 @@ export function ComplaintModal({ review, onClose }: Props) {
             required
             placeholder="Giải thích vì sao đánh giá này không chính xác hoặc vi phạm quy định..."
             error={errors.reason?.message}
-            {...register('reason', {
-              required: 'Vui lòng nhập lý do',
-              minLength: { value: 10, message: 'Lý do tối thiểu 10 ký tự' },
+            {...register("reason", {
+              required: "Vui lòng nhập lý do",
+              minLength: { value: 10, message: "Lý do tối thiểu 10 ký tự" },
             })}
           />
         </form>
       )}
     </Modal>
-  )
+  );
 }
