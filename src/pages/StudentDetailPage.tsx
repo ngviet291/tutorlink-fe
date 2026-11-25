@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { GraduationCap, MapPin, Target } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { Avatar } from "@/shared/components/ui/Avatar";
@@ -10,6 +11,7 @@ import { usePosts } from "@/features/post/hooks/usePosts";
 import { useStudentProfile } from "@/features/student/hooks/useStudent";
 
 export default function StudentDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { data: student, isLoading, isError, refetch } = useStudentProfile(id);
   // Bài đăng công khai của học viên (BE: GET /v1/posts?authorId=)
@@ -28,7 +30,7 @@ export default function StudentDetailPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
         <ErrorState
-          message="Không tìm thấy hồ sơ học viên."
+          message={t("studentDetail.notFound")}
           onRetry={() => void refetch()}
         />
       </div>
@@ -68,7 +70,9 @@ export default function StudentDetailPage() {
         </div>
       </section>
 
-      <h2 className="mb-3 mt-8 text-lg font-bold text-text">Bài đăng</h2>
+      <h2 className="mb-3 mt-8 text-lg font-bold text-text">
+        {t("studentDetail.posts")}
+      </h2>
       {posts.isLoading ? (
         <CardGridSkeleton count={2} />
       ) : posts.isError ? (
@@ -85,18 +89,21 @@ export default function StudentDetailPage() {
               <Button
                 variant="outline"
                 loading={posts.isFetchingNextPage}
-                onClick={() => void posts.fetchNextPage()}>
-                Xem thêm
+                onClick={() => void posts.fetchNextPage()}
+              >
+                {t("studentDetail.loadMore")}
               </Button>
             </div>
           )}
         </>
       ) : (
         <EmptyState
-          title="Chưa có bài đăng công khai"
+          title={t("studentDetail.noPublicPosts")}
           action={
             <Link to={ROUTES.FIND_CLASS}>
-              <Button variant="outline">Xem các lớp khác</Button>
+              <Button variant="outline">
+                {t("studentDetail.viewOtherClasses")}
+              </Button>
             </Link>
           }
         />

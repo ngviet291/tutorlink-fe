@@ -1,4 +1,5 @@
 import { CheckCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
@@ -11,6 +12,7 @@ import {
 import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll"; // chỉnh path theo dự án
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const {
     data,
     isLoading,
@@ -31,15 +33,16 @@ export default function NotificationsPage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-5">
       <PageHeader
-        title="Thông báo"
+        title={t("notifications.title")}
         actions={
           hasUnread ? (
             <Button
               variant="outline"
               size="sm"
               loading={markAll.isPending}
-              onClick={() => markAll.mutate()}>
-              <CheckCheck className="size-4" /> Đánh dấu đã đọc
+              onClick={() => markAll.mutate()}
+            >
+              <CheckCheck className="size-4" /> {t("notifications.markAllRead")}
             </Button>
           ) : undefined
         }
@@ -49,7 +52,7 @@ export default function NotificationsPage() {
       ) : isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : !data?.length ? (
-        <EmptyState title="Chưa có thông báo" />
+        <EmptyState title={t("notifications.empty")} />
       ) : (
         <>
           <div className="overflow-hidden rounded-2xl border border-border bg-surface">

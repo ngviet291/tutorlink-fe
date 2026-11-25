@@ -1,29 +1,36 @@
-import { useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   adminApplicationsService,
   type ApplicationStatus,
-} from '../service/admin.applications.service';
-import { Button } from '@/shared/components/ui/Button';
-import { Select } from '@/shared/components/ui/Select';
-import { EmptyState, ErrorState } from '@/shared/components/ui/EmptyState';
-import { ListSkeleton } from '@/shared/components/ui/Skeleton';
-import { formatDateTime } from '@/shared/utils/date';
-import { formatVnd } from '@/shared/utils/currency';
+} from "../service/admin.applications.service";
+import { Button } from "@/shared/components/ui/Button";
+import { Select } from "@/shared/components/ui/Select";
+import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
+import { ListSkeleton } from "@/shared/components/ui/Skeleton";
+import { formatDateTime } from "@/shared/utils/date";
+import { formatVnd } from "@/shared/utils/currency";
 
-const states: { value: ApplicationStatus; label: string }[] = [
-  { value: 'PENDING', label: 'Chờ xử lý' },
-  { value: 'ACCEPTED', label: 'Đã chấp nhận' },
-  { value: 'CONFIRMED', label: 'Đã xác nhận' },
-  { value: 'FINISHED', label: 'Đã hoàn thành' },
-  { value: 'CANCELLED', label: 'Đã hủy' },
-  { value: 'REJECTED', label: 'Đã từ chối' },
+// Chỉ giữ giá trị; nhãn được dịch lúc render để đổi VI/EN có hiệu lực ngay.
+const STATUS_VALUES: ApplicationStatus[] = [
+  "PENDING",
+  "ACCEPTED",
+  "CONFIRMED",
+  "FINISHED",
+  "CANCELLED",
+  "REJECTED",
 ];
 
 export function AdminApplicationsPanel() {
-  const [status, setStatus] = useState<ApplicationStatus | ''>('');
+  const { t } = useTranslation();
+  const [status, setStatus] = useState<ApplicationStatus | "">("");
+  const states = STATUS_VALUES.map((value) => ({
+    value,
+    label: t(`adminApplicationsPanel.status.${value}`),
+  }));
   const query = useInfiniteQuery({
-    queryKey: ['admin', 'applications', status],
+    queryKey: ["admin", "applications", status],
     queryFn: ({ pageParam }) =>
       adminApplicationsService.getApplications({
         status: status || undefined,
@@ -37,32 +44,34 @@ export function AdminApplicationsPanel() {
 
   return (
     <section className="rounded-2xl border border-border bg-surface p-4">
-      <h2 className="mb-3 text-lg font-bold">Đơn ứng tuyển</h2>
+      <h2 className="mb-3 text-lg font-bold">
+        {t("adminApplicationsPanel.title")}
+      </h2>
       <Select
-        aria-label="Trạng thái đơn"
-        placeholder="Tất cả trạng thái"
+        aria-label={t("adminApplicationsPanel.statusAria")}
+        placeholder={t("adminApplicationsPanel.allStatuses")}
         value={status}
         options={states}
-        onChange={(e) => setStatus(e.target.value as ApplicationStatus | '')}
+        onChange={(e) => setStatus(e.target.value as ApplicationStatus | "")}
       />
       {query.isLoading ? (
         <ListSkeleton />
       ) : query.isError ? (
         <ErrorState onRetry={() => void query.refetch()} />
       ) : !rows.length ? (
-        <EmptyState title="Không có đơn ứng tuyển" />
+        <EmptyState title={t("adminApplicationsPanel.empty")} />
       ) : (
         <div className="my-3 overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
               <tr>
-                <th>Mã đơn</th>
-                <th>Gia sư</th>
-                <th>Học viên</th>
-                <th>Ngày ứng tuyển</th>
-                <th>Trạng thái</th>
-                <th>Học phí đề xuất</th>
-                <th>Giao dịch phí</th>
+                <th>{t("adminApplicationsPanel.colId")}</th>
+                <th>{t("adminApplicationsPanel.colTutor")}</th>
+                <th>{t("adminApplicationsPanel.colStudent")}</th>
+                <th>{t("adminApplicationsPanel.colAppliedAt")}</th>
+                <th>{t("adminApplicationsPanel.colStatus")}</th>
+                <th>{t("adminApplicationsPanel.colProposedFee")}</th>
+                <th>{t("adminApplicationsPanel.colFeeTransaction")}</th>
               </tr>
             </thead>
             <tbody>
@@ -73,13 +82,13 @@ export function AdminApplicationsPanel() {
                   <td>{a.student?.fullName ?? a.studentId}</td>
                   <td>{formatDateTime(a.appliedAt)}</td>
                   <td>
-                    {states.find((s) => s.value === a.applicationStatus)?.label ??
-                      a.applicationStatus}
+                    {states.find((s) => s.value === a.applicationStatus)
+                      ?.label ?? a.applicationStatus}
                   </td>
                   <td>
-                    {a.proposedFee != null ? formatVnd(a.proposedFee) : '—'}
+                    {a.proposedFee != null ? formatVnd(a.proposedFee) : "—"}
                   </td>
-                  <td>{a.transactionStatus ?? a.transactionId ?? '—'}</td>
+                  <td>{a.transactionStatus ?? a.transactionId ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -91,7 +100,7 @@ export function AdminApplicationsPanel() {
           loading={query.isFetchingNextPage}
           onClick={() => void query.fetchNextPage()}
         >
-          Tải thêm đơn
+          {t("adminApplicationsPanel.loadMore")}
         </Button>
       )}
     </section>

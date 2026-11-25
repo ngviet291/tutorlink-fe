@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useId, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -38,6 +39,7 @@ export function Modal({
   footer,
   busy = false,
 }: ModalProps) {
+  const { t } = useTranslation();
   const widthClass = maxWidth ?? SIZE_CLASS[size];
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -124,7 +126,7 @@ export function Modal({
               onClick={onClose}
               disabled={busy}
               className={`-mr-2 -mt-2 shrink-0 ${CLOSE_BUTTON_CLASS}`}
-              aria-label="Đóng"
+              aria-label={t("common.close")}
             >
               <X className="size-5" />
             </button>
@@ -136,7 +138,7 @@ export function Modal({
             onClick={onClose}
             disabled={busy}
             className={`absolute right-3 top-3 ${CLOSE_BUTTON_CLASS}`}
-            aria-label="Đóng"
+            aria-label={t("common.close")}
           >
             <X className="size-5" />
           </button>

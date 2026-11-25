@@ -1,19 +1,24 @@
-import { NavLink } from 'react-router-dom'
-import { cn } from '@/shared/utils/cn'
-import { useAppSelector } from '@/shared/hooks/useAppStore'
-import { useUnreadCount } from '@/features/chat/hooks/useChat'
-import { ROUTES } from '@/constants/routes'
-import { getNavGroups } from './navItems'
+import { NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/shared/utils/cn";
+import { useAppSelector } from "@/shared/hooks/useAppStore";
+import { useUnreadCount } from "@/features/chat/hooks/useChat";
+import { ROUTES } from "@/constants/routes";
+import { getNavGroups } from "./navItems";
 
 export function Sidebar() {
-  const role = useAppSelector((s) => s.auth.user?.role)
-  const unread = useUnreadCount(Boolean(role)).data ?? 0
-  if (!role) return null
-  const groups = getNavGroups(role)
+  const { t } = useTranslation();
+  const role = useAppSelector((s) => s.auth.user?.role);
+  const unread = useUnreadCount(Boolean(role)).data ?? 0;
+  if (!role) return null;
+  const groups = getNavGroups(role);
 
   return (
     <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-border bg-surface p-4 lg:block">
-      <nav aria-label="Menu chức năng" className="flex flex-col gap-5">
+      <nav
+        aria-label={t("shared.sidebar.ariaLabel")}
+        className="flex flex-col gap-5"
+      >
         {groups.map((group, gi) => (
           <div key={gi} className="flex flex-col gap-1">
             {group.title && (
@@ -28,17 +33,19 @@ export function Sidebar() {
                 end={item.end}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors',
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
                     isActive
-                      ? 'bg-primary-light text-primary'
-                      : 'text-text-secondary hover:bg-surface-hover hover:text-text',
+                      ? "bg-primary-light text-primary"
+                      : "text-text-secondary hover:bg-surface-hover hover:text-text",
                   )
                 }
               >
                 <item.icon className="size-5" />
                 {item.label}
                 {item.to === ROUTES.CHAT_INBOX && unread > 0 && (
-                  <span className="ml-auto rounded-full bg-primary px-1.5 text-xs font-bold text-white">{unread}</span>
+                  <span className="ml-auto rounded-full bg-primary px-1.5 text-xs font-bold text-white">
+                    {unread}
+                  </span>
                 )}
               </NavLink>
             ))}
@@ -46,5 +53,5 @@ export function Sidebar() {
         ))}
       </nav>
     </aside>
-  )
+  );
 }

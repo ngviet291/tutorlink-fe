@@ -26,6 +26,7 @@ export interface CommonRegisterValues {
   province: string;
 }
 
+// Dữ liệu mẫu cho môi trường phát triển, không phải chữ giao diện nên không dịch.
 export const COMMON_DEFAULTS: CommonRegisterValues = {
   fullName: "Nguyễn Phước Thịnh",
   email: "nguyenphuocthinh020@gmail.com",
@@ -39,11 +40,6 @@ export const COMMON_DEFAULTS: CommonRegisterValues = {
   ward: "Xã Tân Thới",
   province: "Tỉnh Đồng Tháp",
 };
-
-const GENDERS = [
-  { value: "MALE", label: "Nam" },
-  { value: "FEMALE", label: "Nữ" },
-];
 
 /** Field BE trả về -> tên input trong form phẳng (address lồng nhau ở BE). */
 export const REGISTER_ERROR_ALIASES: Record<string, string> = {
@@ -123,21 +119,24 @@ function EmailVerificationFields() {
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <Input
-            label="Mã xác minh email"
+            label={t("auth.commonRegisterFields.verificationLabel")}
             required
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
-            placeholder="6 chữ số"
+            placeholder={t("auth.commonRegisterFields.codePlaceholder")}
             hint={
               sent
-                ? `Đã gửi mã tới ${sentTo}. Mã có hiệu lực 10 phút, nhớ kiểm tra cả thư rác.`
-                : "Nhập email rồi bấm Gửi mã để nhận mã xác minh."
+                ? t("auth.commonRegisterFields.codeSent", { email: sentTo })
+                : t("auth.commonRegisterFields.codePrompt")
             }
             error={errors.verificationCode?.message}
             {...register("verificationCode", {
               required: t("validation.verificationRequired"),
-              pattern: { value: /^\d{6}$/, message: t("validation.verificationFormat") },
+              pattern: {
+                value: /^\d{6}$/,
+                message: t("validation.verificationFormat"),
+              },
             })}
           />
         </div>
@@ -150,15 +149,15 @@ function EmailVerificationFields() {
           onClick={() => void send()}
         >
           {cooldown > 0
-            ? `Gửi lại (${cooldown}s)`
+            ? t("auth.commonRegisterFields.resendIn", { seconds: cooldown })
             : sent
-              ? "Gửi lại mã"
-              : "Gửi mã"}
+              ? t("auth.commonRegisterFields.resend")
+              : t("auth.commonRegisterFields.send")}
         </Button>
       </div>
       {emailChanged && (
         <p className="text-xs text-text-secondary">
-          Bạn đã đổi email, hãy gửi lại mã cho email mới.
+          {t("auth.commonRegisterFields.emailChanged")}
         </p>
       )}
       {sendCode.isError && (
@@ -194,10 +193,16 @@ export function CommonRegisterFields() {
     wardField: "ward",
   });
 
+  // Dựng lúc render để nhãn đổi theo ngôn ngữ.
+  const genders = [
+    { value: "MALE", label: t("profile.male") },
+    { value: "FEMALE", label: t("profile.female") },
+  ];
+
   return (
     <>
       <Input
-        label="Họ và tên"
+        label={t("auth.fullName")}
         required
         autoComplete="name"
         error={errors.fullName?.message}
@@ -207,7 +212,7 @@ export function CommonRegisterFields() {
         })}
       />
       <Input
-        label="Email"
+        label={t("auth.email")}
         type="email"
         required
         autoComplete="email"
@@ -216,7 +221,7 @@ export function CommonRegisterFields() {
       />
       <EmailVerificationFields />
       <Input
-        label="Mật khẩu"
+        label={t("auth.password")}
         type="password"
         required
         autoComplete="new-password"
@@ -229,7 +234,7 @@ export function CommonRegisterFields() {
         })}
       />
       <Input
-        label="Xác nhận mật khẩu"
+        label={t("auth.confirmPassword")}
         type="password"
         required
         autoComplete="new-password"
@@ -241,7 +246,7 @@ export function CommonRegisterFields() {
         })}
       />
       <Input
-        label="Số điện thoại"
+        label={t("auth.phone")}
         type="tel"
         required
         autoComplete="tel"
@@ -251,14 +256,14 @@ export function CommonRegisterFields() {
       />
       <div className="grid grid-cols-2 gap-3">
         <Select
-          label="Giới tính"
+          label={t("profile.gender")}
           required
-          options={GENDERS}
+          options={genders}
           error={errors.gender?.message}
           {...register("gender", { required: t("validation.genderRequired") })}
         />
         <Input
-          label="Ngày sinh"
+          label={t("auth.dateOfBirth")}
           type="date"
           required
           error={errors.dateOfBirth?.message}
@@ -271,13 +276,14 @@ export function CommonRegisterFields() {
         />
       </div>
       <Input
-        label="Số nhà, tên đường"
+        label={t("auth.commonRegisterFields.street")}
         required
         autoComplete="street-address"
         error={errors.street?.message}
         {...register("street", {
           required: t("validation.streetRequired"),
-          validate: (v) => v.trim().length > 0 || t("validation.streetRequired"),
+          validate: (v) =>
+            v.trim().length > 0 || t("validation.streetRequired"),
         })}
       />
       <div className="grid grid-cols-2 gap-3">
@@ -285,13 +291,15 @@ export function CommonRegisterFields() {
           // API địa chỉ lỗi: cho nhập tay để không chặn đăng ký
           <>
             <Input
-              label="Tỉnh / Thành phố"
+              label={t("auth.commonRegisterFields.province")}
               required
               error={errors.province?.message}
-              {...register("province", { required: t("validation.provinceEnter") })}
+              {...register("province", {
+                required: t("validation.provinceEnter"),
+              })}
             />
             <Input
-              label="Phường / Xã"
+              label={t("auth.commonRegisterFields.ward")}
               required
               error={errors.ward?.message}
               {...register("ward", { required: t("validation.wardEnter") })}
@@ -300,7 +308,7 @@ export function CommonRegisterFields() {
         ) : (
           <>
             <Select
-              label="Tỉnh / Thành phố"
+              label={t("auth.commonRegisterFields.province")}
               required
               disabled={isLoadingProvinces}
               options={provinceOptions}
@@ -311,7 +319,7 @@ export function CommonRegisterFields() {
               })}
             />
             <Select
-              label="Phường / Xã"
+              label={t("auth.commonRegisterFields.ward")}
               required
               disabled={wardDisabled}
               options={wardOptions}

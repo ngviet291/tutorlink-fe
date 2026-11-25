@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/constants/routes";
-import { LEGAL_DOCS } from "@/features/legal/content";
+import { LEGAL_DOCS, type LegalLang } from "@/features/legal/content";
 
 function createLegalPage(key: keyof typeof LEGAL_DOCS) {
   return function LegalPage() {
-    const doc = LEGAL_DOCS[key];
+    const { t, i18n } = useTranslation();
+    const lang: LegalLang = i18n.language?.startsWith("en") ? "en" : "vi";
+    const doc = LEGAL_DOCS[key][lang];
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="text-3xl font-extrabold text-text">{doc.title}</h1>
@@ -34,14 +37,14 @@ function createLegalPage(key: keyof typeof LEGAL_DOCS) {
         </div>
 
         <p className="mt-10 text-sm text-text-secondary">
-          Có thắc mắc?{" "}
+          {t("legal.questions")}{" "}
           <Link
             to={ROUTES.HOME}
             className="font-semibold text-primary hover:underline"
           >
-            Về trang chủ
+            {t("legal.backHome")}
           </Link>{" "}
-          hoặc liên hệ support@tutorlink.vn.
+          {t("legal.orContact", { email: "support@tutorlink.vn" })}
         </p>
       </div>
     );

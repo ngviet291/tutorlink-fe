@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { Modal } from "@/shared/components/ui/Modal";
@@ -10,19 +11,23 @@ import { useToast } from "@/shared/hooks/useToast";
 import { useAdminMutations, usePendingCertificates } from "../hooks/useAdmin";
 import type { PendingCertificate } from "../types/admin.types";
 
+const REASON_MIN_LENGTH = 5;
+
 /** Chứng chỉ AI không tự duyệt được khi gia sư cập nhật hồ sơ: admin xem ảnh rồi duyệt / từ chối. */
 export function AdminCertificatesPanel() {
+  const { t } = useTranslation();
   const toast = useToast();
   const { data, isLoading, isError, refetch } = usePendingCertificates();
   const { reviewCertificate } = useAdminMutations();
   const [rejecting, setRejecting] = useState<PendingCertificate | null>(null);
   const [reason, setReason] = useState("");
-  const [reasonError, setReasonError] = useState("");
+  // Lưu cờ thay vì chuỗi để chữ lỗi được dịch lại mỗi lần render (đổi VI/EN ngay).
+  const [reasonError, setReasonError] = useState(false);
 
   const closeReject = () => {
     setRejecting(null);
     setReason("");
-    setReasonError("");
+    setReasonError(false);
   };
 
   const submit = (c: PendingCertificate, approved: boolean, why?: string) =>
@@ -31,7 +36,9 @@ export function AdminCertificatesPanel() {
       {
         onSuccess: () => {
           toast.success(
-            approved ? "Đã duyệt chứng chỉ" : "Đã từ chối chứng chỉ",
+            approved
+              ? t("adminCertificatesPanel.approved")
+              : t("adminCertificatesPanel.rejected"),
           );
           closeReject();
         },
@@ -41,8 +48,8 @@ export function AdminCertificatesPanel() {
 
   const confirmReject = () => {
     if (!rejecting) return;
-    if (reason.trim().length < 5) {
-      setReasonError("Vui lòng nhập lý do từ chối (tối thiểu 5 ký tự)");
+    if (reason.trim().length < REASON_MIN_LENGTH) {
+      setReasonError(true);
       return;
     }
     submit(rejecting, false, reason.trim());
@@ -51,16 +58,14 @@ export function AdminCertificatesPanel() {
   return (
     <section
       className="flex flex-col gap-3"
-      aria-label="Chứng chỉ chờ admin duyệt"
+      aria-label={t("adminCertificatesPanel.title")}
     >
       <div>
         <h2 className="text-lg font-bold text-text">
-          Chứng chỉ chờ admin duyệt
+          {t("adminCertificatesPanel.title")}
         </h2>
         <p className="text-sm text-text-secondary">
-          Chứng chỉ gia sư vừa cập nhật hồ sơ mà hệ thống AI chưa kiểm tra được
-          (hết lượt, lỗi hoặc quá thời gian chờ). Hồ sơ đăng ký mới thì xem
-          chứng chỉ ngay trong cửa sổ "Xem & duyệt" bên trên.
+          {t("adminCertificatesPanel.description")}
         </p>
       </div>
 
@@ -69,7 +74,7 @@ export function AdminCertificatesPanel() {
       ) : isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : !data?.length ? (
-        <EmptyState title="Không có chứng chỉ nào chờ duyệt" />
+        <EmptyState title={t("adminCertificatesPanel.empty")} />
       ) : (
         <ul className="flex flex-col gap-3">
           {data.map((c) => (
@@ -80,7 +85,7 @@ export function AdminCertificatesPanel() {
               <a href={c.fileUrl} target="_blank" rel="noreferrer">
                 <img
                   src={c.fileUrl}
-                  alt={c.name ?? "Ảnh chứng chỉ"}
+                  alt={c.name ?? t("adminCertificatesPanel.imageAlt")}
                   className="size-20 rounded-lg border border-border object-cover"
                 />
               </a>
@@ -104,7 +109,7 @@ export function AdminCertificatesPanel() {
                   disabled={reviewCertificate.isPending}
                   onClick={() => setRejecting(c)}
                 >
-                  <X className="size-4" /> Từ chối
+                  <X className="size-4" /> {t("adminCertificatesPanel.reject")}
                 </Button>
                 <Button
                   loading={
@@ -113,7 +118,8 @@ export function AdminCertificatesPanel() {
                   }
                   onClick={() => submit(c, true)}
                 >
-                  <Check className="size-4" /> Duyệt
+                  <Check className="size-4" />{" "}
+                  {t("adminCertificatesPanel.approve")}
                 </Button>
               </div>
             </li>
@@ -124,26 +130,34 @@ export function AdminCertificatesPanel() {
       <Modal
         open={Boolean(rejecting)}
         onClose={closeReject}
-        title={`Từ chối chứng chỉ: ${rejecting?.tutorName ?? ""}`}
+        title={t("adminCertificatesPanel.rejectTitle", {
+          name: rejecting?.tutorName ?? "",
+        })}
         footer={
           <Button
             variant="danger"
             loading={reviewCertificate.isPending}
             onClick={confirmReject}
           >
-            <X className="size-4" /> Từ chối
+            <X className="size-4" /> {t("adminCertificatesPanel.reject")}
           </Button>
         }
       >
         <Textarea
-          label="Lý do"
+          label={t("adminCertificatesPanel.reasonLabel")}
           value={reason}
           onChange={(e) => {
             setReason(e.target.value);
-            setReasonError("");
+            setReasonError(false);
           }}
-          error={reasonError}
-          hint="Chứng chỉ sẽ bị xóa; gia sư sẽ nhận được lý do này."
+          error={
+            reasonError
+              ? t("adminCertificatesPanel.reasonTooShort", {
+                  min: REASON_MIN_LENGTH,
+                })
+              : undefined
+          }
+          hint={t("adminCertificatesPanel.reasonHint")}
         />
       </Modal>
     </section>

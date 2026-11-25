@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { Modal } from "@/shared/components/ui/Modal";
 import { Textarea } from "@/shared/components/ui/Textarea";
@@ -15,7 +16,10 @@ interface FormValues {
   reason: string;
 }
 
+const REASON_MIN_LENGTH = 10;
+
 export function ComplaintModal({ review, onClose }: Props) {
+  const { t } = useTranslation();
   const toast = useToast();
   const { complain } = useReviewMutations();
   const {
@@ -36,7 +40,7 @@ export function ComplaintModal({ review, onClose }: Props) {
       { reviewId: review.id, reason },
       {
         onSuccess: () => {
-          toast.success("Đã gửi khiếu nại. Admin sẽ xem xét đánh giá này.");
+          toast.success(t("review.complaintModal.sent"));
           close();
         },
         onError: (e) => toast.apiError(e),
@@ -48,14 +52,14 @@ export function ComplaintModal({ review, onClose }: Props) {
     <Modal
       open={Boolean(review)}
       onClose={close}
-      title="Khiếu nại đánh giá"
+      title={t("review.complaintModal.title")}
       footer={
         <>
           <Button variant="ghost" onClick={close}>
-            Hủy
+            {t("common.cancel")}
           </Button>
           <Button onClick={() => void submit()} loading={complain.isPending}>
-            Gửi khiếu nại
+            {t("review.complaintModal.submit")}
           </Button>
         </>
       }
@@ -63,16 +67,25 @@ export function ComplaintModal({ review, onClose }: Props) {
       {review && (
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4">
           <blockquote className="rounded-xl bg-surface-hover p-3 text-sm text-text-secondary">
-            “{review.comment}” — {review.rating}★ từ {review.student.fullName}
+            {t("review.complaintModal.quote", {
+              comment: review.comment,
+              rating: review.rating,
+              name: review.student.fullName,
+            })}
           </blockquote>
           <Textarea
-            label="Lý do khiếu nại"
+            label={t("review.complaintModal.reasonLabel")}
             required
-            placeholder="Giải thích vì sao đánh giá này không chính xác hoặc vi phạm quy định..."
+            placeholder={t("review.complaintModal.reasonPlaceholder")}
             error={errors.reason?.message}
             {...register("reason", {
-              required: "Vui lòng nhập lý do",
-              minLength: { value: 10, message: "Lý do tối thiểu 10 ký tự" },
+              required: t("review.complaintModal.reasonRequired"),
+              minLength: {
+                value: REASON_MIN_LENGTH,
+                message: t("review.complaintModal.reasonMin", {
+                  min: REASON_MIN_LENGTH,
+                }),
+              },
             })}
           />
         </form>

@@ -7,7 +7,6 @@ import { ROUTES } from '@/constants/routes'
 import { Input } from '@/shared/components/ui/Input'
 import { Button } from '@/shared/components/ui/Button'
 import { useToast } from '@/shared/hooks/useToast'
-import { getErrorMessage } from '@/shared/utils/errors'
 import { rules } from '@/features/auth/validation/auth.validation'
 
 interface ResetForm {
@@ -38,7 +37,7 @@ export default function ResetPasswordPage() {
       toast.success(t('auth.resetPassword'))
       navigate(ROUTES.LOGIN)
     } catch (err) {
-      toast.error(getErrorMessage(err))
+      toast.apiError(err)
     }
   }
 

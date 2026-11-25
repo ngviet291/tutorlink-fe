@@ -42,9 +42,8 @@ export default function PostEditPage() {
         try {
           await publish.mutateAsync(id);
         } catch (publishErr) {
-          // Thay đổi đã được lưu; chỉ bước đăng công khai thất bại.
           toast.error(
-            `Đã lưu thay đổi nhưng chưa đăng được bài. ${getErrorMessage(publishErr)}`,
+            t("postEdit.publishFailed", { error: getErrorMessage(publishErr) }),
           );
           return undefined;
         }
@@ -66,7 +65,7 @@ export default function PostEditPage() {
     return (
       <div
         role="status"
-        aria-label="Đang tải bài đăng"
+        aria-label={t("postEdit.loadingAria")}
         className="flex min-h-[60vh] items-center justify-center"
       >
         <Spinner size="lg" />

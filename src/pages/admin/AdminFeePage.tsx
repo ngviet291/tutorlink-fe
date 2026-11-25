@@ -4,6 +4,7 @@ import {
   PERCENT_SCALE,
 } from "@/features/wallet/constants/payment.constants";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Info } from "lucide-react";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Button } from "@/shared/components/ui/Button";
@@ -29,12 +30,14 @@ function getFeeStatus(fee: FeeRate, now = Date.now()) {
   return "ACTIVE";
 }
 
+// labelKey được dịch lúc hiển thị để đổi ngôn ngữ vẫn đúng
 const FEE_STATUS = {
-  ACTIVE: { tone: "green", label: "Đang áp dụng" },
-  UPCOMING: { tone: "gray", label: "Chưa đến hiệu lực" },
-  EXPIRED: { tone: "gray", label: "Hết hiệu lực" },
+  ACTIVE: { tone: "green", labelKey: "adminFee.status.ACTIVE" },
+  UPCOMING: { tone: "gray", labelKey: "adminFee.status.UPCOMING" },
+  EXPIRED: { tone: "gray", labelKey: "adminFee.status.EXPIRED" },
 } as const;
 export default function AdminFeePage() {
+  const { t } = useTranslation();
   const toast = useToast();
   const { data, isLoading, isError, refetch } = useFeeRates();
   const { createFeeRate } = useAdminPaymentMutations();
@@ -51,6 +54,9 @@ export default function AdminFeePage() {
     },
   });
 
+  // Message validate là khóa i18n, dịch lúc hiển thị
+  const err = (message?: string) => (message ? t(message) : undefined);
+
   const submit = handleSubmit((v) =>
     createFeeRate.mutate(
       {
@@ -60,7 +66,7 @@ export default function AdminFeePage() {
       },
       {
         onSuccess: () => {
-          toast.success("Đã lưu tỉ lệ phí mới");
+          toast.success(t("adminFee.savedToast"));
           reset();
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -70,49 +76,48 @@ export default function AdminFeePage() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
-      <PageHeader title="Cấu hình tỉ lệ phí nhận lớp" />
+      <PageHeader title={t("adminFee.title")} />
       <form
         onSubmit={(e) => void submit(e)}
         noValidate
         className="grid gap-4 rounded-2xl border border-border bg-surface p-5 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-start"
       >
         <Input
-          label="Tỉ lệ (%)"
+          label={t("adminFee.ratePercent")}
           type="number"
           step="0.5"
           required
-          error={errors.ratePercent?.message}
+          error={err(errors.ratePercent?.message)}
           {...register("ratePercent", {
             valueAsNumber: true,
-            required: "Bắt buộc",
-            min: { value: 0, message: "Tối thiểu 0%" },
-            max: { value: PERCENT_SCALE, message: "Tối đa 100%" },
+            required: "adminFee.required",
+            min: { value: 0, message: "adminFee.min" },
+            max: { value: PERCENT_SCALE, message: "adminFee.max" },
           })}
         />
         <Input
-          label="Ngày hiệu lực"
+          label={t("adminFee.effectiveDate")}
           type="date"
           required
-          error={errors.effectiveFrom?.message}
-          {...register("effectiveFrom", { required: "Bắt buộc" })}
+          error={err(errors.effectiveFrom?.message)}
+          {...register("effectiveFrom", { required: "adminFee.required" })}
         />
         <Button
           type="submit"
           className="sm:mt-6"
           loading={createFeeRate.isPending}
         >
-          Lưu
+          {t("adminFee.save")}
         </Button>
       </form>
       <p className="flex items-start gap-2 text-xs text-text-secondary">
-        <Info className="mt-0.5 size-4 shrink-0 text-primary" /> Các mức phí
-        được lưu để quản lý. Hệ thống hiện chưa áp dụng bảng cấu hình này khi
-        tính phí nhận lớp.
+        <Info className="mt-0.5 size-4 shrink-0 text-primary" />{" "}
+        {t("adminFee.note")}
       </p>
 
       <section>
         <h2 className="mb-3 text-lg font-bold text-text">
-          Lịch sử các mức phí
+          {t("adminFee.history")}
         </h2>
         {isLoading ? (
           <ListSkeleton rows={3} />
@@ -123,11 +128,11 @@ export default function AdminFeePage() {
             <table className="w-full min-w-[28rem] text-left text-sm">
               <thead className="bg-surface-hover text-xs uppercase text-text-secondary">
                 <tr>
-                  <th className="p-3">Tỉ lệ</th>
-                  <th>Hiệu lực từ</th>
-                  <th>Đến</th>
-                  <th>Người tạo</th>
-                  <th className="pr-3">Trạng thái</th>
+                  <th className="p-3">{t("adminFee.colRate")}</th>
+                  <th>{t("adminFee.colFrom")}</th>
+                  <th>{t("adminFee.colTo")}</th>
+                  <th>{t("adminFee.colCreatedBy")}</th>
+                  <th className="pr-3">{t("adminFee.colStatus")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -142,7 +147,7 @@ export default function AdminFeePage() {
                     <td className="pr-3">
                       <td className="pr-3">
                         <Badge tone={FEE_STATUS[getFeeStatus(f)].tone}>
-                          {FEE_STATUS[getFeeStatus(f)].label}
+                          {t(FEE_STATUS[getFeeStatus(f)].labelKey)}
                         </Badge>
                       </td>
                     </td>

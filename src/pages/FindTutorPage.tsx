@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 import {
   FilterSidebar,
@@ -20,6 +21,7 @@ import { useSearchTracking } from "@/features/tracking/hooks";
 const RATE_MAX = 500_000;
 
 export default function FindTutorPage() {
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const [filter, setFilter] = useState<FilterValues>({
     ...emptyFilter(RATE_MAX),
@@ -85,17 +87,16 @@ export default function FindTutorPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <h1 className="text-3xl font-extrabold text-text">Tìm Gia Sư</h1>
-      <p className="mt-1 text-text-secondary">
-        Chỉ hiển thị hồ sơ gia sư đã được Admin duyệt. Thông tin liên hệ được mở
-        sau khi kết nối.
-      </p>
+      <h1 className="text-3xl font-extrabold text-text">
+        {t("findTutor.title")}
+      </h1>
+      <p className="mt-1 text-text-secondary">{t("findTutor.subtitle")}</p>
 
       <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-start">
         <FilterSidebar
           value={filter}
           onChange={onFilter}
-          rangeLabel="Giá theo giờ (VNĐ)"
+          rangeLabel={t("findTutor.rateRange")}
           rangeMax={RATE_MAX}
           rangeStep={10_000}
           hideWard
@@ -105,8 +106,8 @@ export default function FindTutorPage() {
 
         <div className="min-w-0 flex-1">
           <Input
-            aria-label="Tìm gia sư theo tên"
-            placeholder="Tìm theo tên gia sư..."
+            aria-label={t("findTutor.searchAria")}
+            placeholder={t("findTutor.searchPlaceholder")}
             leftIcon={<Search className="size-4" />}
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
@@ -120,11 +121,11 @@ export default function FindTutorPage() {
             ) : items.length > 0 ? (
               <>
                 <p className="mb-3 text-sm text-text-secondary">
-                  {total} gia sư phù hợp
+                  {t("findTutor.matchCount", { count: total })}
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                  {items.map((t) => (
-                    <TutorCard key={t.id} tutor={t} />
+                  {items.map((tutor) => (
+                    <TutorCard key={tutor.id} tutor={tutor} />
                   ))}
                 </div>
                 {hasNextPage && (
@@ -134,15 +135,15 @@ export default function FindTutorPage() {
                       loading={isFetchingNextPage}
                       onClick={() => void fetchNextPage()}
                     >
-                      Xem thêm
+                      {t("findTutor.loadMore")}
                     </Button>
                   </div>
                 )}
               </>
             ) : (
               <EmptyState
-                title="Không tìm thấy gia sư phù hợp"
-                description="Thử bỏ bớt bộ lọc hoặc đổi tên gia sư cần tìm."
+                title={t("findTutor.emptyTitle")}
+                description={t("findTutor.emptyDescription")}
               />
             )}
           </div>

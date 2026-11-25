@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Button } from "@/shared/components/ui/Button";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
@@ -23,12 +24,14 @@ import type {
   ComplaintDto,
   ComplaintStatus,
 } from "@/features/admin/service/admin.complaints.service";
+// Khóa i18n, dịch lúc hiển thị để đổi ngôn ngữ vẫn đúng
 const labels = {
-  PENDING: "Chờ xử lý",
-  APPROVED: "Đã chấp nhận",
-  REJECTED: "Đã từ chối",
+  PENDING: "adminComplaints.status.PENDING",
+  APPROVED: "adminComplaints.status.APPROVED",
+  REJECTED: "adminComplaints.status.REJECTED",
 };
 export default function AdminComplaintsPage() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<ComplaintStatus | "">("");
   const { data, isLoading, isError, refetch } = useComplaints(
     status || undefined,
@@ -55,7 +58,7 @@ export default function AdminComplaintsPage() {
       { complaintId: target.id, status },
       {
         onSuccess: () => {
-          toast.success("Đã cập nhật trạng thái khiếu nại");
+          toast.success(t("adminComplaints.updatedToast"));
           setTarget(null);
         },
         onError: (e) => toast.error(getErrorMessage(e)),
@@ -64,15 +67,15 @@ export default function AdminComplaintsPage() {
   };
   return (
     <div className="mx-auto flex max-w-4xl flex-col gap-5">
-      <PageHeader title="Xử lý khiếu nại đánh giá" />
+      <PageHeader title={t("adminComplaints.title")} />
       <Select
-        aria-label="Trạng thái khiếu nại"
-        placeholder="Tất cả trạng thái"
+        aria-label={t("adminComplaints.statusAria")}
+        placeholder={t("adminComplaints.allStatuses")}
         value={status}
         onChange={(e) => setStatus(e.target.value as ComplaintStatus | "")}
         options={Object.entries(labels).map(([value, label]) => ({
           value,
-          label,
+          label: t(label),
         }))}
       />
       {isLoading ? (
@@ -80,7 +83,7 @@ export default function AdminComplaintsPage() {
       ) : isError ? (
         <ErrorState onRetry={() => void refetch()} />
       ) : !data?.length ? (
-        <EmptyState title="Không có khiếu nại" />
+        <EmptyState title={t("adminComplaints.empty")} />
       ) : (
         <ul className="flex flex-col gap-3">
           {data.map((c) => (
@@ -88,18 +91,22 @@ export default function AdminComplaintsPage() {
               key={c.id}
               className="rounded-2xl border border-border bg-surface p-4"
             >
-              <p className="font-bold">{labels[c.status]}</p>
+              <p className="font-bold">{t(labels[c.status])}</p>
               <Link
                 to={ROUTES.TUTOR_DETAIL(c.tutorId)}
                 className="text-primary"
               >
-                Gia sư: {c.tutorName ?? c.tutorId}
+                {t("adminComplaints.tutor", { name: c.tutorName ?? c.tutorId })}
               </Link>
-              <p className="text-sm">Mã đánh giá: {c.reviewId}</p>
-              <p className="my-2">Lý do: {c.reason}</p>
+              <p className="text-sm">
+                {t("adminComplaints.reviewId", { id: c.reviewId })}
+              </p>
+              <p className="my-2">
+                {t("adminComplaints.reason", { reason: c.reason })}
+              </p>
               {c.status === "PENDING" && (
                 <Button size="sm" onClick={() => setTarget(c)}>
-                  Xem xét
+                  {t("adminComplaints.review")}
                 </Button>
               )}
             </li>
@@ -109,7 +116,7 @@ export default function AdminComplaintsPage() {
       <Modal
         open={Boolean(target)}
         onClose={() => setTarget(null)}
-        title="Chi tiết khiếu nại"
+        title={t("adminComplaints.detailTitle")}
         footer={
           <>
             <Button
@@ -117,30 +124,36 @@ export default function AdminComplaintsPage() {
               loading={decideComplaint.isPending}
               onClick={() => resolve("REJECTED")}
             >
-              Từ chối
+              {t("adminComplaints.reject")}
             </Button>
             <Button
               loading={decideComplaint.isPending}
               onClick={() => resolve("APPROVED")}
             >
-              Chấp nhận
+              {t("adminComplaints.approve")}
             </Button>
           </>
         }
       >
         <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1 text-sm">
           <section>
-            <h3 className="mb-2 font-bold">Khiếu nại</h3>
+            <h3 className="mb-2 font-bold">
+              {t("adminComplaints.sectionComplaint")}
+            </h3>
             <p>{target?.reason}</p>
             <p className="mt-1 text-xs text-text-secondary">
-              {labels[target?.status ?? "PENDING"]}
+              {t(labels[target?.status ?? "PENDING"])}
               {target?.createdAt ? ` · ${formatDate(target.createdAt)}` : ""}
             </p>
           </section>
           <section>
-            <h3 className="mb-2 font-bold">Đánh giá bị khiếu nại</h3>
+            <h3 className="mb-2 font-bold">
+              {t("adminComplaints.sectionReview")}
+            </h3>
             {reviewQuery.isLoading ? (
-              <p className="text-text-secondary">Đang tải đánh giá...</p>
+              <p className="text-text-secondary">
+                {t("adminComplaints.loadingReview")}
+              </p>
             ) : review ? (
               <div>
                 <div className="flex items-center gap-2">
@@ -155,75 +168,107 @@ export default function AdminComplaintsPage() {
                 {review.comment && <p className="mt-2">{review.comment}</p>}
               </div>
             ) : (
-              <p className="text-text-secondary">Không tải được đánh giá.</p>
+              <p className="text-text-secondary">
+                {t("adminComplaints.reviewLoadFailed")}
+              </p>
             )}
           </section>
           <section>
-            <h3 className="mb-2 font-bold">Đơn ứng tuyển</h3>
+            <h3 className="mb-2 font-bold">
+              {t("adminComplaints.sectionApplication")}
+            </h3>
             {appQuery.isLoading ? (
-              <p className="text-text-secondary">Đang tải đơn ứng tuyển...</p>
+              <p className="text-text-secondary">
+                {t("adminComplaints.loadingApplication")}
+              </p>
             ) : app ? (
               <div className="flex flex-col gap-1.5">
                 <p className="font-bold">{app.post.title}</p>
                 <p className="text-xs text-text-secondary">
                   {app.post.type === "FIND_TUTOR"
-                    ? "Tìm gia sư"
-                    : "Tìm học viên"}{" "}
-                  · Trạng thái: {app.applicationStatus}
-                  {app.paid ? " · Đã thanh toán" : ""}
+                    ? t("adminComplaints.findTutor")
+                    : t("adminComplaints.findStudent")}{" "}
+                  {t("adminComplaints.statusLine", {
+                    status: app.applicationStatus,
+                  })}
+                  {app.paid ? t("adminComplaints.paidSuffix") : ""}
                 </p>
                 <p className="text-xs text-text-secondary">
-                  Học viên: {app.student.fullName} — Gia sư:{" "}
-                  {app.tutor.fullName}
+                  {t("adminComplaints.people", {
+                    student: app.student.fullName,
+                    tutor: app.tutor.fullName,
+                  })}
                 </p>
                 {app.message && (
-                  <p className="text-xs">Lời nhắn: {app.message}</p>
+                  <p className="text-xs">
+                    {t("adminComplaints.message", { message: app.message })}
+                  </p>
                 )}
                 {app.proposedFee != null && (
                   <p className="text-xs font-semibold text-primary">
-                    Phí đề xuất: {formatVnd(app.proposedFee)}
+                    {t("adminComplaints.proposedFee", {
+                      fee: formatVnd(app.proposedFee),
+                    })}
                   </p>
                 )}
               </div>
             ) : (
               <p className="text-text-secondary">
-                Không tải được đơn ứng tuyển.
+                {t("adminComplaints.applicationLoadFailed")}
               </p>
             )}
           </section>
           {app && (
             <section>
-              <h3 className="mb-2 font-bold">Tiến trình</h3>
+              <h3 className="mb-2 font-bold">
+                {t("adminComplaints.sectionTimeline")}
+              </h3>
               <ol className="flex flex-col gap-1.5">
                 <li>
-                  • Ứng tuyển
+                  {t("adminComplaints.tlApplied")}
                   {app.appliedAt ? ` — ${formatDate(app.appliedAt)}` : ""}
                 </li>
                 {app.selectedAt && (
-                  <li>• Được chọn — {formatDate(app.selectedAt)}</li>
+                  <li>
+                    {t("adminComplaints.tlSelected", {
+                      date: formatDate(app.selectedAt),
+                    })}
+                  </li>
                 )}
                 {app.paid ? (
                   <li>
-                    • Thanh toán phí
+                    {t("adminComplaints.tlPaid")}
                     {app.paidAt ? ` — ${formatDate(app.paidAt)}` : ""}
                   </li>
                 ) : (
                   <li>
-                    • Chưa thanh toán
-                    {app.expiresAt ? ` (hạn ${formatDate(app.expiresAt)})` : ""}
+                    {t("adminComplaints.tlUnpaid")}
+                    {app.expiresAt
+                      ? t("adminComplaints.tlDue", {
+                          date: formatDate(app.expiresAt),
+                        })
+                      : ""}
                   </li>
                 )}
                 {review?.createdAt && (
-                  <li>• Đánh giá — {formatDate(review.createdAt)}</li>
+                  <li>
+                    {t("adminComplaints.tlReviewed", {
+                      date: formatDate(review.createdAt),
+                    })}
+                  </li>
                 )}
                 {target?.createdAt && (
-                  <li>• Khiếu nại — {formatDate(target.createdAt)}</li>
+                  <li>
+                    {t("adminComplaints.tlComplained", {
+                      date: formatDate(target.createdAt),
+                    })}
+                  </li>
                 )}
               </ol>
             </section>
           )}
           <p className="text-xs text-text-secondary">
-            Thao tác cập nhật trạng thái khiếu nại. Đánh giá không bị xóa.
+            {t("adminComplaints.footnote")}
           </p>
         </div>
       </Modal>

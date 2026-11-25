@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CertificateUploadProps {
   value: File[];
@@ -15,6 +16,9 @@ interface CertificateUploadProps {
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
+// Lưu khóa + tham số thay vì chuỗi đã dịch, để đổi VI/EN khi lỗi đang hiện vẫn đúng.
+type Problem = { key: string; params?: Record<string, unknown> };
+
 export function CertificateUpload({
   value,
   onChange,
@@ -25,9 +29,10 @@ export function CertificateUpload({
   fileSubjectIds = [],
   onFileSubjectIdsChange,
 }: CertificateUploadProps) {
+  const { t } = useTranslation();
   const pickSubject = !!subjectOptions && !!onFileSubjectIdsChange;
   const inputRef = useRef<HTMLInputElement>(null);
-  const [localError, setLocalError] = useState("");
+  const [localProblems, setLocalProblems] = useState<Problem[]>([]);
 
   const previews = useMemo(
     () => value.map((f) => ({ file: f, url: URL.createObjectURL(f) })),
@@ -41,23 +46,33 @@ export function CertificateUpload({
   const handlePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(e.target.files ?? []);
     e.target.value = ""; // cho phép chọn lại cùng một file
-    const problems: string[] = [];
+    const problems: Problem[] = [];
     const valid: File[] = [];
 
     for (const f of picked) {
       if (!ACCEPTED.includes(f.type)) {
-        problems.push(`${f.name}: chỉ nhận JPG, PNG, WEBP`);
+        problems.push({
+          key: "auth.certificateUpload.badType",
+          params: { name: f.name },
+        });
       } else if (f.size > maxSizeMB * 1024 * 1024) {
-        problems.push(`${f.name}: vượt quá ${maxSizeMB}MB`);
+        problems.push({
+          key: "auth.certificateUpload.tooLarge",
+          params: { name: f.name, max: maxSizeMB },
+        });
       } else {
         valid.push(f);
       }
     }
 
     const room = maxFiles - value.length;
-    if (valid.length > room) problems.push(`Tối đa ${maxFiles} ảnh`);
+    if (valid.length > room)
+      problems.push({
+        key: "auth.certificateUpload.maxFiles",
+        params: { max: maxFiles },
+      });
 
-    setLocalError(problems.join(". "));
+    setLocalProblems(problems);
     if (valid.length > 0) {
       const added = valid.slice(0, room);
       onChange([...value, ...added]);
@@ -73,23 +88,29 @@ export function CertificateUpload({
   };
 
   const remove = (index: number) => {
-    setLocalError("");
+    setLocalProblems([]);
     onChange(value.filter((_, i) => i !== index));
     if (pickSubject) {
       onFileSubjectIdsChange(
-        value.map((_, i) => fileSubjectIds[i] ?? "").filter((_, i) => i !== index),
+        value
+          .map((_, i) => fileSubjectIds[i] ?? "")
+          .filter((_, i) => i !== index),
       );
     }
   };
 
+  const localError = localProblems.map((p) => t(p.key, p.params)).join(". ");
   const message = localError || error;
 
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-sm font-medium text-text">
-        Ảnh chứng chỉ / bằng cấp{" "}
+        {t("auth.certificateUpload.legend")}{" "}
         <span className="text-xs font-normal text-text-secondary">
-          (tối đa {maxFiles} ảnh, mỗi ảnh ≤ {maxSizeMB}MB)
+          {t("auth.certificateUpload.limits", {
+            maxFiles,
+            maxSize: maxSizeMB,
+          })}
         </span>
       </legend>
 
@@ -105,8 +126,11 @@ export function CertificateUpload({
               <button
                 type="button"
                 onClick={() => remove(i)}
-                aria-label={`Xóa ${p.file.name}`}
-                className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80">
+                aria-label={t("auth.certificateUpload.removeAria", {
+                  name: p.file.name,
+                })}
+                className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+              >
                 <X className="size-3" />
               </button>
             </div>
@@ -120,9 +144,14 @@ export function CertificateUpload({
                     ),
                   )
                 }
-                aria-label={`Môn của ${p.file.name}`}
-                className="w-full rounded-md border border-border bg-transparent px-1 py-1 text-xs">
-                <option value="">Chọn môn</option>
+                aria-label={t("auth.certificateUpload.subjectOfAria", {
+                  name: p.file.name,
+                })}
+                className="w-full rounded-md border border-border bg-transparent px-1 py-1 text-xs"
+              >
+                <option value="">
+                  {t("auth.certificateUpload.pickSubject")}
+                </option>
                 {subjectOptions.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -137,9 +166,10 @@ export function CertificateUpload({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-text-secondary transition-colors hover:border-primary hover:text-primary">
+            className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-text-secondary transition-colors hover:border-primary hover:text-primary"
+          >
             <ImagePlus className="size-5" />
-            Thêm ảnh
+            {t("auth.certificateUpload.addImage")}
           </button>
         )}
       </div>

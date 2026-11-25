@@ -47,13 +47,18 @@ export function TransactionTable() {
   return (
     <section className="rounded-2xl border border-border bg-surface p-4">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <h2 className="text-lg font-bold text-text">{t("wallet.transactionHistory")}</h2>
+        <h2 className="text-lg font-bold text-text">
+          {t("wallet.transactionHistory")}
+        </h2>
       </div>
 
       {isLoading ? (
         <ListSkeleton rows={4} />
       ) : isError ? (
-        <ErrorState message="Không tải được lịch sử giao dịch. Vui lòng thử lại." onRetry={() => void refetch()} />
+        <ErrorState
+          message={t("wallet.transactionTable.loadError")}
+          onRetry={() => void refetch()}
+        />
       ) : !items.length ? (
         <EmptyState title={t("wallet.noTransactions")} />
       ) : (
@@ -61,11 +66,18 @@ export function TransactionTable() {
           {/* Mobile: mỗi giao dịch là một thẻ, không cần cuộn ngang */}
           <ul className="flex flex-col gap-3 md:hidden">
             {items.map((tx) => (
-              <li key={tx.id} className="rounded-xl border border-border bg-surface-secondary p-3">
+              <li
+                key={tx.id}
+                className="rounded-xl border border-border bg-surface-secondary p-3"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-semibold text-text">{TRANSACTION_TYPE_LABEL[tx.transactionType]}</p>
-                    <p className="text-xs text-text-secondary">{formatDateTime(tx.createdAt)}</p>
+                    <p className="font-semibold text-text">
+                      {TRANSACTION_TYPE_LABEL[tx.transactionType]}
+                    </p>
+                    <p className="text-xs text-text-secondary">
+                      {formatDateTime(tx.createdAt)}
+                    </p>
                   </div>
                   <p
                     className={`shrink-0 font-bold ${
@@ -81,12 +93,19 @@ export function TransactionTable() {
                   </p>
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
-                  <StatusBadge kind="transaction" status={tx.transactionStatus} />
+                  <StatusBadge
+                    kind="transaction"
+                    status={tx.transactionStatus}
+                  />
                 </div>
                 {tx.transactionType === "WITHDRAW" && (
                   <div className="mt-2 border-t border-border pt-2 text-sm">
-                    <p className="text-xs text-text-secondary">Thông tin nhận tiền</p>
-                    <p className="break-words font-medium text-text">{tx.accountHolderName}</p>
+                    <p className="text-xs text-text-secondary">
+                      {t("wallet.transactionTable.payoutInfo")}
+                    </p>
+                    <p className="break-words font-medium text-text">
+                      {tx.accountHolderName}
+                    </p>
                     <p className="break-words text-text-secondary">
                       {tx.bankAccountNumber} · {tx.bankName}
                     </p>
@@ -96,7 +115,7 @@ export function TransactionTable() {
                         className="mt-1 min-h-11 font-medium text-primary hover:underline"
                         onClick={() => setEditing(tx)}
                       >
-                        Sửa thông tin
+                        {t("wallet.transactionTable.editInfo")}
                       </button>
                     )}
                   </div>
@@ -111,9 +130,15 @@ export function TransactionTable() {
                 <tr>
                   <th className="w-[19%] py-3 pr-4">{t("wallet.time")}</th>
                   <th className="w-[22%] py-3 pr-4">{t("wallet.type")}</th>
-                  <th className="w-[16%] py-3 pr-5 text-right">{t("wallet.amount")}</th>
-                  <th className="w-[28%] py-3 px-4 text-center">Thông tin nhận tiền</th>
-                  <th className="w-[15%] py-3 pl-4 text-center">{t("common.status")}</th>
+                  <th className="w-[16%] py-3 pr-5 text-right">
+                    {t("wallet.amount")}
+                  </th>
+                  <th className="w-[28%] py-3 px-4 text-center">
+                    {t("wallet.transactionTable.payoutInfo")}
+                  </th>
+                  <th className="w-[15%] py-3 pl-4 text-center">
+                    {t("common.status")}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -127,8 +152,8 @@ export function TransactionTable() {
                     </td>
                     <td
                       className={`py-3 pr-5 text-right font-semibold ${
-                        tx.transactionType === "TOP_UP" 
-                          ? "text-success-text" 
+                        tx.transactionType === "TOP_UP"
+                          ? "text-success-text"
                           : tx.transactionType === "WITHDRAW"
                             ? "text-danger-text"
                             : "text-text"
@@ -140,7 +165,9 @@ export function TransactionTable() {
                     <td className="px-4 py-3 text-text">
                       {tx.transactionType === "WITHDRAW" && (
                         <div className="flex flex-col items-center gap-1 text-center">
-                          <span className="font-medium break-words">{tx.accountHolderName}</span>
+                          <span className="font-medium break-words">
+                            {tx.accountHolderName}
+                          </span>
                           <span className="break-words text-text-secondary">
                             {tx.bankAccountNumber} · {tx.bankName}
                           </span>
@@ -150,21 +177,29 @@ export function TransactionTable() {
                               className="mt-1 w-fit font-medium text-primary hover:underline"
                               onClick={() => setEditing(tx)}
                             >
-                              Sửa thông tin
+                              {t("wallet.transactionTable.editInfo")}
                             </button>
                           )}
                         </div>
                       )}
                     </td>
                     <td className="py-3 pl-4 text-center">
-                      <StatusBadge kind="transaction" status={tx.transactionStatus} />
+                      <StatusBadge
+                        kind="transaction"
+                        status={tx.transactionStatus}
+                      />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {editing && <EditWithdrawalModal transaction={editing} onClose={() => setEditing(null)} />}
+          {editing && (
+            <EditWithdrawalModal
+              transaction={editing}
+              onClose={() => setEditing(null)}
+            />
+          )}
           {hasNextPage && (
             <div ref={loaderRef} className="mt-4 flex justify-center py-2">
               {isFetchingNextPage && <ListSkeleton rows={1} />}

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/utils/cn";
 
 interface RangeSliderProps {
@@ -30,6 +31,7 @@ export function RangeSlider({
   format = formatShortVnd,
   className,
 }: RangeSliderProps) {
+  const { t } = useTranslation();
   const pct = (v: number) => (rangeMax === 0 ? 0 : (v / rangeMax) * 100);
   const thumb =
     "pointer-events-none absolute inset-0 h-5 w-full appearance-none bg-transparent " +
@@ -48,7 +50,9 @@ export function RangeSlider({
         <span className="rounded-lg bg-primary-light px-2 py-1 text-primary">
           {format(min)}
         </span>
-        <span className="text-text-secondary">đến</span>
+        <span className="text-text-secondary">
+          {t("shared.rangeSlider.to")}
+        </span>
         <span className="rounded-lg bg-primary-light px-2 py-1 text-primary">
           {max >= rangeMax ? `${format(rangeMax)}+` : format(max)}
         </span>
@@ -61,23 +65,27 @@ export function RangeSlider({
         />
         <input
           type="range"
-          aria-label="Giá trị tối thiểu"
+          aria-label={t("shared.rangeSlider.minAria")}
           min={0}
           max={rangeMax}
           step={step}
           value={min}
-          onChange={(e) => onChange(Math.min(Number(e.target.value), max - step), max)}
+          onChange={(e) =>
+            onChange(Math.min(Number(e.target.value), max - step), max)
+          }
           className={thumb}
           style={{ zIndex: min > rangeMax - step * 2 ? 5 : 3 }}
         />
         <input
           type="range"
-          aria-label="Giá trị tối đa"
+          aria-label={t("shared.rangeSlider.maxAria")}
           min={0}
           max={rangeMax}
           step={step}
           value={max}
-          onChange={(e) => onChange(min, Math.max(Number(e.target.value), min + step))}
+          onChange={(e) =>
+            onChange(min, Math.max(Number(e.target.value), min + step))
+          }
           className={thumb}
           style={{ zIndex: 4 }}
         />

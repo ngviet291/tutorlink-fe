@@ -1,4 +1,5 @@
 import { BadgeCheck, Clock, ShieldQuestion } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/shared/components/ui/Badge";
 import type { CertificateResponse } from "@/features/user/types/user.dto";
 import { useTutorCertificates } from "../hooks/useAdmin";
@@ -6,33 +7,47 @@ import { useTutorCertificates } from "../hooks/useAdmin";
 const isPdf = (url: string) => /\.pdf(\?|$)/i.test(url);
 
 function StatusBadge({ c }: { c: CertificateResponse }) {
+  const { t } = useTranslation();
   if (c.verified)
     return (
       <Badge tone="green" icon={<BadgeCheck className="size-3" />}>
-        Đã xác thực
+        {t("adminTutorCertificateGallery.verified")}
       </Badge>
     );
   if (c.pendingAdminReview)
     return (
       <Badge tone="blue" icon={<ShieldQuestion className="size-3" />}>
-        Chờ admin duyệt
+        {t("adminTutorCertificateGallery.pendingAdmin")}
       </Badge>
     );
   return (
     <Badge tone="yellow" icon={<Clock className="size-3" />}>
-      AI đang kiểm tra
+      {t("adminTutorCertificateGallery.aiChecking")}
     </Badge>
   );
 }
 
 /** Hiện thẳng ảnh chứng chỉ của gia sư trong modal duyệt hồ sơ. */
 export function TutorCertificateGallery({ tutorId }: { tutorId: string }) {
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useTutorCertificates(tutorId);
 
-  if (isLoading) return <p className="text-text-secondary">Đang tải chứng chỉ…</p>;
+  if (isLoading)
+    return (
+      <p className="text-text-secondary">
+        {t("adminTutorCertificateGallery.loading")}
+      </p>
+    );
   if (isError)
-    return <p className="text-danger-text">Không tải được chứng chỉ</p>;
-  if (!data?.length) return <p className="text-text">Chưa có</p>;
+    return (
+      <p className="text-danger-text">
+        {t("adminTutorCertificateGallery.loadError")}
+      </p>
+    );
+  if (!data?.length)
+    return (
+      <p className="text-text">{t("adminTutorCertificateGallery.none")}</p>
+    );
 
   return (
     <ul className="mt-1 grid gap-3 sm:grid-cols-2">
@@ -43,11 +58,13 @@ export function TutorCertificateGallery({ tutorId }: { tutorId: string }) {
         >
           <a href={c.fileUrl} target="_blank" rel="noreferrer">
             {isPdf(c.fileUrl) ? (
-              <span className="text-primary underline">Mở file PDF</span>
+              <span className="text-primary underline">
+                {t("adminTutorCertificateGallery.openPdf")}
+              </span>
             ) : (
               <img
                 src={c.fileUrl}
-                alt={c.name ?? "Ảnh chứng chỉ"}
+                alt={c.name ?? t("adminTutorCertificateGallery.imageAlt")}
                 loading="lazy"
                 className="max-h-56 w-full rounded-lg border border-border bg-surface-hover object-contain"
               />

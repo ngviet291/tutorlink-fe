@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/shared/components/ui/Button";
 import { FormField } from "@/shared/components/ui/FormField";
 import { Input } from "@/shared/components/ui/Input";
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function EditWithdrawalModal({ transaction, onClose }: Props) {
+  const { t } = useTranslation();
   const toast = useToast();
   const update = useUpdateWithdrawal();
   const bankId = `${useId()}-bank`;
@@ -41,7 +43,7 @@ export function EditWithdrawalModal({ transaction, onClose }: Props) {
       { id: transaction.id, details },
       {
         onSuccess: () => {
-          toast.success("Đã cập nhật thông tin nhận tiền");
+          toast.success(t("wallet.editWithdrawalModal.updated"));
           onClose();
         },
         onError: (error) => toast.error(getErrorMessage(error)),
@@ -53,7 +55,7 @@ export function EditWithdrawalModal({ transaction, onClose }: Props) {
     <Modal
       open
       onClose={onClose}
-      title="Sửa thông tin nhận tiền"
+      title={t("wallet.editWithdrawalModal.title")}
       busy={update.isPending}
     >
       <form
@@ -62,22 +64,22 @@ export function EditWithdrawalModal({ transaction, onClose }: Props) {
         className="flex flex-col gap-4"
       >
         <Input
-          label="Số tài khoản"
+          label={t("wallet.editWithdrawalModal.accountNumber")}
           required
           inputMode="numeric"
           autoComplete="off"
           disabled={update.isPending}
           error={errors.bankAccountNumber?.message}
           {...register("bankAccountNumber", {
-            required: "Vui lòng nhập số tài khoản",
+            required: t("wallet.editWithdrawalModal.accountNumberRequired"),
             pattern: {
               value: /^\d{6,19}$/,
-              message: "Số tài khoản gồm 6–19 chữ số",
+              message: t("wallet.editWithdrawalModal.accountNumberFormat"),
             },
           })}
         />
         <FormField
-          label="Ngân hàng"
+          label={t("wallet.editWithdrawalModal.bank")}
           htmlFor={bankId}
           required
           error={errors.bankName?.message}
@@ -85,7 +87,7 @@ export function EditWithdrawalModal({ transaction, onClose }: Props) {
           <Controller
             name="bankName"
             control={control}
-            rules={{ required: "Vui lòng chọn ngân hàng" }}
+            rules={{ required: t("wallet.editWithdrawalModal.bankRequired") }}
             render={({ field }) => (
               <BankSelect
                 id={bankId}
@@ -98,16 +100,16 @@ export function EditWithdrawalModal({ transaction, onClose }: Props) {
           />
         </FormField>
         <Input
-          label="Tên chủ tài khoản"
+          label={t("wallet.editWithdrawalModal.holder")}
           required
           autoComplete="off"
           disabled={update.isPending}
           error={errors.accountHolderName?.message}
           {...register("accountHolderName", {
-            required: "Vui lòng nhập tên chủ tài khoản",
+            required: t("wallet.editWithdrawalModal.holderRequired"),
             pattern: {
               value: /^[\p{L} ]{2,50}$/u,
-              message: "Tên gồm 2–50 chữ cái",
+              message: t("wallet.editWithdrawalModal.holderFormat"),
             },
             setValueAs: (value: string) =>
               typeof value === "string"
@@ -122,10 +124,10 @@ export function EditWithdrawalModal({ transaction, onClose }: Props) {
             onClick={onClose}
             disabled={update.isPending}
           >
-            Đóng
+            {t("common.close")}
           </Button>
           <Button type="submit" loading={update.isPending}>
-            Lưu thay đổi
+            {t("wallet.editWithdrawalModal.save")}
           </Button>
         </div>
       </form>

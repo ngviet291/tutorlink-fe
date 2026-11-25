@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   /**
@@ -7,20 +8,27 @@ interface Props {
    * BE tính theo đúng config expiry window nên FE không cần hardcode 24h.
    */
   expiresAt?: string;
-  /** Hành động sắp hết hạn, vd "xác nhận" / "thanh toán" — hiển thị trong câu countdown. */
+  /**
+   * Hành động sắp hết hạn đã được DỊCH (vd t("applicantRow.actionConfirm")),
+   * hiển thị trong câu countdown.
+   */
   actionLabel: string;
   /** Gọi đúng 1 lần khi đếm về 0 để parent refetch trạng thái mới (scheduler BE đổi sang CANCELLED). */
   onExpire?: () => void;
   className?: string;
 }
 
-/** Đếm ngược: >1h hiển thị "XgYYp", <=1h hiển thị "MM:SS". */
-function formatRemaining(ms: number): string {
+/** Đếm ngược: >1h hiển thị "XgYYp" (vi) / "XhYYm" (en), <=1h hiển thị "MM:SS". */
+function formatRemaining(
+  ms: number,
+  hourUnit: string,
+  minuteUnit: string,
+): string {
   const total = Math.max(0, Math.floor(ms / 1000));
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  if (h > 0) return `${h}g${String(m).padStart(2, "0")}p`;
+  if (h > 0) return `${h}${hourUnit}${String(m).padStart(2, "0")}${minuteUnit}`;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
@@ -30,6 +38,7 @@ export function ExpiryCountdown({
   onExpire,
   className = "",
 }: Props) {
+  const { t } = useTranslation();
   const [now, setNow] = useState(() => Date.now());
   const expiredRef = useRef(false);
 
@@ -65,11 +74,19 @@ export function ExpiryCountdown({
   return (
     <span
       className={`inline-flex items-center gap-1 text-xs font-medium ${color} ${className}`}
-      title={expiresAt}>
+      title={expiresAt}
+    >
       <Clock className="size-3.5" />
       {expired
-        ? "Đã hết hạn"
-        : `Còn ${formatRemaining(remaining ?? 0)} để ${actionLabel}`}
+        ? t("application.expiryCountdown.expired")
+        : t("application.expiryCountdown.remaining", {
+            time: formatRemaining(
+              remaining ?? 0,
+              t("application.expiryCountdown.hourUnit"),
+              t("application.expiryCountdown.minuteUnit"),
+            ),
+            action: actionLabel,
+          })}
     </span>
   );
 }
