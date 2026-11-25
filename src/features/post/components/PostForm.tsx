@@ -18,7 +18,7 @@ import { Textarea } from "@/shared/components/ui/Textarea";
 
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { PostPayload, PostResponse } from "../types/post.types";
-import type { PostType } from "@/shared/types/common.types";
+import type { BudgetUnit, PostType } from "@/shared/types/common.types";
 
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
@@ -380,8 +380,7 @@ export function PostForm({
             required
             error={errors.subjectId?.message}
             value={field.value}
-            onChange={field.onChange}
-          >
+            onChange={field.onChange}>
             <option value="">{t("tutor.selectSubject")}</option>
 
             {subjects.map((subject) => (
@@ -407,8 +406,7 @@ export function PostForm({
               required
               error={errors.educationLevel?.message}
               value={field.value}
-              onChange={field.onChange}
-            >
+              onChange={field.onChange}>
               {EDUCATION_LEVELS.map((level) => (
                 <option key={level} value={level}>
                   {EDUCATION_LEVEL_LABEL[level]}
@@ -430,8 +428,7 @@ export function PostForm({
               required
               error={errors.teachingMode?.message}
               value={field.value}
-              onChange={field.onChange}
-            >
+              onChange={field.onChange}>
               {TEACHING_MODES.map((mode) => (
                 <option key={mode} value={mode}>
                   {TEACHING_MODE_LABEL[mode]}
@@ -583,8 +580,7 @@ export function PostForm({
                   error={errors.address?.province?.message}
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  disabled={isLoadingProvinces}
-                >
+                  disabled={isLoadingProvinces}>
                   <option value="">{t("common.selectProvince")}</option>
 
                   {provinceOptions
@@ -620,8 +616,7 @@ export function PostForm({
                     error={errors.address?.ward?.message}
                     value={field.value ?? ""}
                     onChange={field.onChange}
-                    disabled={!province || isLoadingWards}
-                  >
+                    disabled={!province || isLoadingWards}>
                     <option value="">
                       {province
                         ? t("post.postForm.selectWard")
@@ -678,8 +673,7 @@ export function PostForm({
               type="button"
               onClick={() => submitAs(false)}
               loading={isSubmitting}
-              className="sm:flex-1"
-            >
+              className="flex-1">
               {t("post.publishPost")}
             </Button>
           </>
