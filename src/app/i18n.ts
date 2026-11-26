@@ -268,7 +268,7 @@ const vi = {
   legal: {
     questions: "Có thắc mắc?",
     backHome: "Về trang chủ",
-    orContact: "hoặc liên hệ {{email}}.",
+    orContact: "hoặc liên hệ",
   },
   auth: {
     login: "Đăng nhập",
@@ -2042,7 +2042,7 @@ const en = {
   legal: {
     questions: "Have questions?",
     backHome: "Back to home",
-    orContact: "or contact {{email}}.",
+    orContact: "or contact",
   },
   auth: {
     login: "Log in",
