@@ -76,15 +76,14 @@ export default function AdminTutorReviewPage() {
           {data.map((tutor) => (
             <li
               key={tutor.id}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center"
-            >
+              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center">
               <Avatar name={tutor.fullName} src={tutor.avatarUrl} size="lg" />
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-text">{tutor.fullName}</p>
                 <p className="text-xs text-text-secondary">
                   {t("adminTutorReview.summary", {
                     years: tutor.experienceYears,
-                    fee: formatVnd(tutor.hourlyRate),
+                    // fee: formatVnd(tutor.hourlyRate),
                   })}
                 </p>
                 <div className="mt-1 flex flex-wrap gap-1">
@@ -121,19 +120,16 @@ export default function AdminTutorReviewPage() {
             <Button
               variant="danger"
               loading={reviewTutor.isPending}
-              onClick={() => decide("REJECTED")}
-            >
+              onClick={() => decide("REJECTED")}>
               <X className="size-4" /> {t("adminTutorReview.reject")}
             </Button>
             <Button
               loading={reviewTutor.isPending}
-              onClick={() => decide("APPROVED")}
-            >
+              onClick={() => decide("APPROVED")}>
               <Check className="size-4" /> {t("adminTutorReview.approve")}
             </Button>
           </>
-        }
-      >
+        }>
         {detail && (
           <div className="flex flex-col gap-4 text-sm">
             <dl className="grid gap-2 sm:grid-cols-2">
@@ -168,16 +164,14 @@ export default function AdminTutorReviewPage() {
                   })}
                 </dd>
               </div>
-              <div>
+              {/* <div>
                 <dt className="text-xs text-text-secondary">
                   {t("adminTutorReview.pricePerHour")}
                 </dt>
                 <dd className="font-semibold text-text">
                   {formatVnd(detail.hourlyRate)}
                 </dd>
-              </div>
-            </dl>
-            <div>
+              </div> */}
               <div>
                 <p className="text-xs text-text-secondary">
                   {t("adminTutorReview.subjects")}
@@ -192,6 +186,8 @@ export default function AdminTutorReviewPage() {
                   )}
                 </div>
               </div>
+            </dl>
+            <div>
               <p className="text-xs text-text-secondary">
                 {t("adminTutorReview.bio")}
               </p>

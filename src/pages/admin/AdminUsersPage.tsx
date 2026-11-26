@@ -14,6 +14,7 @@ import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import { useToast } from "@/shared/hooks/useToast";
+import { formatDate } from "@/shared/utils/date";
 import {
   useAdminMutations,
   useAdminUser,
@@ -163,8 +164,7 @@ export default function AdminUsersPage() {
                       <button
                         type="button"
                         className="cursor-pointer text-sm font-semibold text-primary hover:underline"
-                        onClick={() => openDetail(u)}
-                      >
+                        onClick={() => openDetail(u)}>
                         {t("adminUsers.details")}
                       </button>
                     </td>
@@ -174,11 +174,7 @@ export default function AdminUsersPage() {
             </table>
           </div>
           {hasNextPage && (
-            <div
-              ref={loadMoreRef}
-              className="h-8"
-              aria-hidden="true"
-            />
+            <div ref={loadMoreRef} className="h-8" aria-hidden="true" />
           )}
         </>
       )}
@@ -186,22 +182,35 @@ export default function AdminUsersPage() {
       <Modal
         open={Boolean(detail)}
         onClose={closeDetail}
-        title={t("adminUsers.detailTitle")}
-      >
+        title={t("adminUsers.detailTitle")}>
         {detail && (
           <div className="flex flex-col gap-4 text-sm">
+            {detail.avatarUrl && (
+              <div className="flex justify-center">
+                <Avatar name={detail.fullName} src={detail.avatarUrl} size="lg" />
+              </div>
+            )}
             <dl className="grid gap-2 sm:grid-cols-2">
               {[
+                [t("adminUsers.id"), detail.id],
                 [t("adminUsers.fullName"), detail.fullName],
-                ["Email", detail.email],
+                [t("adminUsers.email"), detail.email],
                 [t("adminUsers.phone"), detail.phone],
                 [t("adminUsers.colRole"), roleLabel(detail.role)],
                 [
-                  t("adminUsers.area"),
-                  [detail.address?.ward, detail.address?.province]
-                    .filter(Boolean)
-                    .join(", ") || "—",
+                  t("adminUsers.gender"),
+                  detail.gender
+                    ? t(`adminUsers.genderValue.${detail.gender}`)
+                    : "—",
                 ],
+                [t("adminUsers.dateOfBirth"), formatDate(detail.dateOfBirth)],
+                [
+                  t("adminUsers.colStatus"),
+                  t(`admin.userStatus.${detail.userStatus}`),
+                ],
+                [t("adminUsers.street"), detail.address?.street ?? "—"],
+                [t("adminUsers.ward"), detail.address?.ward ?? "—"],
+                [t("adminUsers.province"), detail.address?.province ?? "—"],
               ].map(([k, v]) => (
                 <div key={k}>
                   <dt className="text-xs text-text-secondary">{k}</dt>
@@ -209,9 +218,6 @@ export default function AdminUsersPage() {
                 </div>
               ))}
             </dl>
-            <p className="text-xs text-text-secondary">
-              {t("adminUsers.passwordNote")}
-            </p>
             {detail.role !== "ADMIN" && (
               <Select
                 label={t("adminUsers.accountStatus")}

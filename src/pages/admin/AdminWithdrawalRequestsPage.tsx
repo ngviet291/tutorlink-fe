@@ -45,24 +45,24 @@ export default function AdminWithdrawalRequestsPage() {
     detail && showQr
       ? `https://img.vietqr.io/image/${encodeURIComponent(detail.bankName ?? "")}-${detail.bankAccountNumber}-compact2.png` +
         `?amount=${detail.amount}` +
-        `&addInfo=${encodeURIComponent(`Thanh toan cho hoa don ${detail.id.slice(0, 8)}`)}` +
+        `&addInfo=${encodeURIComponent(t("admin.withdrawalrequests.qrTransferMemo", { id: detail.id.slice(0, 8) }))}` +
         `&accountName=${encodeURIComponent(detail.accountHolderName ?? "")}`
       : "";
 
   // Thông tin đã in trong ảnh QR thì không hiện lại ở danh sách.
   const rows: [string, string][] = detail
     ? [
-        ["Mã giao dịch", detail.id],
-        ["Gia sư", detail.tutorName ?? detail.tutorId ?? "—"],
+        [t("admin.withdrawalrequests.txId"), detail.id],
+        [t("admin.withdrawalrequests.colTutor"), detail.tutorName ?? detail.tutorId ?? "—"],
         ...(showQr
           ? []
           : ([
-              ["Số tiền", formatVnd(detail.amount)],
-              ["Tên chủ tài khoản", detail.accountHolderName ?? "—"],
-              ["Số tài khoản", detail.bankAccountNumber ?? "—"],
-              ["Ngân hàng", detail.bankName ?? "—"],
+              [t("admin.withdrawalrequests.colAmount"), formatVnd(detail.amount)],
+              [t("admin.withdrawalrequests.holder"), detail.accountHolderName ?? "—"],
+              [t("admin.withdrawalrequests.accountNumber"), detail.bankAccountNumber ?? "—"],
+              [t("admin.withdrawalrequests.bank"), detail.bankName ?? "—"],
             ] as [string, string][])),
-        ["Thời gian yêu cầu", formatDateTime(detail.createdAt)],
+        [t("admin.withdrawalrequests.requestedAt"), formatDateTime(detail.createdAt)],
       ]
     : [];
 
@@ -170,7 +170,7 @@ export default function AdminWithdrawalRequestsPage() {
           setDetailId(undefined);
           setConfirmAction(null);
         }}
-        title="Chi tiết yêu cầu rút tiền"
+        title={t("admin.withdrawalrequests.detailTitle")}
         size="md"
         className="max-h-[96vh]! [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {detailQuery.isLoading && <ListSkeleton rows={2} />}
@@ -201,7 +201,7 @@ export default function AdminWithdrawalRequestsPage() {
             {showQr && (
               <img
                 src={qrUrl}
-                alt="Mã QR chuyển khoản cho gia sư"
+                alt={t("admin.withdrawalrequests.qrAlt")}
                 className="mx-auto mt-4 w-full max-w-sm rounded-xl border border-border bg-white object-contain p-2"
               />
             )}
