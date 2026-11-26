@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react"; // MỚI: useEffect, useRef
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,8 @@ import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { formatDate } from "@/shared/utils/date";
+import { cn } from "@/shared/utils/cn"; // MỚI
+import { useHighlight, useHighlightParam } from "@/shared/hooks/useHighlight"; // MỚI
 import { OfferList } from "@/features/application/components/OfferList";
 import { ExpiryCountdown } from "@/features/application/components/ExpiryCountdown";
 import { NextStepHint } from "@/features/application/components/NextStepHint";
@@ -37,6 +39,27 @@ export default function MyApplicationsPage() {
   const [reviewTarget, setReviewTarget] = useState<ApplicationResponse | null>(
     null,
   );
+
+  // MỚI: đơn cần làm sáng khi vào từ thông báo (?highlight=<applicationId>)
+  const highlightId = useHighlightParam();
+  const {
+    ref: highlightRef,
+    flashing,
+    isHighlighted,
+  } = useHighlight<HTMLLIElement>(
+    highlightId,
+    !isLoading && Boolean(data?.length),
+  );
+
+  // MỚI: đơn mới từ thông báo có thể chưa nằm trong cache -> tải lại đúng một lần
+  const refetchedFor = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (!highlightId || isLoading || !data) return;
+    if (data.some((a) => a.id === highlightId)) return;
+    if (refetchedFor.current === highlightId) return;
+    refetchedFor.current = highlightId;
+    void refetch();
+  }, [highlightId, isLoading, data, refetch]);
 
   // Finish xong: học viên của đơn được mở modal đánh giá gia sư (nếu chưa review)
   const handleFinish = (a: ApplicationResponse) => {
@@ -102,97 +125,113 @@ export default function MyApplicationsPage() {
         />
       ) : (
         <ul className="flex flex-col gap-3">
-          {data.map((a) => (
-            <li
-              key={a.id}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0">
-                <Link
-                  to={ROUTES.POST_DETAIL(a.post.id)}
-                  state={{ mine: true }}
-                  className="block truncate font-bold text-text hover:text-primary"
-                >
-                  {a.post.title}
-                </Link>
-                <p className="mt-0.5 text-xs text-text-secondary">
-                  {t("myApplications.appliedOn", {
-                    date: formatDate(a.appliedAt),
-                  })}
-                </p>
-                <NextStepHint
-                  application={a}
-                  userId={user?.id}
-                  className="mt-1.5"
-                />
-              </div>
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
-                <StatusBadge kind="application" status={a.applicationStatus} />
-                {/* Đơn ACCEPTED có expiresAt do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
-                {a.applicationStatus === "ACCEPTED" && a.expiresAt && (
-                  <ExpiryCountdown
-                    expiresAt={a.expiresAt}
-                    actionLabel={
-                      a.paid || !isFeePayer(a, user?.id)
-                        ? t("myApplications.actionConfirm")
-                        : t("myApplications.actionPay")
-                    }
-                    onExpire={() => void refetch()}
-                  />
+          {data.map((a) => {
+            const lit = isHighlighted(a.id); // MỚI
+            return (
+              <li
+                key={a.id}
+                ref={lit ? highlightRef : undefined} // MỚI
+                className={cn(
+                  "flex flex-col gap-3 rounded-2xl border border-border p-4 transition-colors duration-500 sm:flex-row sm:items-center sm:justify-between",
+                  lit && flashing ? "bg-primary-light" : "bg-surface",
+                  lit &&
+                    (flashing
+                      ? "ring-2 ring-primary"
+                      : "ring-2 ring-primary/40"),
                 )}
-                {a.applicationStatus === "ACCEPTED" &&
-                  !a.paid &&
-                  isFeePayer(a, user?.id) && (
-                    <Button size="sm" onClick={() => setOffer(a)}>
-                      {t("myApplications.payFee")}
-                    </Button>
+              >
+                <div className="min-w-0">
+                  <Link
+                    to={ROUTES.POST_DETAIL(a.post.id)}
+                    state={{ mine: true }}
+                    className="block truncate font-bold text-text hover:text-primary"
+                  >
+                    {a.post.title}
+                  </Link>
+                  <p className="mt-0.5 text-xs text-text-secondary">
+                    {t("myApplications.appliedOn", {
+                      date: formatDate(a.appliedAt),
+                    })}
+                  </p>
+                  <NextStepHint
+                    application={a}
+                    userId={user?.id}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                  <StatusBadge
+                    kind="application"
+                    status={a.applicationStatus}
+                  />
+                  {/* Đơn ACCEPTED có expiresAt do BE tính: chưa trả -> hạn thanh toán (W1), đã trả -> hạn applicant confirm (W2) */}
+                  {a.applicationStatus === "ACCEPTED" && a.expiresAt && (
+                    <ExpiryCountdown
+                      expiresAt={a.expiresAt}
+                      actionLabel={
+                        a.paid || !isFeePayer(a, user?.id)
+                          ? t("myApplications.actionConfirm")
+                          : t("myApplications.actionPay")
+                      }
+                      onExpire={() => void refetch()}
+                    />
                   )}
-                {a.applicationStatus === "ACCEPTED" &&
-                  a.paid &&
-                  isApplicant(a, user?.id) && (
+                  {a.applicationStatus === "ACCEPTED" &&
+                    !a.paid &&
+                    isFeePayer(a, user?.id) && (
+                      <Button size="sm" onClick={() => setOffer(a)}>
+                        {t("myApplications.payFee")}
+                      </Button>
+                    )}
+                  {a.applicationStatus === "ACCEPTED" &&
+                    a.paid &&
+                    isApplicant(a, user?.id) && (
+                      <Button
+                        size="sm"
+                        loading={
+                          confirm.isPending && confirm.variables === a.id
+                        }
+                        onClick={() =>
+                          confirm.mutate(a.id, {
+                            onSuccess: () =>
+                              toast.success(t("myApplications.confirmed")),
+                            onError: (e) => toast.apiError(e),
+                          })
+                        }
+                      >
+                        {t("myApplications.confirm")}
+                      </Button>
+                    )}
+                  {a.applicationStatus === "CONFIRMED" && (
                     <Button
                       size="sm"
-                      loading={confirm.isPending && confirm.variables === a.id}
-                      onClick={() =>
-                        confirm.mutate(a.id, {
-                          onSuccess: () =>
-                            toast.success(t("myApplications.confirmed")),
-                          onError: (e) => toast.apiError(e),
-                        })
-                      }
+                      variant="outline"
+                      loading={finish.isPending && finish.variables === a.id}
+                      onClick={() => handleFinish(a)}
                     >
-                      {t("myApplications.confirm")}
+                      {t("myApplications.finishClass")}
                     </Button>
                   )}
-                {a.applicationStatus === "CONFIRMED" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    loading={finish.isPending && finish.variables === a.id}
-                    onClick={() => handleFinish(a)}
-                  >
-                    {t("myApplications.finishClass")}
-                  </Button>
-                )}
-                {a.applicationStatus === "CONFIRMED" && (
-                  <Link
-                    to={ROUTES.CHAT_WITH(
-                      (user?.id === a.student?.id
-                        ? a.tutor?.id
-                        : a.student?.id) ?? a.post.author.id,
-                    )}
-                  >
-                    <Button size="sm" variant="secondary">
-                      {t("myApplications.openChat")}
-                    </Button>
-                  </Link>
-                )}
-                {a.applicationStatus === "FINISHED" && (
-                  <FinishedReviewAction a={a} />
-                )}
-              </div>
-            </li>
-          ))}
+                  {a.applicationStatus === "CONFIRMED" && (
+                    <Link
+                      to={ROUTES.CHAT_WITH(
+                        (user?.id === a.student?.id
+                          ? a.tutor?.id
+                          : a.student?.id) ?? a.post.author.id,
+                      )}
+                    >
+                      <Button size="sm" variant="secondary">
+                        {t("myApplications.openChat")}
+                      </Button>
+                    </Link>
+                  )}
+                  {a.applicationStatus === "FINISHED" && (
+                    <FinishedReviewAction a={a} />
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
       <PayFeeModal application={offer} onClose={() => setOffer(null)} />
@@ -236,8 +275,6 @@ function FinishedReviewAction({ a }: { a: ApplicationResponse }) {
       </>
     );
   }
-
-  // Chỉ học viên mới được đánh giá; gia sư chưa có review -> không hiện gì
   if (!isStudent) return null;
   const tutorName =
     (a.post.type === "FIND_TUTOR"

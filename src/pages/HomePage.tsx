@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,13 +6,10 @@ import {
   BookOpen,
   Brain,
   Calculator,
-  ChevronLeft,
-  ChevronRight,
   Code2,
   FlaskConical,
   Languages,
   Music2,
-  Quote,
   Atom,
   Dna,
   ShieldCheck,
@@ -32,6 +29,7 @@ import { useTopTutor } from "@/features/tutor/hooks/useTutors";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { TOP_TUTOR } from "@/features/tutor/types/tutor.types";
+import { HowItWorksSection } from "@/shared/components/ui/HowItWorksSection";
 
 const SUBJECT_ICONS: Record<string, LucideIcon> = {
   "019cef3d-54e0-7e12-85ae-da011bb1fa7d": Calculator,
@@ -43,22 +41,6 @@ const SUBJECT_ICONS: Record<string, LucideIcon> = {
   "019cef3d-7808-7483-8158-511aa2f5576d": Code2,
   "019cef3d-7fd8-7881-95f9-bf62461639ef": Music2,
 };
-
-// name/text là khóa i18n, dịch lúc hiển thị
-const TESTIMONIALS = [
-  {
-    name: "home.testimonial1Name",
-    text: "home.testimonial1Text",
-  },
-  {
-    name: "home.testimonial2Name",
-    text: "home.testimonial2Text",
-  },
-  {
-    name: "home.testimonial3Name",
-    text: "home.testimonial3Text",
-  },
-];
 
 function Hero({ role }: { role?: string }) {
   const { t } = useTranslation();
@@ -192,52 +174,6 @@ function SectionHead({
   );
 }
 
-function Testimonials() {
-  const { t } = useTranslation();
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(
-      () => setI((x) => (x + 1) % TESTIMONIALS.length),
-      6000,
-    );
-    return () => clearInterval(timer);
-  }, []);
-  const cur = TESTIMONIALS[i]!;
-  return (
-    <div className="mx-auto max-w-3xl rounded-3xl border border-border bg-surface p-8 text-center shadow-sm">
-      <Quote className="mx-auto mb-4 size-8 text-secondary" />
-      <p className="min-h-20 text-lg text-text" key={i}>
-        {t(cur.text)}
-      </p>
-      <p className="mt-4 text-sm font-semibold text-primary">{t(cur.name)}</p>
-      <div className="mt-6 flex items-center justify-center gap-3">
-        <button
-          type="button"
-          aria-label={t("home.prev")}
-          onClick={() =>
-            setI((i + TESTIMONIALS.length - 1) % TESTIMONIALS.length)
-          }
-          className="cursor-pointer rounded-full border border-border p-2 hover:bg-surface-hover">
-          <ChevronLeft className="size-4" />
-        </button>
-        {TESTIMONIALS.map((_, k) => (
-          <span
-            key={k}
-            className={`size-2 rounded-full ${k === i ? "bg-primary" : "bg-border"}`}
-          />
-        ))}
-        <button
-          type="button"
-          aria-label={t("home.next")}
-          onClick={() => setI((i + 1) % TESTIMONIALS.length)}
-          className="cursor-pointer rounded-full border border-border p-2 hover:bg-surface-hover">
-          <ChevronRight className="size-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function HomePage() {
   const { t } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
@@ -284,7 +220,8 @@ export default function HomePage() {
                 <Link
                   key={s.id}
                   to={`${subjectTarget}?subject=${s.id}`}
-                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
+                >
                   <span className="flex size-12 items-center justify-center rounded-xl bg-primary-light text-primary">
                     <Icon className="size-6" />
                   </span>
@@ -334,38 +271,7 @@ export default function HomePage() {
           )}
         </section>
 
-        <section>
-          <SectionHead title={t("home.stepsTitle")} />
-          <ol className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                n: "1",
-                title: t("home.step1Title"),
-                desc: t("home.step1Desc"),
-              },
-              {
-                n: "2",
-                title: t("home.step2Title"),
-                desc: t("home.step2Desc"),
-              },
-              {
-                n: "3",
-                title: t("home.step3Title"),
-                desc: t("home.step3Desc"),
-              },
-            ].map(({ n, title, desc }) => (
-              <li
-                key={n}
-                className="relative rounded-2xl border border-border bg-surface p-6">
-                <span className="mb-4 flex size-10 items-center justify-center rounded-full bg-primary text-lg font-extrabold text-white">
-                  {n}
-                </span>
-                <h3 className="mb-1 text-lg font-bold text-text">{title}</h3>
-                <p className="text-sm text-text-secondary">{desc}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
+        <HowItWorksSection />
 
         <section>
           <SectionHead title={t("home.whyTitle")} />
@@ -394,18 +300,14 @@ export default function HomePage() {
             ].map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-border bg-surface p-5">
+                className="rounded-2xl border border-border bg-surface p-5"
+              >
                 <Icon className="mb-3 size-7 text-primary" />
                 <h3 className="mb-1 font-bold text-text">{title}</h3>
                 <p className="text-sm text-text-secondary">{desc}</p>
               </div>
             ))}
           </div>
-        </section>
-
-        <section>
-          <SectionHead title={t("home.testimonialsTitle")} />
-          <Testimonials />
         </section>
 
         {user?.role !== "TUTOR" && (

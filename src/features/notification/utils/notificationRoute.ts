@@ -25,13 +25,23 @@ function reviewsRoute(tutorId: string, reviewId?: string | null): string {
     ? `${base}&${HIGHLIGHT_PARAM}=${encodeURIComponent(reviewId)}`
     : base;
 }
+
+// Đến danh sách đơn ứng tuyển; có id thì đơn đó được cuộn tới và làm sáng.
+function applicationsRoute(applicationId?: string | null): string {
+  return applicationId
+    ? `${ROUTES.MY_APPLICATIONS}?${HIGHLIGHT_PARAM}=${encodeURIComponent(applicationId)}`
+    : ROUTES.MY_APPLICATIONS;
+}
+
 export function resolveNotificationRoute(
   n: RouteInput,
   userId?: string,
 ): string | null {
-  console.log("notif", n.notificationType, n.targetType, n.targetId, userId);
   if (!n.targetType) {
     if (n.notificationType === "REVIEW" && userId) return reviewsRoute(userId);
+    if (n.notificationType === "APPLICATION") {
+      return applicationsRoute(n.targetId);
+    }
     return FALLBACK_ROUTE_BY_TYPE[n.notificationType] ?? null;
   }
   switch (n.targetType) {
@@ -40,7 +50,7 @@ export function resolveNotificationRoute(
     case "MY_POSTS":
       return ROUTES.MY_POSTS;
     case "MY_APPLICATIONS":
-      return ROUTES.MY_APPLICATIONS;
+      return applicationsRoute(n.targetId);
     case "TUTOR_PROFILE":
       if (n.notificationType === "REVIEW" && userId)
         return reviewsRoute(userId);
