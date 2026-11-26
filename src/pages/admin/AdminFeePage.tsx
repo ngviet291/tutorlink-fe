@@ -34,7 +34,7 @@ function getFeeStatus(fee: FeeRate, now = Date.now()) {
 const FEE_STATUS = {
   ACTIVE: { tone: "green", labelKey: "adminFee.status.ACTIVE" },
   UPCOMING: { tone: "gray", labelKey: "adminFee.status.UPCOMING" },
-  EXPIRED: { tone: "gray", labelKey: "adminFee.status.EXPIRED" },
+  EXPIRED: { tone: "red", labelKey: "adminFee.status.EXPIRED" },
 } as const;
 export default function AdminFeePage() {
   const { t } = useTranslation();

@@ -197,6 +197,7 @@ export const BACKEND_MESSAGES_VI: Record<string, string> = {
   "Comment must not exceed 2000 characters": "Nhận xét tối đa 2000 ký tự",
   "Complaint status is required": "Thiếu trạng thái khiếu nại",
   "Subject name must not be blank!": "Vui lòng nhập tên môn học",
+  "Subject name already exists!": "Tên môn học đã tồn tại",
   "Subject name must not exceed 255 characters!": "Tên môn học tối đa 255 ký tự",
   "Description must not exceed 255 characters!": "Mô tả tối đa 255 ký tự",
   "Category must not be blank!": "Vui lòng nhập nhóm môn",

@@ -47,10 +47,6 @@ export class SubjectService {
     return this.gateway.create(req);
   }
 
-  update(id: string, req: SubjectRequest): Promise<SubjectResponse> {
-    return this.gateway.update(id, req);
-  }
-
   remove(id: string): Promise<void> {
     return this.gateway.remove(id);
   }

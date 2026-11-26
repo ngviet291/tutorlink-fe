@@ -119,14 +119,20 @@ export function resolveErrorMessage(error: unknown): string {
     if (isApiError) {
       const status = e.status as number | string | undefined;
       const source = (e as { rawMessage?: unknown }).rawMessage ?? e.message;
-      const translated = translateBackendMessage(source);
-      if (translated) return translated;
-
       if (e.fieldErrors && typeof e.fieldErrors === "object") {
         const msgs = Object.values(e.fieldErrors as Record<string, unknown>)
           .map(translateBackendMessage)
           .filter((m): m is string => Boolean(m));
-        if (msgs.length > 0) return msgs.join("\n");
+
+        if (msgs.length > 0) {
+          return msgs.join("\n");
+        }
+      }
+      const translated = translateBackendMessage(source);
+      if (translated) return translated;
+
+      if (typeof source === "string" && source.trim()) {
+        return source;
       }
       if (status === undefined && isNetworkLike(error)) {
         return networkErrorMessage();

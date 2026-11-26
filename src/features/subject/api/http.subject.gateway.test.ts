@@ -25,7 +25,6 @@ it("matches subject CRUD and cursor contracts including 204 delete", async () =>
   h.put.mockResolvedValue(dto);
   h.delete.mockResolvedValue(undefined);
   await g.create(body);
-  await g.update("s", body);
   await g.remove("s");
   expect(h.post).toHaveBeenCalledWith("/v1/subjects", body);
   expect(h.put).toHaveBeenCalledWith("/v1/subjects/s", body);
@@ -45,9 +44,14 @@ it("collects all subject cursor pages", async () => {
       hasNext: true,
       nextCursor: "a",
     })
-    .mockResolvedValueOnce({ content: [{ id: "b", name: "B" }], hasNext: false });
+    .mockResolvedValueOnce({
+      content: [{ id: "b", name: "B" }],
+      hasNext: false,
+    });
   expect(
-    (await new SubjectService(new HttpSubjectGateway(h)).getAll()).map((s) => s.id),
+    (await new SubjectService(new HttpSubjectGateway(h)).getAll()).map(
+      (s) => s.id,
+    ),
   ).toEqual(["a", "b"]);
   expect(h.get).toHaveBeenLastCalledWith("/v1/subjects?cursor=a&limit=50");
 });

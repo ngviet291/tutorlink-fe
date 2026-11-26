@@ -14,7 +14,6 @@ export interface SubjectQueryGateway {
 /** Chỉ ADMIN được gọi (BE chặn bằng role). */
 export interface SubjectAdminGateway {
   create(req: SubjectRequest): Promise<SubjectResponse>;
-  update(id: string, req: SubjectRequest): Promise<SubjectResponse>;
   remove(id: string): Promise<void>;
 }
 

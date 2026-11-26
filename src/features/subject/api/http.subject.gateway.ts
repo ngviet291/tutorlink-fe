@@ -49,10 +49,6 @@ export class HttpSubjectGateway implements SubjectGateway {
     return toSubject(await this.http.post<SubjectResponseDto>(SUBJECTS, req));
   }
 
-  async update(id: string, req: SubjectRequest): Promise<SubjectResponse> {
-    return toSubject(await this.http.put<SubjectResponseDto>(`${SUBJECTS}/${id}`, req));
-  }
-
   async remove(id: string): Promise<void> {
     await this.http.delete<void>(`${SUBJECTS}/${id}`);
   }

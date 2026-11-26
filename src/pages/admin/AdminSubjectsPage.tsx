@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { SUBJECT_FORM_NAME_MAX_LENGTH } from "@/features/subject/constants/subject.constants";
 import { useForm } from "react-hook-form";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+
+import { SUBJECT_FORM_NAME_MAX_LENGTH } from "@/features/subject/constants/subject.constants";
 import { Button } from "@/shared/components/ui/Button";
 import { ErrorState } from "@/shared/components/ui/EmptyState";
 import { Input } from "@/shared/components/ui/Input";
@@ -26,10 +27,12 @@ export default function AdminSubjectsPage() {
   const { t } = useTranslation();
   const toast = useToast();
   const { data, isLoading, isError, refetch } = useSubjects();
-  const { create, update, remove } = useSubjectMutations();
-  const [editing, setEditing] = useState<SubjectResponse | "new" | null>(null);
+  const { create, remove } = useSubjectMutations();
+
+  const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<SubjectResponse | null>(null);
-  // Môn mà BE từ chối xóa vì đang được sử dụng: disable nút Xóa trong modal
+
+  // Môn mà BE từ chối xóa vì đang được sử dụng
   const [inUseIds, setInUseIds] = useState<string[]>([]);
   const form = useForm<SubjectPayload>();
   const {
@@ -42,21 +45,14 @@ export default function AdminSubjectsPage() {
   // Đổi ngôn ngữ: validate lại ô đang lỗi để chữ lỗi đổi theo
   useServerFormErrors(form, NO_KNOWN_FIELDS);
 
-  const open = (s: SubjectResponse | "new") => {
-    setEditing(s);
-    reset(
-      s === "new"
-        ? {
-            name: "",
-            description: "",
-            category: "" as SubjectPayload["category"],
-          }
-        : {
-            name: s.name,
-            description: s.description ?? "",
-            category: s.category,
-          },
-    );
+  const openCreate = () => {
+    setCreating(true);
+
+    reset({
+      name: "",
+      description: "",
+      category: "" as SubjectPayload["category"],
+    });
   };
 
   const isInUse = (s: SubjectResponse) =>
@@ -65,18 +61,16 @@ export default function AdminSubjectsPage() {
   const deletingInUse = deleting ? isInUse(deleting) : false;
 
   const submit = handleSubmit((v) => {
-    const opts = {
+    create.mutate(v, {
       onSuccess: () => {
         toast.success(t("adminSubjects.saved"));
-        setEditing(null);
+        setCreating(false);
+        reset();
       },
-      onError: (e: unknown) => toast.apiError(e),
-    };
-    if (editing === "new") {
-      create.mutate(v, opts);
-    } else if (editing) {
-      update.mutate({ id: editing.id, payload: v }, opts);
-    }
+      onError: (e: unknown) => {
+        toast.apiError(e);
+      },
+    });
   });
 
   const confirmDelete = () => {
@@ -89,8 +83,13 @@ export default function AdminSubjectsPage() {
         toast.success(t("adminSubjects.deleted"));
         setDeleting(null);
       },
-      // BE từ chối: giữ modal mở, lúc này deletingInUse = true nên nút Xóa bị disable
-      onError: () => setInUseIds((ids) => [...ids, subject.id]),
+
+      // BE từ chối xóa vì môn đang được sử dụng
+      onError: () => {
+        setInUseIds((ids) =>
+          ids.includes(subject.id) ? ids : [...ids, subject.id],
+        );
+      },
     });
   };
 
@@ -99,8 +98,9 @@ export default function AdminSubjectsPage() {
       <PageHeader
         title={t("adminSubjects.title")}
         actions={
-          <Button onClick={() => open("new")}>
-            <Plus className="size-4" /> {t("adminSubjects.add")}
+          <Button onClick={openCreate}>
+            <Plus className="size-4" />
+            {t("adminSubjects.add")}
           </Button>
         }
       />
@@ -113,28 +113,27 @@ export default function AdminSubjectsPage() {
           {data?.map((s) => (
             <li
               key={s.id}
-              className="flex items-center justify-between gap-3 p-3">
+              className="flex items-center justify-between gap-3 p-3"
+            >
               <div>
                 <p className="font-semibold text-text">{s.name}</p>
                 <p className="text-xs text-text-secondary">
                   {s.usageCount === undefined
                     ? s.category
-                    : t("adminSubjects.usage", { count: s.usageCount })}
+                    : t("adminSubjects.usage", {
+                        count: s.usageCount,
+                      })}
                 </p>
               </div>
               <div className="flex gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  aria-label={t("adminSubjects.editAria", { name: s.name })}
-                  onClick={() => open(s)}>
-                  <Pencil className="size-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label={t("adminSubjects.deleteAria", { name: s.name })}
-                  onClick={() => setDeleting(s)}>
+                  aria-label={t("adminSubjects.deleteAria", {
+                    name: s.name,
+                  })}
+                  onClick={() => setDeleting(s)}
+                >
                   <Trash2 className="size-4 text-danger-text" />
                 </Button>
               </div>
@@ -144,26 +143,26 @@ export default function AdminSubjectsPage() {
       )}
 
       <Modal
-        open={Boolean(editing)}
-        onClose={() => setEditing(null)}
-        title={
-          editing === "new"
-            ? t("adminSubjects.addTitle")
-            : t("adminSubjects.editTitle")
-        }
+        open={creating}
+        onClose={() => setCreating(false)}
+        title={t("adminSubjects.addTitle")}
         size="sm"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setEditing(null)}>
+            <Button
+              variant="ghost"
+              onClick={() => setCreating(false)}
+              disabled={create.isPending}
+            >
               {t("common.cancel")}
             </Button>
-            <Button
-              loading={create.isPending || update.isPending}
-              onClick={() => void submit()}>
+
+            <Button loading={create.isPending} onClick={() => void submit()}>
               {t("common.save")}
             </Button>
           </>
-        }>
+        }
+      >
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-3">
           <Input
             label={t("adminSubjects.nameLabel")}
@@ -204,19 +203,22 @@ export default function AdminSubjectsPage() {
             <Button
               variant="ghost"
               onClick={() => setDeleting(null)}
-              disabled={remove.isPending}>
+              disabled={remove.isPending}
+            >
               {t("common.cancel")}
             </Button>
             {!deletingInUse && (
               <Button
                 variant="danger"
                 loading={remove.isPending}
-                onClick={confirmDelete}>
+                onClick={confirmDelete}
+              >
                 {t("common.delete")}
               </Button>
             )}
           </>
-        }>
+        }
+      >
         <p className="text-sm text-text-secondary">
           <Trans
             i18nKey="adminSubjects.deleteConfirm"
@@ -227,7 +229,8 @@ export default function AdminSubjectsPage() {
         {deletingInUse && (
           <p
             role="alert"
-            className="mt-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text">
+            className="mt-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
+          >
             {t("adminSubjects.inUse")}
           </p>
         )}

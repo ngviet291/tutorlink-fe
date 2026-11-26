@@ -64,16 +64,10 @@ export function useSubjectMutations() {
     onSuccess: refresh,
   });
 
-  const update = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: SubjectRequest }) =>
-      subjectService.update(id, payload),
-    onSuccess: refresh,
-  });
-
   const remove = useMutation({
     mutationFn: (id: string) => subjectService.remove(id),
     onSuccess: refresh,
   });
 
-  return { create, update, remove };
+  return { create, remove };
 }
