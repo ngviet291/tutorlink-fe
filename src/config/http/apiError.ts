@@ -57,7 +57,10 @@ export function isVietnameseMessage(message?: unknown): message is string {
     text.length > 0 && VIETNAMESE_RE.test(text) && !TECHNICAL_RE.test(text)
   );
 }
-export function localizeFieldMessage(message: unknown): string {
+export function localizeFieldMessage(message: unknown, field?: string): string {
+  if (field && /password/i.test(field)) {
+    return i18n.t("validation.passwordHint");
+  }
   const known = translateBackendMessage(message);
   if (known) return known;
   const text = typeof message === "string" ? message.toLowerCase() : "";
@@ -80,7 +83,7 @@ export function localizeFieldErrors(
 ): Record<string, string> | undefined {
   return raw
     ? Object.fromEntries(
-        Object.entries(raw).map(([k, v]) => [k, localizeFieldMessage(v)]),
+        Object.entries(raw).map(([k, v]) => [k, localizeFieldMessage(v, k)]),
       )
     : undefined;
 }
@@ -171,7 +174,7 @@ export function toApiError(error: unknown): ApiError {
       rawFieldErrors && typeof rawFieldErrors === "object"
         ? Object.fromEntries(
             Object.entries(rawFieldErrors as Record<string, unknown>).map(
-              ([key, value]) => [key, localizeFieldMessage(value)],
+              ([key, value]) => [key, localizeFieldMessage(value, key)],
             ),
           )
         : undefined;

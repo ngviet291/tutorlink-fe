@@ -71,7 +71,7 @@ export function AdminApplicationsPanel() {
                 <th>{t("adminApplicationsPanel.colAppliedAt")}</th>
                 <th>{t("adminApplicationsPanel.colStatus")}</th>
                 <th>{t("adminApplicationsPanel.colProposedFee")}</th>
-                <th>{t("adminApplicationsPanel.colFeeTransaction")}</th>
+                {/* <th>{t("adminApplicationsPanel.colFeeTransaction")}</th> */}
               </tr>
             </thead>
             <tbody>
@@ -88,7 +88,7 @@ export function AdminApplicationsPanel() {
                   <td>
                     {a.proposedFee != null ? formatVnd(a.proposedFee) : "—"}
                   </td>
-                  <td>{a.transactionStatus ?? a.transactionId ?? "—"}</td>
+                  {/* <td>{a.transactionStatus ?? a.transactionId ?? "—"}</td> */}
                 </tr>
               ))}
             </tbody>

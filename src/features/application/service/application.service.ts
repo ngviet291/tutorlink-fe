@@ -249,7 +249,7 @@ export class ApplicationService {
           ...app,
           aiRank: 0,
           aiScore: s.score,
-          aiReason: describeWarnings(s.warnings),
+          aiReason: describeWarnings(s.warnings, app.post.type),
         },
       ];
     });

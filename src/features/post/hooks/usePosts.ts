@@ -278,3 +278,12 @@ export function usePostForAdmin(id: string | undefined) {
     retry: false,
   });
 }
+
+export function useRecommendedPosts(limit?: number, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.posts.recommended(limit),
+    queryFn: () => postService.getRecommendedPosts(limit),
+    enabled,
+    retry: false,
+  });
+}

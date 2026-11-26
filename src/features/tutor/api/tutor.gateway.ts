@@ -6,6 +6,7 @@ import type {
   TutorResponse,
 } from "../types/tutor.types";
 export interface TutorQueryGateway {
+  getTopNTutor(size: number): Promise<CursorResponse<TutorResponse>>;
   getTutors(params?: TutorFilter): Promise<CursorResponse<TutorResponse>>;
   getTutorById(id: string): Promise<TutorResponse>;
 }

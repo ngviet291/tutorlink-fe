@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -18,7 +18,7 @@ import { Textarea } from "@/shared/components/ui/Textarea";
 
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import type { PostPayload, PostResponse } from "../types/post.types";
-import type { PostType } from "@/shared/types/common.types";
+import type { EducationLevel, PostType } from "@/shared/types/common.types";
 
 import { useAddressSelect } from "@/shared/hooks/useAddressSelect";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
@@ -29,6 +29,7 @@ import {
   usePostFormAbandonTracking,
 } from "@/features/tracking/hooks";
 import { intlLocale } from "@/shared/utils/locale";
+import { useTutorProfile } from "@/features/tutor/hooks/useTutors";
 
 // Dữ liệu test khi DEV + tạo mới (tính theo ngôn ngữ hiện tại).
 const getTestDefaults = (
@@ -102,22 +103,55 @@ export function PostForm({
 }: PostFormProps) {
   const { t } = useTranslation();
 
-  const { data: subjects = [] } = useSubjects();
+  const { data: allSubjects = [] } = useSubjects();
+
+  const profile = useTutorProfile();
 
   // Role quyết định loại bài đăng.
   const role = useAppSelector((s) => s.auth.user?.role);
+  const isTutor = role === "TUTOR";
 
-  const postType: PostType =
-    role === "TUTOR"
-      ? "FIND_STUDENT"
-      : role === "STUDENT"
-        ? "FIND_TUTOR"
-        : (defaultValues?.type ?? "FIND_TUTOR");
+  // Gia sư chỉ được đăng theo môn / cấp học trong hồ sơ của mình (lấy từ Redux);
+  // chưa có hồ sơ (tải lỗi) hoặc không phải gia sư thì dùng danh sách đầy đủ.
+  const tutorSubjects = isTutor ? profile?.subjects : undefined;
+  const tutorLevels = isTutor ? profile?.educationLevels : undefined;
+
+  const subjects = useMemo(() => {
+    const base: { id: string; name: string }[] = tutorSubjects?.length
+      ? tutorSubjects
+      : allSubjects;
+    const current = defaultValues?.subject;
+    // Khi sửa bài: giữ môn hiện tại trong danh sách dù hồ sơ đã đổi
+    return current && !base.some((s) => s.id === current.id)
+      ? [current, ...base]
+      : base;
+  }, [tutorSubjects, allSubjects, defaultValues?.subject]);
+
+  const educationLevels = useMemo(() => {
+    const base: readonly EducationLevel[] = tutorLevels?.length
+      ? tutorLevels
+      : EDUCATION_LEVELS;
+    const current = defaultValues?.educationLevel;
+    return current && !base.includes(current) ? [current, ...base] : base;
+  }, [tutorLevels, defaultValues?.educationLevel]);
+
+  const postType: PostType = isTutor
+    ? "FIND_STUDENT"
+    : role === "STUDENT"
+      ? "FIND_TUTOR"
+      : (defaultValues?.type ?? "FIND_TUTOR");
 
   const isCreate = !defaultValues;
 
   const testValues: Partial<PostPayload> =
     import.meta.env.DEV && isCreate ? getTestDefaults(t)[postType] : {};
+
+  // Cấp học mặc định phải nằm trong danh sách được phép
+  const preferredLevel =
+    testValues.educationLevel ?? defaultValues?.educationLevel ?? "HIGH_SCHOOL";
+  const initialLevel = educationLevels.includes(preferredLevel)
+    ? preferredLevel
+    : educationLevels[0];
 
   const form = useForm<PostPayload>({
     defaultValues: {
@@ -128,8 +162,6 @@ export function PostForm({
       content: defaultValues?.content ?? "",
 
       subjectId: defaultValues?.subject?.id ?? "",
-
-      educationLevel: defaultValues?.educationLevel ?? "HIGH_SCHOOL",
 
       teachingMode: defaultValues?.teachingMode ?? "BOTH",
 
@@ -159,6 +191,8 @@ export function PostForm({
 
       // Chỉ DEV + create.
       ...testValues,
+
+      educationLevel: initialLevel,
     },
   });
 
@@ -407,7 +441,7 @@ export function PostForm({
               error={errors.educationLevel?.message}
               value={field.value}
               onChange={field.onChange}>
-              {EDUCATION_LEVELS.map((level) => (
+              {educationLevels.map((level) => (
                 <option key={level} value={level}>
                   {EDUCATION_LEVEL_LABEL[level]}
                 </option>
@@ -447,8 +481,7 @@ export function PostForm({
           <Select
             label={t("post.postForm.budgetUnitLabel")}
             value={field.value ?? "PER_SESSION"}
-            onChange={field.onChange}
-          >
+            onChange={field.onChange}>
             {budgetUnitOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -649,8 +682,7 @@ export function PostForm({
       {errors.root?.server && (
         <p
           role="alert"
-          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
-        >
+          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text">
           {errors.root.server.message}
         </p>
       )}
@@ -664,8 +696,7 @@ export function PostForm({
               variant="secondary"
               onClick={() => submitAs(true)}
               loading={isSubmitting}
-              className="sm:flex-1"
-            >
+              className="sm:flex-1">
               {t("post.postForm.saveDraft")}
             </Button>
 
@@ -682,8 +713,7 @@ export function PostForm({
             type="button"
             onClick={() => submitAs(false)}
             loading={isSubmitting}
-            className="w-full"
-          >
+            className="w-full">
             {t("post.postForm.saveChanges")}
           </Button>
         )}

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import {
   BookOpenCheck,
   CheckCircle2,
@@ -35,11 +34,12 @@ import { useFavorites } from "@/features/favorite/hooks/useFavorites";
 import { useMyPosts } from "@/features/post/hooks/usePosts";
 import { ReviewForm } from "@/features/review/components/ReviewForm";
 import { useHasReviewed } from "@/features/review/hooks/useReviews";
-import { useMyTutorProfile } from "@/features/tutor/hooks/useTutors";
+import { useTutorProfile } from "@/features/tutor/hooks/useTutors";
 import { PayFeeModal } from "@/features/wallet/components/PayFeeModal";
 import { useWallet } from "@/features/wallet/hooks/useWallet";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { useToast } from "@/shared/hooks/useToast";
+import { getErrorMessage } from "@/shared/utils/errors";
 
 function Stat({
   icon: Icon,
@@ -79,11 +79,10 @@ function TodoSection({
   isTutor: boolean;
   onPay: (a: ApplicationResponse) => void;
 }) {
-  const { t } = useTranslation();
   const toast = useToast();
   const apps = useMyApplications();
   const posts = useMyPosts();
-  const profile = useMyTutorProfile(isTutor);
+  const profile = useTutorProfile();
   const { confirm, decline } = useApplicationMutations();
 
   // Đơn PENDING (chủ bài cần chọn) đã được gộp vào dòng "N ứng viên đang chờ bạn chọn" của bài,
@@ -94,8 +93,7 @@ function TodoSection({
   const postsWaiting = (
     posts.data?.pages.flatMap((p) => p.content) ?? []
   ).filter((p) => p.status === "PUBLISHED" && (p.applicationCount ?? 0) > 0);
-  const profileRejected =
-    isTutor && profile.data?.verificationStatus === "REJECTED";
+  const profileRejected = isTutor && profile?.verificationStatus === "REJECTED";
   const total = myApps.length + postsWaiting.length + (profileRejected ? 1 : 0);
 
   const isLoading = apps.isLoading || posts.isLoading;
@@ -108,14 +106,12 @@ function TodoSection({
   return (
     <section
       aria-labelledby="todo-heading"
-      className="rounded-2xl border-2 border-primary/40 bg-primary-light/60 p-4 sm:p-5"
-    >
+      className="rounded-2xl border-2 border-primary/40 bg-primary-light/60 p-4 sm:p-5">
       <h2
         id="todo-heading"
-        className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text"
-      >
+        className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text">
         <ClipboardList className="size-5 text-primary" aria-hidden="true" />
-        {t("dashboard.todoTitle")}
+        Việc cần xử lý
         {total > 0 && (
           <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-white">
             {total}
@@ -128,7 +124,7 @@ function TodoSection({
       ) : isError ? (
         <ErrorState
           className="py-6"
-          message={t("dashboard.todoLoadError")}
+          message="Không tải được danh sách việc cần xử lý. Vui lòng thử lại."
           onRetry={retry}
         />
       ) : total === 0 ? (
@@ -137,17 +133,17 @@ function TodoSection({
             className="size-5 text-success-text"
             aria-hidden="true"
           />
-          {t("dashboard.todoEmpty")}
+          Bạn đã xử lý hết mọi việc. Khi có việc mới, nó sẽ hiện ở đây.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
           {profileRejected && (
             <li className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-bold text-primary">
-                {t("dashboard.todoProfileRejected")}
+                Hồ sơ gia sư bị từ chối — cập nhật và gửi lại để được duyệt
               </p>
               <Link to={ROUTES.TUTOR_PROFILE}>
-                <Button size="sm">{t("dashboard.updateProfile")}</Button>
+                <Button size="sm">Cập nhật hồ sơ</Button>
               </Link>
             </li>
           )}
@@ -155,19 +151,16 @@ function TodoSection({
           {postsWaiting.map((p) => (
             <li
               key={p.id}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
-            >
+              className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="truncate font-semibold text-text">{p.title}</p>
                 <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-primary">
                   <Users className="size-4 shrink-0" aria-hidden="true" />
-                  {t("dashboard.waitingApplicants", {
-                    count: p.applicationCount,
-                  })}
+                  Có {p.applicationCount} ứng viên đang chờ bạn chọn
                 </p>
               </div>
               <Link to={ROUTES.POST_DETAIL(p.id)}>
-                <Button size="sm">{t("dashboard.viewApplicants")}</Button>
+                <Button size="sm">Xem ứng viên</Button>
               </Link>
             </li>
           ))}
@@ -180,13 +173,11 @@ function TodoSection({
             return (
               <li
                 key={a.id}
-                className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
-              >
+                className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <Link
                     to={ROUTES.POST_DETAIL(a.post.id)}
-                    className="block truncate font-semibold text-text hover:text-primary"
-                  >
+                    className="block truncate font-semibold text-text hover:text-primary">
                     {a.post.title}
                   </Link>
                   <NextStepHint
@@ -199,7 +190,7 @@ function TodoSection({
                   {canPay && (
                     <>
                       <Button size="sm" onClick={() => onPay(a)}>
-                        {t("dashboard.payFee")}
+                        Thanh toán phí
                       </Button>
                       <Button
                         size="sm"
@@ -210,12 +201,11 @@ function TodoSection({
                         onClick={() =>
                           decline.mutate(a.id, {
                             onSuccess: () =>
-                              toast.success(t("dashboard.declined")),
-                            onError: (e) => toast.apiError(e),
+                              toast.success("Đã từ chối lời mời"),
+                            onError: (e) => toast.error(getErrorMessage(e)),
                           })
-                        }
-                      >
-                        {t("dashboard.decline")}
+                        }>
+                        Từ chối
                       </Button>
                     </>
                   )}
@@ -225,13 +215,11 @@ function TodoSection({
                       loading={confirm.isPending && confirm.variables === a.id}
                       onClick={() =>
                         confirm.mutate(a.id, {
-                          onSuccess: () =>
-                            toast.success(t("dashboard.classConfirmed")),
-                          onError: (e) => toast.apiError(e),
+                          onSuccess: () => toast.success("Đã xác nhận lớp học"),
+                          onError: (e) => toast.error(getErrorMessage(e)),
                         })
-                      }
-                    >
-                      {t("dashboard.confirmClass")}
+                      }>
+                      Xác nhận lớp học
                     </Button>
                   )}
                 </div>
@@ -245,7 +233,6 @@ function TodoSection({
 }
 
 function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
-  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const iAmStudent =
     (a.post.type === "FIND_TUTOR" ? a.post.author.id : a.tutor.id) === myId;
@@ -259,28 +246,25 @@ function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
       <div className="min-w-0">
         <Link
           to={ROUTES.POST_DETAIL(a.post.id)}
-          className="block truncate font-bold text-text hover:text-primary"
-        >
+          className="block truncate font-bold text-text hover:text-primary">
           {a.post.title}
         </Link>
         <p className="text-xs text-text-secondary">
-          {t("dashboard.connectedWith", { name: partner.fullName })}
+          Kết nối với {partner.fullName}
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap gap-2">
         <Link to={ROUTES.CHAT_WITH(partner.id)}>
           <Button size="sm" variant="secondary">
-            {t("dashboard.openChat")}
+            Mở chat
           </Button>
         </Link>
         {iAmStudent && !reviewed.data && (
           <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-            <Star className="size-4" /> {t("dashboard.endAndReview")}
+            <Star className="size-4" /> Kết thúc lớp & đánh giá
           </Button>
         )}
-        {iAmStudent && reviewed.data && (
-          <Badge tone="green">{t("dashboard.reviewed")}</Badge>
-        )}
+        {iAmStudent && reviewed.data && <Badge tone="green">Đã đánh giá</Badge>}
       </div>
       {iAmStudent && (
         <ReviewForm
@@ -295,7 +279,6 @@ function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
 }
 
 export default function DashboardPage() {
-  const { t } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
   const isTutor = user?.role === "TUTOR";
   const isStudent = user?.role === "STUDENT";
@@ -304,7 +287,7 @@ export default function DashboardPage() {
   const connections = useConnections();
   const favorites = useFavorites(isStudent);
   const wallet = useWallet(isTutor);
-  const profile = useMyTutorProfile(isTutor);
+  const profile = useTutorProfile();
   const notifications = useNotifications();
   const [offer, setOffer] = useState<ApplicationResponse | null>(null);
 
@@ -313,23 +296,21 @@ export default function DashboardPage() {
   const myPosts = posts.data?.pages.flatMap((p) => p.content) ?? [];
   const unread = notifications.data?.filter((n) => !n.read).length ?? 0;
   const recentPosts = myPosts.slice(0, 4);
-  const createPostLabel = isTutor
-    ? t("dashboard.createPostTutor")
-    : t("dashboard.createPostStudent");
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <PageHeader
-        title={t("dashboard.greeting", { name: user.fullName })}
+        title={`Xin chào, ${user.fullName}`}
         description={
           isTutor
-            ? t("dashboard.subtitleTutor")
-            : t("dashboard.subtitleStudent")
+            ? "Quản lý lớp, đơn ứng tuyển và ví của bạn."
+            : "Theo dõi bài đăng, ứng viên và các lớp đã kết nối."
         }
         actions={
           <Link to={ROUTES.POST_CREATE}>
             <Button>
-              <Plus className="size-4" /> {createPostLabel}
+              <Plus className="size-4" />{" "}
+              {isTutor ? "Đăng tìm học viên" : "Đăng bài tìm gia sư"}
             </Button>
           </Link>
         }
@@ -338,12 +319,11 @@ export default function DashboardPage() {
       {/* 1. Việc cần xử lý — luôn ở đầu trang */}
       <TodoSection userId={user.id} isTutor={isTutor} onPay={setOffer} />
 
-      {isTutor && profile.data?.verificationStatus === "PENDING" && (
+      {isTutor && profile?.verificationStatus === "PENDING" && (
         <Link
           to={ROUTES.TUTOR_PROFILE}
-          className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm font-semibold text-text hover:opacity-90"
-        >
-          {t("dashboard.profilePendingLink")}
+          className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm font-semibold text-text hover:opacity-90">
+          Hồ sơ gia sư đang chờ duyệt — xem chi tiết →
         </Link>
       )}
 
@@ -351,13 +331,13 @@ export default function DashboardPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           icon={FileText}
-          label={t("dashboard.statMyPosts")}
+          label="Bài đăng của tôi"
           value={posts.isError ? "—" : posts.data ? myPosts.length : undefined}
           to={ROUTES.MY_POSTS}
         />
         <Stat
           icon={Users}
-          label={t("dashboard.statApplied")}
+          label="Đơn đã ứng tuyển"
           value={apps.isError ? "—" : apps.data ? apps.data.length : undefined}
           to={ROUTES.MY_APPLICATIONS}
         />
@@ -365,7 +345,7 @@ export default function DashboardPage() {
         {isTutor ? (
           <Stat
             icon={Wallet}
-            label={t("dashboard.statBalance")}
+            label="Số dư ví"
             value={
               wallet.isError
                 ? "—"
@@ -378,7 +358,7 @@ export default function DashboardPage() {
         ) : (
           <Stat
             icon={Heart}
-            label={t("dashboard.statFavorites")}
+            label="Gia sư yêu thích"
             value={
               isStudent
                 ? favorites.isError
@@ -393,7 +373,7 @@ export default function DashboardPage() {
         )}
         <Stat
           icon={Inbox}
-          label={t("dashboard.statUnread")}
+          label="Thông báo chưa đọc"
           value={
             notifications.isError
               ? "—"
@@ -408,14 +388,11 @@ export default function DashboardPage() {
       {/* 3. Hoạt động gần đây */}
       <section>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-extrabold text-text">
-            {t("dashboard.recentPosts")}
-          </h2>
+          <h2 className="text-lg font-extrabold text-text">Bài đăng gần đây</h2>
           <Link
             to={ROUTES.MY_POSTS}
-            className="text-sm font-semibold text-primary hover:underline"
-          >
-            {t("common.viewAll")}
+            className="text-sm font-semibold text-primary hover:underline">
+            Xem tất cả
           </Link>
         </div>
         {posts.isLoading ? (
@@ -423,18 +400,19 @@ export default function DashboardPage() {
         ) : posts.isError ? (
           <ErrorState
             className="py-8"
-            message={t("dashboard.postsLoadError")}
+            message="Không tải được bài đăng. Vui lòng thử lại."
             onRetry={() => void posts.refetch()}
           />
         ) : recentPosts.length === 0 ? (
           <EmptyState
             className="py-8"
-            title={t("dashboard.noPostsTitle")}
-            description={t("dashboard.noPostsDesc")}
+            title="Bạn chưa có bài đăng"
+            description="Đăng bài đầu tiên để bắt đầu nhận ứng viên."
             action={
               <Link to={ROUTES.POST_CREATE}>
                 <Button size="sm">
-                  <Plus className="size-4" /> {createPostLabel}
+                  <Plus className="size-4" />{" "}
+                  {isTutor ? "Đăng tìm học viên" : "Đăng bài tìm gia sư"}
                 </Button>
               </Link>
             }
@@ -445,8 +423,7 @@ export default function DashboardPage() {
               <li key={p.id}>
                 <Link
                   to={ROUTES.POST_DETAIL(p.id)}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3 hover:shadow-md"
-                >
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3 hover:shadow-md">
                   <span className="min-w-0 truncate font-semibold text-text">
                     {p.title}
                   </span>
@@ -465,29 +442,25 @@ export default function DashboardPage() {
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text">
           <BookOpenCheck className="size-5 text-primary" aria-hidden="true" />{" "}
-          {isTutor
-            ? t("dashboard.classesTutor")
-            : t("dashboard.classesStudent")}
+          {isTutor ? "Lớp đang dạy" : "Lớp đã kết nối"}
         </h2>
         {connections.isLoading ? (
           <Skeleton className="h-20 w-full" />
         ) : connections.isError ? (
           <ErrorState
             className="py-8"
-            message={t("dashboard.classesLoadError")}
+            message="Không tải được danh sách lớp. Vui lòng thử lại."
             onRetry={() => void connections.refetch()}
           />
         ) : !connections.data?.length ? (
           <EmptyState
             className="py-8"
-            title={t("dashboard.noClassesTitle")}
-            description={t("dashboard.noClassesDesc")}
+            title="Chưa có lớp nào được kết nối"
+            description="Lớp sẽ xuất hiện ở đây sau khi gia sư thanh toán phí nhận lớp."
             action={
               <Link to={isTutor ? ROUTES.FIND_CLASS : ROUTES.FIND_TUTOR}>
                 <Button size="sm">
-                  {isTutor
-                    ? t("dashboard.findClassNow")
-                    : t("dashboard.findTutorNow")}
+                  {isTutor ? "Tìm lớp ngay" : "Tìm gia sư"}
                 </Button>
               </Link>
             }

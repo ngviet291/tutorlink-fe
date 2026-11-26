@@ -608,6 +608,8 @@ const vi = {
     footnote: "Thao tác cập nhật trạng thái khiếu nại. Đánh giá không bị xóa.",
   },
   findClass: {
+    recommendedTitle: "Gợi ý cho bạn",
+    matchScore: "Phù hợp {{score}}%",
     typeFindTutor: "Lớp cần gia sư",
     typeFindStudent: "Gia sư tìm học viên",
     titleStudent: "Bài Đăng Của Gia Sư",
@@ -2301,6 +2303,8 @@ const en = {
       "Post a listing and wait for this or other tutors to apply.",
   },
   findClass: {
+    recommendedTitle: "Recommended for you",
+    matchScore: "{{score}}% match",
     typeFindTutor: "Classes looking for tutors",
     typeFindStudent: "Tutors looking for students",
     titleStudent: "Tutor Posts",

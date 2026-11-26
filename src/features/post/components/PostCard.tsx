@@ -20,6 +20,7 @@ import type { PostResponse } from "../types/post.types";
 interface PostCardProps {
   post: PostResponse;
   mine?: boolean;
+  compact?: boolean;
   /** Có truyền thì số lượt đăng ký bấm được (dùng ở trang admin). */
   onViewApplications?: () => void;
   /** Có truyền thì hiện nút Gỡ bài (dùng ở trang admin). */
@@ -36,6 +37,7 @@ const handleClick = (action: () => void) => (e: MouseEvent) => {
 export function PostCard({
   post,
   mine = false,
+  compact = false,
   onViewApplications,
   onRemove,
 }: PostCardProps) {
@@ -45,7 +47,7 @@ export function PostCard({
     <Link
       to={ROUTES.POST_DETAIL(post.id)}
       state={mine}
-      className="group flex h-full flex-col gap-3 rounded-2xl border border-border bg-surface p-4 transition-shadow hover:shadow-md"
+      className={`group flex h-full flex-col rounded-2xl border border-border bg-surface transition-shadow hover:shadow-md ${compact ? "gap-2 p-3" : "gap-3 p-4"}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -57,13 +59,13 @@ export function PostCard({
         <StatusBadge kind="post" status={post.status} />
       </div>
 
-      <h3 className="line-clamp-2 text-base font-bold text-text group-hover:text-primary">
+      <h3 className={`${compact ? "text-sm" : "text-base"} line-clamp-2 font-bold text-text group-hover:text-primary`}>
         {post.title}
       </h3>
-      <p className="line-clamp-2 text-sm text-text-secondary">{post.content}</p>
+      <p className={`${compact ? "line-clamp-1 text-xs" : "line-clamp-2 text-sm"} text-text-secondary`}>{post.content}</p>
 
-      <dl className="mt-auto grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-text-secondary">
-        <div className="col-span-2 text-sm font-bold text-primary">
+      <dl className="mt-auto grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-text-secondary">
+        <div className={`col-span-2 font-bold text-primary ${compact ? "text-xs" : "text-sm"}`}>
           {formatBudgetRange(
             post.minBudget ?? undefined,
             post.maxBudget ?? undefined,

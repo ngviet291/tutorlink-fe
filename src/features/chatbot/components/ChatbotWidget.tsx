@@ -11,8 +11,8 @@ import {
   ChevronLeft,
   History,
   MessageSquarePlus,
-  RotateCcw,
   Send,
+  Trash,
   X,
 } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
@@ -73,8 +73,7 @@ function PostCard({ post }: { post: ChatbotPost }) {
   return (
     <Link
       to={ROUTES.POST_DETAIL(post.id)}
-      className="flex w-full max-w-[85%] gap-2.5 rounded-xl border border-border bg-surface p-3 text-left transition-colors hover:border-primary hover:bg-surface-secondary"
-    >
+      className="flex w-full max-w-[85%] gap-2.5 rounded-xl border border-border bg-surface p-3 text-left transition-colors hover:border-primary hover:bg-surface-secondary">
       {post.authorAvatarUrl ? (
         <img
           src={post.authorAvatarUrl}
@@ -149,8 +148,7 @@ function ConfirmClear({
       aria-labelledby="chatbot-clear-title"
       aria-describedby="chatbot-clear-desc"
       onKeyDown={onKeyDown}
-      className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-4"
-    >
+      className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full rounded-xl border border-border bg-surface p-4 shadow-xl">
         <h3 id="chatbot-clear-title" className="text-sm font-bold text-text">
           {t("chatbot.clear.title")}
@@ -172,8 +170,7 @@ function ConfirmClear({
             type="button"
             onClick={onCancel}
             disabled={isClearing}
-            className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-sm text-text hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-50"
-          >
+            className="cursor-pointer rounded-lg border border-border px-3 py-1.5 text-sm text-text hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-50">
             {t("common.cancel")}
           </button>
 
@@ -181,8 +178,7 @@ function ConfirmClear({
             type="button"
             onClick={onConfirm}
             disabled={isClearing}
-            className="flex cursor-pointer items-center gap-2 rounded-lg bg-danger px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+            className="flex cursor-pointer items-center gap-2 rounded-lg bg-danger px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
             {isClearing && <Spinner size="sm" />}
             {t("common.delete")}
           </button>
@@ -306,16 +302,14 @@ export function ChatbotWidget() {
         <section
           role="dialog"
           aria-label={t("chatbot.aria.dialog")}
-          className="relative flex h-112 w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
-        >
+          className="relative flex h-112 w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
           <header className="flex items-center gap-2 border-b border-border bg-primary px-4 py-3 text-white">
             {historyOpen ? (
               <button
                 type="button"
                 onClick={() => setHistoryOpen(false)}
                 aria-label={t("chatbot.history.back")}
-                className="cursor-pointer rounded p-1 hover:bg-white/20"
-              >
+                className="cursor-pointer rounded p-1 hover:bg-white/20">
                 <ChevronLeft className="size-5" />
               </button>
             ) : (
@@ -333,8 +327,7 @@ export function ChatbotWidget() {
                 disabled={isSending || isLoadingHistory}
                 aria-label={t("chatbot.history.title")}
                 title={t("chatbot.history.title")}
-                className="cursor-pointer rounded p-1 hover:bg-white/20 disabled:opacity-40"
-              >
+                className="cursor-pointer rounded p-1 hover:bg-white/20 disabled:opacity-40">
                 <History className="size-4" />
               </button>
             )}
@@ -345,9 +338,8 @@ export function ChatbotWidget() {
                 onClick={askToClear}
                 disabled={!hasConversation || isSending || isClearing}
                 aria-label={t("chatbot.clear.open")}
-                className="cursor-pointer rounded p-1 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
-              >
-                <RotateCcw className="size-4" />
+                className="cursor-pointer rounded p-1 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent">
+                <Trash className="size-4" />
               </button>
             )}
 
@@ -355,8 +347,7 @@ export function ChatbotWidget() {
               type="button"
               onClick={() => setOpen(false)}
               aria-label={t("chatbot.close")}
-              className="cursor-pointer rounded p-1 hover:bg-white/20"
-            >
+              className="cursor-pointer rounded p-1 hover:bg-white/20">
               <X className="size-4" />
             </button>
           </header>
@@ -367,8 +358,7 @@ export function ChatbotWidget() {
                 type="button"
                 onClick={startNewConversation}
                 disabled={isSending}
-                className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
-              >
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50">
                 <MessageSquarePlus className="size-4" />
                 {t("chatbot.history.newConversation")}
               </button>
@@ -380,8 +370,7 @@ export function ChatbotWidget() {
               ) : historyError ? (
                 <div
                   className="py-4 text-center text-sm text-danger-text"
-                  role="alert"
-                >
+                  role="alert">
                   {historyError}
                 </div>
               ) : conversations.length === 0 ? (
@@ -396,8 +385,7 @@ export function ChatbotWidget() {
                       type="button"
                       onClick={() => chooseConversation(conversation.id)}
                       disabled={isLoadingHistory || isSending}
-                      className="flex flex-col items-start gap-1 rounded-xl border border-border bg-surface p-3 text-left transition-colors hover:border-primary hover:bg-surface-secondary disabled:opacity-50"
-                    >
+                      className="flex flex-col items-start gap-1 rounded-xl border border-border bg-surface p-3 text-left transition-colors hover:border-primary hover:bg-surface-secondary disabled:opacity-50">
                       <span className="w-full truncate text-sm font-semibold text-text">
                         {conversation.title ||
                           t("chatbot.history.conversation")}
@@ -419,16 +407,14 @@ export function ChatbotWidget() {
             <>
               <div
                 className="flex flex-1 flex-col gap-2 overflow-y-auto p-3"
-                aria-live="polite"
-              >
+                aria-live="polite">
                 {messages.map((m) => (
                   <div
                     key={m.id}
                     className={cn(
                       "flex flex-col gap-2",
                       m.role === "user" ? "items-end" : "items-start",
-                    )}
-                  >
+                    )}>
                     <div
                       className={cn(
                         "max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm",
@@ -437,8 +423,7 @@ export function ChatbotWidget() {
                           : m.isError
                             ? "bg-orange-50 text-text dark:bg-orange-500/10"
                             : "bg-surface-secondary text-text",
-                      )}
-                    >
+                      )}>
                       {m.content}
                     </div>
 
@@ -447,8 +432,7 @@ export function ChatbotWidget() {
                         type="button"
                         onClick={() => retry(m.id)}
                         disabled={isSending}
-                        className="rounded-lg border border-border bg-surface px-3 py-1 text-xs font-medium text-text hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-50"
-                      >
+                        className="rounded-lg border border-border bg-surface px-3 py-1 text-xs font-medium text-text hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-50">
                         {t("chatbot.retry")}
                       </button>
                     )}
@@ -470,8 +454,7 @@ export function ChatbotWidget() {
 
               <form
                 onSubmit={onSubmit}
-                className="flex items-end gap-2 border-t border-border p-2"
-              >
+                className="flex items-end gap-2 border-t border-border p-2">
                 <textarea
                   ref={inputRef}
                   rows={1}
@@ -488,8 +471,7 @@ export function ChatbotWidget() {
                   type="submit"
                   disabled={isSending || !draft.trim()}
                   aria-label={t("chatbot.send")}
-                  className="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-primary text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
+                  className="flex size-10 cursor-pointer items-center justify-center rounded-lg bg-primary text-white disabled:cursor-not-allowed disabled:opacity-50">
                   <Send className="size-4" />
                 </button>
               </form>
@@ -516,8 +498,7 @@ export function ChatbotWidget() {
             : t("chatbot.aria.openAssistant")
         }
         aria-expanded={open}
-        className="flex size-14 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105"
-      >
+        className="flex size-14 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-105">
         {open ? <X className="size-6" /> : <Bot className="size-6" />}
       </button>
     </div>

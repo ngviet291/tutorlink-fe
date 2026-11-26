@@ -2,6 +2,7 @@ import type {
   Address,
   BudgetUnit,
   EducationLevel,
+  MatchWarning,
   PostStatus,
   PostType,
   TeachingMode,
@@ -98,3 +99,10 @@ export type PostStatistic = PostStatisticsByStatus;
 export type AdminPostFilter = Omit<PostFilter, "authorId" | "province"> & {
   status?: PostStatus | "";
 };
+
+export interface RecommendedPost {
+  post: PostResponse;
+  score: number;
+  breakdown: Record<string, number>;
+  warnings: MatchWarning[];
+}

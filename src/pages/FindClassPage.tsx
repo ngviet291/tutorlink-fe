@@ -8,7 +8,6 @@ import {
   type FilterValues,
 } from "@/shared/components/ui/FilterSidebar";
 import { Input } from "@/shared/components/ui/Input";
-import { Button } from "@/shared/components/ui/Button";
 import { CardGridSkeleton } from "@/shared/components/ui/Skeleton";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { Segmented } from "@/shared/components/ui/Tabs";
@@ -17,9 +16,11 @@ import { usePosts } from "@/features/post/hooks/usePosts";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import type { PostType } from "@/shared/types/common.types";
 import type { PostFilter } from "@/features/post/types/post.types";
 import { useSearchTracking } from "@/features/tracking/hooks";
+import { RecommendedPosts } from "@/features/post/components/RecommendedPosts";
 
 const BUDGET_MAX = 10_000_000;
 
@@ -78,6 +79,11 @@ export default function FindClassPage() {
 
   const items = data?.pages.flatMap((p) => p.content) ?? [];
 
+  const sentinelRef = useInfiniteScroll(
+    () => void fetchNextPage(),
+    !!hasNextPage && !isFetchingNextPage,
+  );
+
   const hasSearch = Boolean(
     debounced ||
     filter.subjectId ||
@@ -105,12 +111,11 @@ export default function FindClassPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto max-w-screen-2xl px-4 py-8">
       <h1 className="text-3xl font-extrabold text-text">
         {isStudent ? t("findClass.titleStudent") : t("findClass.titleTutor")}
       </h1>
       <p className="mt-1 text-text-secondary">{t("findClass.subtitle")}</p>
-
       {!lockedType && (
         <div className="mt-5">
           <Segmented value={type} onChange={setPicked} items={typeItems} />
@@ -150,17 +155,8 @@ export default function FindClassPage() {
                     <PostCard key={p.id} post={p} />
                   ))}
                 </div>
-                {hasNextPage && (
-                  <div className="mt-8 text-center">
-                    <Button
-                      variant="outline"
-                      loading={isFetchingNextPage}
-                      onClick={() => void fetchNextPage()}
-                    >
-                      {t("findClass.loadMore")}
-                    </Button>
-                  </div>
-                )}
+                {hasNextPage && <div ref={sentinelRef} className="mt-8 h-1" aria-hidden />}
+                {isFetchingNextPage && <CardGridSkeleton />}
               </>
             ) : (
               <EmptyState
@@ -170,6 +166,12 @@ export default function FindClassPage() {
             )}
           </div>
         </div>
+
+        {role && !hasSearch && (
+          <aside className="min-w-0 lg:w-64 lg:shrink-0 xl:w-72">
+            <RecommendedPosts />
+          </aside>
+        )}
       </div>
     </div>
   );

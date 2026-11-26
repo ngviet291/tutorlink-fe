@@ -8,11 +8,11 @@ import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { Input } from "@/shared/components/ui/Input";
 import { Modal } from "@/shared/components/ui/Modal";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
-import { Button } from "@/shared/components/ui/Button";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { Select } from "@/shared/components/ui/Select";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { useDebounce } from "@/shared/hooks/useDebounce";
+import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import { useToast } from "@/shared/hooks/useToast";
 import {
   useAdminMutations,
@@ -44,6 +44,12 @@ export default function AdminUsersPage() {
     role: role || undefined,
     status: status || undefined,
   });
+  const loadMoreRef = useInfiniteScroll(
+    () => {
+      if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+    },
+    Boolean(hasNextPage) && !isFetchingNextPage,
+  );
   const { setUserStatus } = useAdminMutations();
   const [detailId, setDetailId] = useState<string | null>(null);
   const [selected, setSelected] = useState<BaseUserResponse | null>(null);
@@ -168,15 +174,11 @@ export default function AdminUsersPage() {
             </table>
           </div>
           {hasNextPage && (
-            <div className="flex justify-center">
-              <Button
-                variant="outline"
-                loading={isFetchingNextPage}
-                onClick={() => void fetchNextPage()}
-              >
-                {t("adminUsers.loadMore")}
-              </Button>
-            </div>
+            <div
+              ref={loadMoreRef}
+              className="h-8"
+              aria-hidden="true"
+            />
           )}
         </>
       )}

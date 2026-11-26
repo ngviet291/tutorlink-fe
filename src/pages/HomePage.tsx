@@ -28,9 +28,10 @@ import { ErrorState } from "@/shared/components/ui/EmptyState";
 import { PostCard } from "@/features/post/components/PostCard";
 import { TutorCard } from "@/features/tutor/components/TutorCard";
 import { usePosts } from "@/features/post/hooks/usePosts";
-import { useTutors } from "@/features/tutor/hooks/useTutors";
+import { useTopTutor, useTutors } from "@/features/tutor/hooks/useTutors";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
+import { TOP_TUTOR } from "@/features/tutor/types/tutor.types";
 
 const SUBJECT_ICONS: Record<string, LucideIcon> = {
   "019cef3d-54e0-7e12-85ae-da011bb1fa7d": Calculator,
@@ -216,8 +217,7 @@ function Testimonials() {
           onClick={() =>
             setI((i + TESTIMONIALS.length - 1) % TESTIMONIALS.length)
           }
-          className="cursor-pointer rounded-full border border-border p-2 hover:bg-surface-hover"
-        >
+          className="cursor-pointer rounded-full border border-border p-2 hover:bg-surface-hover">
           <ChevronLeft className="size-4" />
         </button>
         {TESTIMONIALS.map((_, k) => (
@@ -230,8 +230,7 @@ function Testimonials() {
           type="button"
           aria-label={t("home.next")}
           onClick={() => setI((i + 1) % TESTIMONIALS.length)}
-          className="cursor-pointer rounded-full border border-border p-2 hover:bg-surface-hover"
-        >
+          className="cursor-pointer rounded-full border border-border p-2 hover:bg-surface-hover">
           <ChevronRight className="size-4" />
         </button>
       </div>
@@ -246,7 +245,7 @@ export default function HomePage() {
   // Khách chưa đăng nhập được coi là học viên.
   const isStudent = !user || user.role === "STUDENT";
   const subjects = useSubjects();
-  const tutors = useTutors({ limit: 4 });
+  const topTutors = useTopTutor(TOP_TUTOR);
   const posts = usePosts({
     type: isStudent ? "FIND_STUDENT" : "FIND_TUTOR",
     limit: 6,
@@ -285,8 +284,7 @@ export default function HomePage() {
                 <Link
                   key={s.id}
                   to={`${subjectTarget}?subject=${s.id}`}
-                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
-                >
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
                   <span className="flex size-12 items-center justify-center rounded-xl bg-primary-light text-primary">
                     <Icon className="size-6" />
                   </span>
@@ -300,13 +298,13 @@ export default function HomePage() {
         {!isTutor && (
           <section>
             <SectionHead title={t("home.topTutors")} to={ROUTES.FIND_TUTOR} />
-            {tutors.isLoading ? (
+            {topTutors.isLoading ? (
               <CardGridSkeleton count={4} />
-            ) : tutors.isError ? (
-              <ErrorState onRetry={() => void tutors.refetch()} />
+            ) : topTutors.isError ? (
+              <ErrorState onRetry={() => void topTutors.refetch()} />
             ) : (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {tutors.data?.pages[0]?.content.map((tutor) => (
+                {topTutors.data?.content.map((tutor) => (
                   <TutorCard key={tutor.id} tutor={tutor} />
                 ))}
               </div>
@@ -358,8 +356,7 @@ export default function HomePage() {
             ].map(({ n, title, desc }) => (
               <li
                 key={n}
-                className="relative rounded-2xl border border-border bg-surface p-6"
-              >
+                className="relative rounded-2xl border border-border bg-surface p-6">
                 <span className="mb-4 flex size-10 items-center justify-center rounded-full bg-primary text-lg font-extrabold text-white">
                   {n}
                 </span>
@@ -397,8 +394,7 @@ export default function HomePage() {
             ].map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-border bg-surface p-5"
-              >
+                className="rounded-2xl border border-border bg-surface p-5">
                 <Icon className="mb-3 size-7 text-primary" />
                 <h3 className="mb-1 font-bold text-text">{title}</h3>
                 <p className="text-sm text-text-secondary">{desc}</p>
