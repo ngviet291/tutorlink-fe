@@ -10,6 +10,7 @@ import type { SubjectResponse } from "@/features/subject/types/subject.types";
 import type { ContactInfo } from "@/features/user/types/user.types";
 
 type SubjectSummary = Pick<SubjectResponse, "id" | "name">;
+export const TOP_TUTOR = 4;
 
 export interface Certificate {
   name: string;

@@ -29,6 +29,13 @@ export function useTutors(params: Omit<TutorFilter, "cursor"> = {}) {
   });
 }
 
+export function useTopTutor(size: number) {
+  return useQuery({
+    queryKey: [...queryKeys.tutors.all, "top", size],
+    queryFn: () => tutorService.getTopTutor(size),
+  });
+}
+
 export function useTutor(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.tutors.detail(id ?? ""),

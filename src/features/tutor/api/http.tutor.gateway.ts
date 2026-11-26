@@ -8,10 +8,11 @@ import type {
   CertificateResponse,
   TutorResponse as TutorResponseDto,
 } from "@/features/user/types/user.dto";
-import type {
-  TutorFilter,
-  TutorProfilePayload,
-  TutorResponse,
+import {
+  TOP_TUTOR,
+  type TutorFilter,
+  type TutorProfilePayload,
+  type TutorResponse,
 } from "../types/tutor.types";
 import type { TutorGateway } from "./tutor.gateway";
 
@@ -33,6 +34,18 @@ export class HttpTutorGateway implements TutorGateway {
     const res = await this.publicHttp.get<CursorResponse<TutorResponseDto>>(
       `${USERS}/tutors/search`,
       { params },
+    );
+    return {
+      content: (res.content ?? []).map(toTutor),
+      hasNext: res.hasNext ?? false,
+      nextCursor: res.nextCursor,
+    };
+  }
+  async getTopNTutor(
+    size: number = TOP_TUTOR,
+  ): Promise<CursorResponse<TutorResponse>> {
+    const res = await this.publicHttp.get<CursorResponse<TutorResponseDto>>(
+      `${USERS}/tutors/top/${size}`,
     );
     return {
       content: (res.content ?? []).map(toTutor),

@@ -33,6 +33,10 @@ export class TutorService {
     return this.gateway.getMyCertificates();
   }
 
+  getTopTutor(size: number): Promise<CursorResponse<TutorResponse>> {
+    return this.gateway.getTopNTutor(size);
+  }
+
   uploadCertificates(
     subjectId: string,
     files: File[],
