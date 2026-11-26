@@ -1,4 +1,5 @@
 import { ROUTES } from "@/constants/routes";
+import { HIGHLIGHT_PARAM } from "@/shared/hooks/useHighlight";
 import type { NotificationResponse } from "../types/notification.types";
 
 type RouteInput = Pick<
@@ -18,8 +19,19 @@ const FALLBACK_ROUTE_BY_TYPE: Partial<
   MESSAGE: ROUTES.CHAT_INBOX,
 };
 
-export function resolveNotificationRoute(n: RouteInput): string | null {
+function reviewsRoute(tutorId: string, reviewId?: string | null): string {
+  const base = `${ROUTES.TUTOR_DETAIL(tutorId)}?tab=reviews`;
+  return reviewId
+    ? `${base}&${HIGHLIGHT_PARAM}=${encodeURIComponent(reviewId)}`
+    : base;
+}
+export function resolveNotificationRoute(
+  n: RouteInput,
+  userId?: string,
+): string | null {
+  console.log("notif", n.notificationType, n.targetType, n.targetId, userId);
   if (!n.targetType) {
+    if (n.notificationType === "REVIEW" && userId) return reviewsRoute(userId);
     return FALLBACK_ROUTE_BY_TYPE[n.notificationType] ?? null;
   }
   switch (n.targetType) {
@@ -30,7 +42,11 @@ export function resolveNotificationRoute(n: RouteInput): string | null {
     case "MY_APPLICATIONS":
       return ROUTES.MY_APPLICATIONS;
     case "TUTOR_PROFILE":
+      if (n.notificationType === "REVIEW" && userId)
+        return reviewsRoute(userId);
       return ROUTES.TUTOR_PROFILE;
+    case "REVIEW":
+      return userId ? reviewsRoute(userId, n.targetId) : ROUTES.TUTOR_PROFILE;
     case "WALLET":
       return ROUTES.WALLET;
     case "CHAT":

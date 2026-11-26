@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "./Button";
@@ -13,6 +14,7 @@ import {
   EDUCATION_LEVEL_LABEL,
 } from "@/constants/enums";
 import { useProvinces, useWards } from "@/shared/hooks/useAddress";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
 export interface FilterValues {
   subjectId: string;
@@ -104,6 +106,28 @@ export function FilterSidebar({
   const { data: wards = [], isFetching: wardsLoading } = useWards(provinceCode);
   const set = (patch: Partial<FilterValues>) =>
     onChange({ ...value, ...patch });
+
+  // Kéo thanh giá: cập nhật UI ngay (range), chỉ báo lên cha sau khi dừng kéo 400ms
+  // để không gọi API/refetch liên tục.
+  const [range, setRange] = useState({ min: value.min, max: value.max });
+  const debouncedRange = useDebounce(range, 400);
+
+  // Đồng bộ ngược khi cha đổi (bấm Đặt lại, đổi đơn vị học phí...)
+  useEffect(() => {
+    setRange((r) =>
+      r.min === value.min && r.max === value.max
+        ? r
+        : { min: value.min, max: value.max },
+    );
+  }, [value.min, value.max]);
+
+  // Đẩy giá trị đã debounce lên cha (chỉ khi thực sự khác)
+  useEffect(() => {
+    if (debouncedRange.min !== value.min || debouncedRange.max !== value.max) {
+      onChange({ ...value, min: debouncedRange.min, max: debouncedRange.max });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedRange]);
 
   const toggleLevel = (lvl: EducationLevel) => {
     const next = value.educationLevels.includes(lvl)
@@ -272,11 +296,11 @@ export function FilterSidebar({
           </div>
           {value.budgetUnit ? (
             <RangeSlider
-              min={value.min}
-              max={value.max}
+              min={range.min}
+              max={range.max}
               rangeMax={BUDGET_RANGE_BY_UNIT[value.budgetUnit].max}
               step={BUDGET_RANGE_BY_UNIT[value.budgetUnit].step}
-              onChange={(mn, mx) => set({ min: mn, max: mx })}
+              onChange={(mn, mx) => setRange({ min: mn, max: mx })}
               className="mt-4"
             />
           ) : (
@@ -291,11 +315,11 @@ export function FilterSidebar({
             {priceLabel}
           </label>
           <RangeSlider
-            min={value.min}
-            max={value.max}
+            min={range.min}
+            max={range.max}
             rangeMax={rangeMax}
             step={rangeStep}
-            onChange={(mn, mx) => set({ min: mn, max: mx })}
+            onChange={(mn, mx) => setRange({ min: mn, max: mx })}
             className="mt-2"
           />
         </div>
@@ -305,7 +329,7 @@ export function FilterSidebar({
         variant="ghost"
         size="sm"
         onClick={() => onChange(emptyFilter(rangeMax))}
-        className="mt-1"
+        className="mt-1 !bg-[#F97316] !text-white !opacity-100 hover:!bg-[#EA580C] disabled:!opacity-100"
       >
         {t("shared.filterSidebar.reset")}
       </Button>

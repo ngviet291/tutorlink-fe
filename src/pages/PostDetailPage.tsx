@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   CalendarDays,
   Clock,
@@ -30,7 +31,7 @@ import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { Tooltip } from "@/shared/components/ui/Tooltip";
 import { formatBudgetRange } from "@/shared/utils/currency";
-import { formatDate } from "@/shared/utils/date";
+import { formatDate, timeAgo } from "@/shared/utils/date";
 import { getErrorMessage } from "@/shared/utils/errors";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { useToast } from "@/shared/hooks/useToast";
@@ -39,14 +40,81 @@ import { ApplyModal } from "@/features/application/components/ApplyModal";
 import {
   useMyApplicationsForPost,
   useApplicationMutations,
+  useApplicationsByPost,
 } from "@/features/application/hooks/useApplications";
 import {
   usePostDetail,
   usePostMutations,
 } from "@/features/post/hooks/usePosts";
 import { useTutorProfile } from "@/features/tutor/hooks/useTutors";
+import type { PostResponse } from "@/features/post/types/post.types";
+
+function AdminApplicantsPanel({ post }: { post: PostResponse }) {
+  const { t } = useTranslation();
+  const { data, isLoading } = useApplicationsByPost(post.id, true);
+
+  return (
+    <section className="rounded-3xl border border-border bg-surface p-5 sm:p-7">
+      <h2 className="mb-3 text-lg font-bold text-text">
+        {t("postDetail.applicantsTitle", {
+          count: data?.length ?? post.applicationCount ?? 0,
+        })}
+      </h2>
+      {isLoading ? (
+        <Skeleton className="h-24 w-full" />
+      ) : !data?.length ? (
+        <p className="text-sm text-text-secondary">{t("post.noApplicants")}</p>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {data.map((a) => {
+            // Bài FIND_TUTOR: người ứng tuyển là gia sư; FIND_STUDENT: là học viên
+            const applicant = post.type === "FIND_TUTOR" ? a.tutor : a.student;
+            const to =
+              post.type === "FIND_TUTOR"
+                ? ROUTES.TUTOR_DETAIL(applicant.id)
+                : ROUTES.STUDENT_DETAIL(applicant.id);
+            return (
+              <li key={a.id}>
+                <Link
+                  to={to}
+                  className="flex items-center gap-3 rounded-xl border border-border p-3 hover:border-primary"
+                >
+                  <Avatar
+                    name={applicant.fullName}
+                    src={applicant.avatarUrl}
+                    size="md"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold text-text">
+                      {applicant.fullName}
+                    </p>
+                    <p className="text-xs text-text-secondary">
+                      {[
+                        t("postDetail.appliedAgo", {
+                          time: timeAgo(a.appliedAt),
+                        }),
+                        a.proposedFee
+                          ? t("postDetail.proposedFee", {
+                              fee: a.proposedFee.toLocaleString(),
+                            })
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 export default function PostDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -74,7 +142,7 @@ export default function PostDetailPage() {
     refetch,
   } = usePostDetail(id, Boolean(user), isAdmin);
 
-  const myApps = useMyApplicationsForPost(post, Boolean(user));
+  const myApps = useMyApplicationsForPost(post, Boolean(user) && !isAdmin);
 
   if (isLoading) {
     return (
@@ -93,7 +161,7 @@ export default function PostDetailPage() {
           message={
             isError && (error as { status?: number } | null)?.status !== 404
               ? getErrorMessage(error)
-              : "Không tìm thấy bài đăng hoặc bài đã bị gỡ."
+              : t("post.notFound")
           }
           onRetry={() => void refetch()}
         />
@@ -129,13 +197,13 @@ export default function PostDetailPage() {
   let disabledReason: string | undefined;
 
   if (isAuthor) {
-    disabledReason = "Bạn không thể đăng ký bài của chính mình";
+    disabledReason = t("post.cannotApplyOwnPost");
   } else if (alreadyApplied) {
-    disabledReason = "Bạn đã đăng ký bài này rồi";
+    disabledReason = t("post.alreadyApplied");
   } else if (post.status !== "PUBLISHED") {
-    disabledReason = "Bài đăng không còn nhận đăng ký";
+    disabledReason = t("post.notAcceptingApplications");
   } else if (isTutor && post.type === "FIND_TUTOR" && !tutorApproved) {
-    disabledReason = "Hồ sơ gia sư của bạn chưa được duyệt";
+    disabledReason = t("post.tutorNotApproved");
   }
 
   const onApply = () => {
@@ -153,7 +221,7 @@ export default function PostDetailPage() {
     close.mutate(post.id, {
       onSuccess: () => {
         setCloseOpen(false);
-        toast.success("Đã đóng bài đăng");
+        toast.success(t("postDetail.closedToast"));
       },
       onError: (e) => toast.error(getErrorMessage(e)),
     });
@@ -164,7 +232,7 @@ export default function PostDetailPage() {
 
     remove.mutate(post.id, {
       onSuccess: () => {
-        toast.success("Đã xóa bài đăng");
+        toast.success(t("post.deleted"));
         navigate(ROUTES.MY_POSTS);
       },
       onError: (e) => {
@@ -184,24 +252,27 @@ export default function PostDetailPage() {
   }[] = [
     {
       icon: MapPin,
-      label: "Khu vực",
+      label: t("post.location"),
       value: [post.address?.ward, post.address?.province]
         .filter(Boolean)
         .join(", "),
     },
     {
       icon: Wifi,
-      label: "Hình thức",
+      label: t("post.teachingMode"),
       value: TEACHING_MODE_LABEL[post.teachingMode],
     },
     {
       icon: Clock,
-      label: "Lịch học",
-      value: `${post.sessionsPerWeek} buổi/tuần · ${post.durationMinutes} phút/buổi`,
+      label: t("post.schedule"),
+      value: t("postDetail.scheduleValue", {
+        sessions: post.sessionsPerWeek,
+        minutes: post.durationMinutes,
+      }),
     },
     {
       icon: CalendarDays,
-      label: "Hạn đăng ký",
+      label: t("post.deadline"),
       value: formatDate(post.deadline),
     },
   ];
@@ -240,10 +311,10 @@ export default function PostDetailPage() {
           {formatBudgetRange(post.minBudget, post.maxBudget)}{" "}
           <span className="text-sm font-medium text-text-secondary">
             {BUDGET_UNIT_LABEL[post.budgetUnit ?? "PER_MONTH"].replace(
-              "mỗi ",
+              t("postDetail.unitPrefix"),
               "/",
             )}{" "}
-            (dự kiến)
+            {t("postDetail.estimated")}
           </span>
         </p>
 
@@ -251,7 +322,8 @@ export default function PostDetailPage() {
           {info.map(({ icon: Icon, label, value }) => (
             <div
               key={label}
-              className="flex items-start gap-3 rounded-xl bg-surface-hover p-3">
+              className="flex items-start gap-3 rounded-xl bg-surface-hover p-3"
+            >
               <Icon className="mt-0.5 size-5 shrink-0 text-primary" />
 
               <div>
@@ -264,7 +336,7 @@ export default function PostDetailPage() {
         </dl>
 
         <h2 className="mb-2 mt-6 text-lg font-bold text-text">
-          Mô tả chi tiết
+          {t("post.description")}
         </h2>
 
         <p className="whitespace-pre-line text-text-secondary">
@@ -273,9 +345,7 @@ export default function PostDetailPage() {
 
         <p className="mt-5 flex items-start gap-2 rounded-xl border border-border p-3 text-xs text-text-secondary">
           <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-          Học phí thực tế hằng tháng do hai bên tự thỏa thuận ngoài hệ thống
-          TutorLink. Gia sư chỉ trả một khoản phí nhận lớp (tính trên học phí dự
-          kiến tháng đầu) khi được chọn.
+          {t("postDetail.feeNotice")}
         </p>
 
         <div className="mt-6 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-start sm:justify-between">
@@ -285,7 +355,8 @@ export default function PostDetailPage() {
                 ? ROUTES.TUTOR_DETAIL(post.author.id)
                 : ROUTES.STUDENT_DETAIL(post.author.id)
             }
-            className="flex items-center gap-3 rounded-xl hover:opacity-80">
+            className="flex items-center gap-3 rounded-xl hover:opacity-80"
+          >
             <Avatar
               name={post.author.fullName}
               src={post.author.avatarUrl}
@@ -293,12 +364,14 @@ export default function PostDetailPage() {
             />
 
             <div>
-              <p className="text-xs text-text-secondary">Người đăng</p>
+              <p className="text-xs text-text-secondary">{t("post.postedBy")}</p>
 
               <p className="font-bold text-text">{post.author.fullName}</p>
 
               <p className="text-xs text-text-secondary">
-                {post.applicationCount ?? 0} lượt đăng ký
+                {t("postDetail.applicationCount", {
+                  count: post.applicationCount ?? 0,
+                })}
               </p>
             </div>
           </Link>
@@ -314,8 +387,9 @@ export default function PostDetailPage() {
                 onClick={onApply}
                 disabled={
                   Boolean(disabledReason) || (Boolean(user) && !roleMatches)
-                }>
-                Đăng ký nhận lớp
+                }
+              >
+                {t("post.apply")}
               </Button>
             </Tooltip>
           )}
@@ -330,17 +404,17 @@ export default function PostDetailPage() {
           {!isAuthor && !isAdmin && user && !roleMatches && !disabledReason && (
             <p className="self-center text-xs text-text-secondary">
               {post.type === "FIND_TUTOR"
-                ? "Chỉ gia sư mới đăng ký bài này."
-                : "Chỉ học viên mới đăng ký bài này."}
+                ? t("postDetail.onlyTutorCanApply")
+                : t("postDetail.onlyStudentCanApply")}
             </p>
           )}
 
           {!user && (
             <p className="self-center text-xs text-text-secondary">
               <Link className="font-semibold text-primary" to={ROUTES.LOGIN}>
-                Đăng nhập
+                {t("postDetail.login")}
               </Link>{" "}
-              để đăng ký nhận lớp.
+              {t("postDetail.toApply")}
             </p>
           )}
 
@@ -351,8 +425,9 @@ export default function PostDetailPage() {
                 variant="outline"
                 size="lg"
                 loading={cancel.isPending}
-                onClick={() => setCancelOpen(true)}>
-                <XCircle className="size-4" /> Hủy đăng ký
+                onClick={() => setCancelOpen(true)}
+              >
+                <XCircle className="size-4" /> {t("postDetail.cancelApplication")}
               </Button>
             )}
 
@@ -362,9 +437,10 @@ export default function PostDetailPage() {
             myTutor.verificationStatus !== "APPROVED" && (
               <Link
                 to={ROUTES.TUTOR_PROFILE}
-                className="self-center text-xs font-semibold text-primary hover:underline">
+                className="self-center text-xs font-semibold text-primary hover:underline"
+              >
                 <Wallet className="mr-1 inline size-3.5" />
-                Xem trạng thái hồ sơ gia sư
+                {t("postDetail.viewTutorStatus")}
               </Link>
             )}
         </div>
@@ -376,28 +452,29 @@ export default function PostDetailPage() {
                 loading={publish.isPending}
                 onClick={() =>
                   publish.mutate(post.id, {
-                    onSuccess: () => toast.success("Đã đăng công khai"),
+                    onSuccess: () => toast.success(t("post.published")),
                     onError: (e) => toast.error(getErrorMessage(e)),
                   })
-                }>
-                Đăng công khai
+                }
+              >
+                {t("post.publishPost")}
               </Button>
             )}
 
             {post.status === "PUBLISHED" && (
               <Button variant="outline" onClick={() => setCloseOpen(true)}>
-                <Lock className="size-4" /> Đóng bài
+                <Lock className="size-4" /> {t("postDetail.close")}
               </Button>
             )}
 
             <Link to={ROUTES.POST_EDIT(post.id)}>
               <Button variant="outline">
-                <Pencil className="size-4" /> Sửa bài
+                <Pencil className="size-4" /> {t("post.editPost")}
               </Button>
             </Link>
 
             <Button variant="danger" onClick={() => setDeleteOpen(true)}>
-              <Trash2 className="size-4" /> Xóa bài
+              <Trash2 className="size-4" /> {t("post.deletePost")}
             </Button>
           </div>
         )}
@@ -406,6 +483,12 @@ export default function PostDetailPage() {
       {isAuthor && post.status !== "DRAFT" && (
         <div className="mt-6">
           <ApplicantList post={post} />
+        </div>
+      )}
+
+      {isAdmin && post.status !== "DRAFT" && (
+        <div className="mt-6">
+          <AdminApplicantsPanel post={post} />
         </div>
       )}
 
@@ -421,9 +504,9 @@ export default function PostDetailPage() {
       <ConfirmDialog
         open={cancelOpen}
         onClose={() => setCancelOpen(false)}
-        title="Hủy đăng ký bài này?"
-        confirmText="Hủy đăng ký"
-        cancelText="Giữ đăng ký"
+        title={t("postDetail.cancelDialogTitle")}
+        confirmText={t("postDetail.cancelApplication")}
+        cancelText={t("postDetail.keepApplication")}
         danger
         loading={cancel.isPending}
         onConfirm={() => {
@@ -431,7 +514,7 @@ export default function PostDetailPage() {
           cancel.mutate(myApplication.id, {
             onSuccess: () => {
               setCancelOpen(false);
-              toast.success("Đã hủy đăng ký");
+              toast.success(t("postDetail.cancelledToast"));
             },
             onError: (e) => {
               setCancelOpen(false);
@@ -439,28 +522,28 @@ export default function PostDetailPage() {
             },
           });
         }}
-        description="Đơn đăng ký của bạn sẽ bị hủy và chủ bài sẽ không còn thấy bạn trong danh sách ứng viên."
+        description={t("postDetail.cancelDialogDesc")}
       />
 
       <ConfirmDialog
         open={closeOpen}
         onClose={() => setCloseOpen(false)}
-        title="Đóng bài đăng?"
-        confirmText="Đóng bài"
+        title={t("postDetail.closeDialogTitle")}
+        confirmText={t("postDetail.close")}
         loading={close.isPending}
         onConfirm={onClosePost}
-        description="Bài đăng sẽ ngừng nhận đăng ký mới. Các đăng ký hiện có vẫn được giữ lại."
+        description={t("postDetail.closeDialogDesc")}
       />
 
       <ConfirmDialog
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
-        title="Xóa bài đăng?"
+        title={t("post.deleteConfirmTitle")}
         danger
-        confirmText="Xóa bài"
+        confirmText={t("post.deleteConfirm")}
         loading={remove.isPending}
         onConfirm={onDelete}
-        description="Bài đăng sẽ bị xóa vĩnh viễn. Thao tác này chỉ thực hiện được khi bài chưa ghép cặp."
+        description={t("postDetail.deleteDialogDesc")}
       />
     </div>
   );

@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Award,
@@ -40,6 +46,7 @@ import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { useTutorProfileTracking, track } from "@/features/tracking/hooks";
 
 type Tab = "about" | "certs" | "reviews" | "schedule" | "posts";
+const TABS: Tab[] = ["about", "certs", "reviews", "schedule", "posts"];
 
 export default function TutorDetailPage() {
   const { t } = useTranslation();
@@ -48,7 +55,13 @@ export default function TutorDetailPage() {
   const toast = useToast();
   const user = useAppSelector((s) => s.auth.user);
   const { data: tutor, isLoading, isError, refetch } = useTutor(id);
-  const [tab, setTab] = useState<Tab>("about");
+  // Mở sẵn tab / đánh giá theo URL, ví dụ từ thông báo: ?tab=reviews&reviewId=...
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const highlightReviewId = searchParams.get("reviewId") ?? undefined;
+  const [tab, setTab] = useState<Tab>(
+    TABS.includes(tabParam as Tab) ? (tabParam as Tab) : "about",
+  );
   const canFavorite = user?.role === "STUDENT";
   const favorites = useFavoriteIds(canFavorite);
   const toggle = useToggleFavorite("profile");
@@ -241,7 +254,12 @@ export default function TutorDetailPage() {
               ) : (
                 <EmptyState title={t("tutorDetail.noCertificates")} />
               ))}
-            {tab === "reviews" && <ReviewList tutorId={tutor.id} />}
+            {tab === "reviews" && (
+              <ReviewList
+                tutorId={tutor.id}
+                highlightReviewId={highlightReviewId}
+              />
+            )}
             {tab === "posts" &&
               (tutorPosts.isLoading ? (
                 <Skeleton className="h-40 w-full" />

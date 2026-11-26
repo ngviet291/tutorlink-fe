@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/utils/cn";
 import { timeAgo } from "@/shared/utils/date";
+import { useAppSelector } from "@/shared/hooks/useAppStore";
 import type {
   NotificationResponse,
   NotificationType,
@@ -41,11 +42,13 @@ export function NotificationList({ items, onNavigate, compact }: Props) {
   const { t } = useTranslation();
   const { markOne } = useNotificationMutations();
   const navigate = useNavigate();
+  // Cần id người đang đăng nhập để mở đúng hồ sơ công khai chứa đánh giá (gia sư nhận đánh giá)
+  const userId = useAppSelector((s) => s.auth.user?.id);
 
   const handleClick = (n: NotificationResponse) => {
     if (!n.read) markOne.mutate(n.id);
     onNavigate?.();
-    const route = resolveNotificationRoute(n);
+    const route = resolveNotificationRoute(n, userId);
     if (route) navigate(route);
   };
 

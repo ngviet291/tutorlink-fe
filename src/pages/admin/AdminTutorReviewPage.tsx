@@ -9,7 +9,6 @@ import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { Textarea } from "@/shared/components/ui/Textarea";
-import { formatVnd } from "@/shared/utils/currency";
 import { useToast } from "@/shared/hooks/useToast";
 import {
   useAdminMutations,

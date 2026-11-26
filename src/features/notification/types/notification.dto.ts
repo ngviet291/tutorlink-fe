@@ -9,6 +9,7 @@ export type NotificationTarget =
   | "MY_POSTS"
   | "MY_APPLICATIONS"
   | "TUTOR_PROFILE"
+  | "REVIEW"
   | "WALLET"
   | "CHAT"
   | "ADMIN_COMPLAINTS"

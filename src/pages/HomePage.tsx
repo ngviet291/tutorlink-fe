@@ -28,7 +28,7 @@ import { ErrorState } from "@/shared/components/ui/EmptyState";
 import { PostCard } from "@/features/post/components/PostCard";
 import { TutorCard } from "@/features/tutor/components/TutorCard";
 import { usePosts } from "@/features/post/hooks/usePosts";
-import { useTopTutor, useTutors } from "@/features/tutor/hooks/useTutors";
+import { useTopTutor } from "@/features/tutor/hooks/useTutors";
 import { useSubjects } from "@/features/subject/hooks/useSubjects";
 import { useAppSelector } from "@/shared/hooks/useAppStore";
 import { TOP_TUTOR } from "@/features/tutor/types/tutor.types";

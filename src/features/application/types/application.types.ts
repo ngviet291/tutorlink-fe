@@ -22,6 +22,8 @@ export interface ApplicationResponse {
   appliedAt: string;
   /** Thoi diem duoc chon (ACCEPTED). */
   selectedAt?: string;
+  studentFinishedAt?: string | null;
+  tutorFinishedAt?: string | null;
   /** Thoi diem thanh toan thanh cong. */
   paidAt?: string;
 

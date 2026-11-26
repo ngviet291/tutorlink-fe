@@ -1,43 +1,54 @@
-import { useState } from 'react'
-import { useSelector } from 'react-redux'
-import { Flag } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
-import { Modal } from '@/shared/components/ui/Modal'
-import { Button } from '@/shared/components/ui/Button'
-import { RatingStars } from '@/shared/components/ui/RatingStars'
-import { ListSkeleton } from '@/shared/components/ui/Skeleton'
-import { formatDate } from '@/shared/utils/date'
-import type { RootState } from '@/app/store'
-import { useTutorReviews } from '../hooks/useReviews'
-import { ComplaintModal } from './ComplaintModal'
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { Flag, Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Modal } from "@/shared/components/ui/Modal";
+import { Button } from "@/shared/components/ui/Button";
+import { RatingStars } from "@/shared/components/ui/RatingStars";
+import { ListSkeleton } from "@/shared/components/ui/Skeleton";
+import { formatDate } from "@/shared/utils/date";
+import type { RootState } from "@/app/store";
+import { useTutorReviews } from "../hooks/useReviews";
+import { ComplaintModal } from "./ComplaintModal";
+import { ReviewForm } from "./ReviewForm";
 
 interface Props {
-  applicationId: string
-  tutorId?: string
-  open: boolean
-  onClose: () => void
+  applicationId: string;
+  tutorId?: string;
+  open: boolean;
+  onClose: () => void;
 }
 
 // Modal xem lại đánh giá của 1 đơn FINISHED.
+// Học viên viết đánh giá được sửa (nếu chưa bị khiếu nại).
 // Gia sư xem được đánh giá học viên để lại và có thể khiếu nại (ComplaintModal).
-export function ReviewDetailModal({ applicationId, tutorId, open, onClose }: Props) {
-  const { t } = useTranslation()
-  const { data, isLoading } = useTutorReviews(open ? tutorId : undefined)
-  const review = data?.find((r) => r.applicationId === applicationId)
-  const user = useSelector((state: RootState) => state.auth.user)
-  const isTutor = user?.role === 'TUTOR'
-  const [complainOpen, setComplainOpen] = useState(false)
+export function ReviewDetailModal({
+  applicationId,
+  tutorId,
+  open,
+  onClose,
+}: Props) {
+  const { t } = useTranslation();
+  const { data, isLoading } = useTutorReviews(open ? tutorId : undefined);
+  const review = data?.find((r) => r.applicationId === applicationId);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isTutor = user?.role === "TUTOR";
+  const isOwner = user?.role === "STUDENT" && review?.student?.id === user.id;
+  const [complainOpen, setComplainOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
-  const complained = Boolean(review?.complaintStatus && review.complaintStatus !== 'NONE')
+  const complained = Boolean(
+    review?.complaintStatus && review.complaintStatus !== "NONE",
+  );
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title={t('review.detail.title')}>
+      <Modal open={open} onClose={onClose} title={t("review.detail.title")}>
         {isLoading ? (
           <ListSkeleton rows={2} />
         ) : !review ? (
           <p className="text-sm text-text-secondary">
-            {t('review.detail.notFound')}
+            {t("review.detail.notFound")}
           </p>
         ) : (
           <div className="flex flex-col gap-3">
@@ -59,10 +70,28 @@ export function ReviewDetailModal({ applicationId, tutorId, open, onClose }: Pro
               </p>
             )}
 
+            {isOwner &&
+              (complained ? (
+                <p className="text-xs text-text-secondary">
+                  {t("review.detail.editLocked")}
+                </p>
+              ) : (
+                <div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditOpen(true)}
+                  >
+                    <Pencil className="size-4" />
+                    {t("review.detail.edit")}
+                  </Button>
+                </div>
+              ))}
+
             {isTutor &&
               (complained ? (
                 <p className="text-xs text-text-secondary">
-                  {t('review.detail.alreadyComplained')}
+                  {t("review.detail.alreadyComplained")}
                 </p>
               ) : (
                 <div>
@@ -72,7 +101,7 @@ export function ReviewDetailModal({ applicationId, tutorId, open, onClose }: Pro
                     onClick={() => setComplainOpen(true)}
                   >
                     <Flag className="size-4" />
-                    {t('review.detail.complain')}
+                    {t("review.detail.complain")}
                   </Button>
                 </div>
               ))}
@@ -84,6 +113,17 @@ export function ReviewDetailModal({ applicationId, tutorId, open, onClose }: Pro
         review={complainOpen ? (review ?? null) : null}
         onClose={() => setComplainOpen(false)}
       />
+
+      {review && (
+        <ReviewForm
+          applicationId={applicationId}
+          reviewId={review.id}
+          initialRating={review.rating}
+          initialComment={review.comment}
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+        />
+      )}
     </>
-  )
+  );
 }

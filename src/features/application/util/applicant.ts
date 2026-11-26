@@ -27,3 +27,13 @@ export function isFeePayer(
 ): boolean {
   return Boolean(userId) && a.tutor?.id === userId;
 }
+/** Tôi (học viên hoặc gia sư của đơn) đã bấm hoàn thành chưa. */
+export function iHaveFinished(
+  a: ApplicationResponse,
+  userId?: string,
+): boolean {
+  if (!userId) return false;
+  if (a.student?.id === userId) return Boolean(a.studentFinishedAt);
+  if (a.tutor?.id === userId) return Boolean(a.tutorFinishedAt);
+  return false;
+}

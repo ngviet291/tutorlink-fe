@@ -8,7 +8,6 @@ import { formatVnd } from "@/shared/utils/currency";
 import { formatDateTime } from "@/shared/utils/date";
 import { Button } from "@/shared/components/ui/Button";
 import { useToast } from "@/shared/hooks/useToast";
-import { getErrorMessage } from "@/shared/utils/errors";
 import {
   useAdminPaymentMutations,
   useAdminTransactions,

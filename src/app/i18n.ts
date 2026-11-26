@@ -48,6 +48,7 @@ const vi = {
       adminPanel: "Trang quản trị",
       overview: "Tổng quan",
       account: "Tài khoản",
+      publicProfile: "Công khai",
       closeMenu: "Đóng menu",
       openMenu: "Mở menu",
       mobileNav: "Menu di động",
@@ -818,6 +819,24 @@ const vi = {
       description:
         "Bài đăng sẽ bị xóa vĩnh viễn. Thao tác này chỉ thực hiện được khi bài chưa ghép cặp.",
     },
+    unitPrefix: "mỗi ",
+    onlyTutorCanApply: "Chỉ gia sư mới đăng ký bài này.",
+    onlyStudentCanApply: "Chỉ học viên mới đăng ký bài này.",
+    toApply: "để đăng ký nhận lớp.",
+    cancelApplication: "Hủy đăng ký",
+    keepApplication: "Giữ đăng ký",
+    cancelDialogTitle: "Hủy đăng ký bài này?",
+    cancelDialogDesc:
+      "Đơn đăng ký của bạn sẽ bị hủy và chủ bài sẽ không còn thấy bạn trong danh sách ứng viên.",
+    close: "Đóng bài",
+    closeDialogTitle: "Đóng bài đăng?",
+    closeDialogDesc:
+      "Bài đăng sẽ ngừng nhận đăng ký mới. Các đăng ký hiện có vẫn được giữ lại.",
+    deleteDialogDesc:
+      "Bài đăng sẽ bị xóa vĩnh viễn. Thao tác này chỉ thực hiện được khi bài chưa ghép cặp.",
+    applicantsTitle: "Lượt đăng ký ({{count}})",
+    appliedAgo: "Đã ứng tuyển {{time}}",
+    proposedFee: "Đề xuất {{fee}} đ",
   },
 
   toast: { close: "Đóng thông báo" },
@@ -1365,7 +1384,12 @@ const vi = {
       reasonRequired: "Vui lòng nhập lý do",
       reasonMin: "Lý do tối thiểu {{min}} ký tự",
     },
+    updated: "Đã cập nhật đánh giá",
+    editTitle: "Sửa đánh giá",
+    save: "Lưu thay đổi",
     detail: {
+      edit: "Sửa đánh giá",
+      editLocked: "Đánh giá đã bị khiếu nại nên không thể sửa.",
       title: "Đánh giá",
       notFound: "Không tìm thấy đánh giá.",
       alreadyComplained: "Bạn đã gửi khiếu nại cho đánh giá này.",
@@ -1834,6 +1858,7 @@ const en = {
       adminPanel: "Admin panel",
       overview: "Overview",
       account: "Account",
+      publicProfile: "Public profile",
       closeMenu: "Close menu",
       openMenu: "Open menu",
       mobileNav: "Mobile menu",
@@ -2621,6 +2646,24 @@ const en = {
       description:
         "The post will be permanently deleted. This can only be done while the post has no match yet.",
     },
+    unitPrefix: "per ",
+    onlyTutorCanApply: "Only tutors can apply to this post.",
+    onlyStudentCanApply: "Only students can apply to this post.",
+    toApply: "to apply for this class.",
+    cancelApplication: "Cancel application",
+    keepApplication: "Keep application",
+    cancelDialogTitle: "Cancel your application to this post?",
+    cancelDialogDesc:
+      "Your application will be cancelled and the post owner will no longer see you in the applicant list.",
+    close: "Close post",
+    closeDialogTitle: "Close this post?",
+    closeDialogDesc:
+      "The post will stop accepting new applications. Existing applications are kept.",
+    deleteDialogDesc:
+      "This post will be permanently deleted. This can only be done if the post has not been matched yet.",
+    applicantsTitle: "Applications ({{count}})",
+    appliedAgo: "Applied {{time}}",
+    proposedFee: "Proposed {{fee}} VND",
   },
 
   toast: { close: "Close notification" },
@@ -3174,7 +3217,13 @@ const en = {
       reasonRequired: "Please enter a reason",
       reasonMin: "The reason must be at least {{min}} characters",
     },
+    editTitle: "Edit review",
+    updated: "Review updated",
+    save: "Save changes",
     detail: {
+      edit: "Edit review",
+      editLocked:
+        "This review has been disputed, so it can no longer be edited.",
       title: "Review",
       notFound: "Review not found.",
       alreadyComplained:

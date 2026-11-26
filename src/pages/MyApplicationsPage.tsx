@@ -41,9 +41,14 @@ export default function MyApplicationsPage() {
   // Finish xong: học viên của đơn được mở modal đánh giá gia sư (nếu chưa review)
   const handleFinish = (a: ApplicationResponse) => {
     finish.mutate(a.id, {
-      onSuccess: () => {
-        toast.success(t("myApplications.finished"));
-        if (user?.role === "STUDENT" && a.student?.id === user.id) {
+      onSuccess: (res) => {
+        const finished = res?.applicationStatus === "FINISHED";
+        toast.success(
+          finished
+            ? t("myApplications.finished")
+            : t("myApplications.finishWaiting"),
+        );
+        if (finished && user?.role === "STUDENT" && a.student?.id === user.id) {
           void reviewService
             .hasReviewed(a.id)
             .then((reviewed) => {
@@ -169,8 +174,14 @@ export default function MyApplicationsPage() {
                     {t("myApplications.finishClass")}
                   </Button>
                 )}
-                {a.applicationStatus === "FINISHED" && (
-                  <Link to={ROUTES.CHAT_WITH(a.post.author.id)}>
+                {a.applicationStatus === "CONFIRMED" && (
+                  <Link
+                    to={ROUTES.CHAT_WITH(
+                      (user?.id === a.student?.id
+                        ? a.tutor?.id
+                        : a.student?.id) ?? a.post.author.id,
+                    )}
+                  >
                     <Button size="sm" variant="secondary">
                       {t("myApplications.openChat")}
                     </Button>

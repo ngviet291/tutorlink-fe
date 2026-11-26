@@ -1,13 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@/constants/queryKeys'
-import { reviewService } from '../service/review.service'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/constants/queryKeys";
+import { reviewService } from "../service/review.service";
 
 export function useTutorReviews(tutorId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.reviews.byTutor(tutorId ?? ''),
-    queryFn: () => reviewService.getReviewsByTutor(tutorId ?? ''),
+    queryKey: queryKeys.reviews.byTutor(tutorId ?? ""),
+    queryFn: () => reviewService.getReviewsByTutor(tutorId ?? ""),
     enabled: Boolean(tutorId),
-  })
+  });
 }
 
 export function useHasReviewed(applicationId: string) {
@@ -15,28 +15,54 @@ export function useHasReviewed(applicationId: string) {
     queryKey: queryKeys.reviews.byApplication(applicationId),
     queryFn: () => reviewService.hasReviewed(applicationId),
     enabled: Boolean(applicationId),
-  })
+  });
 }
 
 export function useSubmitReview() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: (v: { applicationId: string; rating: number; comment?: string }) =>
-      reviewService.createReview({ applicationId: v.applicationId, rating: v.rating, comment: v.comment ?? '' }),
+    mutationFn: (v: {
+      applicationId: string;
+      rating: number;
+      comment?: string;
+    }) =>
+      reviewService.createReview({
+        applicationId: v.applicationId,
+        rating: v.rating,
+        comment: v.comment ?? "",
+      }),
     onSuccess: (_, vars) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.reviews.all })
-      void qc.invalidateQueries({ queryKey: queryKeys.reviews.byApplication(vars.applicationId) })
-      void qc.invalidateQueries({ queryKey: queryKeys.tutors.all })
+      void qc.invalidateQueries({ queryKey: queryKeys.reviews.all });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.reviews.byApplication(vars.applicationId),
+      });
+      void qc.invalidateQueries({ queryKey: queryKeys.tutors.all });
     },
-  })
+  });
 }
 
 export function useReviewMutations() {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
   return {
     complain: useMutation({
-      mutationFn: (v: { reviewId: string; reason: string }) => reviewService.submitComplaint(v.reviewId, v.reason),
-      onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.reviews.all }),
+      mutationFn: (v: { reviewId: string; reason: string }) =>
+        reviewService.submitComplaint(v.reviewId, v.reason),
+      onSuccess: () =>
+        qc.invalidateQueries({ queryKey: queryKeys.reviews.all }),
     }),
-  }
+  };
+}
+export function useUpdateReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { reviewId: string; rating: number; comment?: string }) =>
+      reviewService.updateReview(v.reviewId, {
+        rating: v.rating,
+        comment: v.comment ?? "",
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.reviews.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.tutors.all });
+    },
+  });
 }

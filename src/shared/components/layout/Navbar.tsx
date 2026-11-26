@@ -8,6 +8,7 @@ import {
   Moon,
   Sun,
   User,
+  UserRound,
   X,
 } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
@@ -96,6 +97,20 @@ export function Navbar() {
                         {user.email}
                       </p>
                     </div>
+                    {user.role === "TUTOR" && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={dropdownItemClass}
+                        onClick={() => {
+                          close();
+                          navigate(ROUTES.TUTOR_DETAIL(user.id));
+                        }}
+                      >
+                        <UserRound className="size-4" />{" "}
+                        {t("shared.navbar.publicProfile")}
+                      </button>
+                    )}
                     <button
                       type="button"
                       role="menuitem"
