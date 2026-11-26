@@ -809,27 +809,7 @@ const vi = {
         "Bài đăng sẽ bị xóa vĩnh viễn. Thao tác này chỉ thực hiện được khi bài chưa ghép cặp.",
     },
   },
-  applicantRow: {
-    proposed: "Đề xuất: {{fee}}",
-    actionConfirm: "xác nhận",
-    actionTutorPay: "gia sư thanh toán",
-    actionPay: "thanh toán",
-    payFee: "Thanh toán phí nhận lớp",
-    confirmTutor: "Xác nhận gia sư",
-    confirmStudent: "Xác nhận học viên",
-    reject: "Từ chối",
-    unselect: "Hủy chọn",
-    paidToast: "Đã thanh toán phí nhận lớp",
-    confirmedToast: "Đã xác nhận",
-    rejectedToast: "Đã từ chối ứng viên",
-    unselectedToast: "Đã hủy chọn ứng viên",
-    payDialog: {
-      title: "Thanh toán phí nhận lớp?",
-      confirm: "Thanh toán",
-      description:
-        "Phí nhận lớp sẽ được trừ từ ví của bạn. Nếu số dư không đủ, bạn cần nạp thêm tiền vào ví trước.",
-    },
-  },
+
   toast: { close: "Đóng thông báo" },
   login: {
     title: "Đăng nhập",
@@ -1067,6 +1047,27 @@ const vi = {
       remaining: "Còn {{time}} để {{action}}",
       hourUnit: "g",
       minuteUnit: "p",
+    },
+    applicantRow: {
+      proposed: "Đề xuất: {{fee}}",
+      actionConfirm: "xác nhận",
+      actionTutorPay: "gia sư thanh toán",
+      actionPay: "thanh toán",
+      payFee: "Thanh toán phí nhận lớp",
+      confirmTutor: "Xác nhận gia sư",
+      confirmStudent: "Xác nhận học viên",
+      reject: "Từ chối",
+      unselect: "Hủy chọn",
+      paidToast: "Đã thanh toán phí nhận lớp",
+      confirmedToast: "Đã xác nhận",
+      rejectedToast: "Đã từ chối ứng viên",
+      unselectedToast: "Đã hủy chọn ứng viên",
+      payDialog: {
+        title: "Thanh toán phí nhận lớp?",
+        confirm: "Thanh toán",
+        description:
+          "Phí nhận lớp sẽ được trừ từ ví của bạn. Nếu số dư không đủ, bạn cần nạp thêm tiền vào ví trước.",
+      },
     },
   },
   wallet: {
@@ -2597,27 +2598,6 @@ const en = {
         "The post will be permanently deleted. This can only be done while the post has no match yet.",
     },
   },
-  applicantRow: {
-    proposed: "Proposed: {{fee}}",
-    actionConfirm: "to confirm",
-    actionTutorPay: "for the tutor to pay",
-    actionPay: "to pay",
-    payFee: "Pay class fee",
-    confirmTutor: "Confirm tutor",
-    confirmStudent: "Confirm student",
-    reject: "Reject",
-    unselect: "Cancel selection",
-    paidToast: "Class fee paid",
-    confirmedToast: "Confirmed",
-    rejectedToast: "Applicant rejected",
-    unselectedToast: "Selection cancelled",
-    payDialog: {
-      title: "Pay the class fee?",
-      confirm: "Pay",
-      description:
-        "The class fee will be deducted from your wallet. If your balance is not enough, top up your wallet first.",
-    },
-  },
 
   toast: { close: "Close notification" },
   login: {
@@ -2858,6 +2838,27 @@ const en = {
       remaining: "{{time}} left for {{action}}",
       hourUnit: "h",
       minuteUnit: "m",
+    },
+    applicantRow: {
+      proposed: "Proposed: {{fee}}",
+      actionConfirm: "to confirm",
+      actionTutorPay: "for the tutor to pay",
+      actionPay: "to pay",
+      payFee: "Pay class fee",
+      confirmTutor: "Confirm tutor",
+      confirmStudent: "Confirm student",
+      reject: "Reject",
+      unselect: "Cancel selection",
+      paidToast: "Class fee paid",
+      confirmedToast: "Confirmed",
+      rejectedToast: "Applicant rejected",
+      unselectedToast: "Selection cancelled",
+      payDialog: {
+        title: "Pay the class fee?",
+        confirm: "Pay",
+        description:
+          "The class fee will be deducted from your wallet. If your balance is not enough, top up your wallet first.",
+      },
     },
   },
   wallet: {
