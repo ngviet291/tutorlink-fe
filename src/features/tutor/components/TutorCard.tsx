@@ -81,13 +81,13 @@ export function TutorCard({ tutor }: { tutor: TutorResponse }) {
       </div>
 
       {/* Chân thẻ: giá là điểm nhấn duy nhất */}
-      <div className="flex items-center justify-between border-t border-border bg-primary/5 px-5 py-3">
-        <span className="text-lg font-bold tabular-nums text-primary">
+      <div className="flex items-center justify-end border-t border-border bg-primary/5 p-3" >
+        {/* <span className="text-lg font-bold tabular-nums text-primary">
           {formatVnd(tutor.hourlyRate)}
           <span className="ml-0.5 text-xs font-normal text-text-secondary">
             {t("common.perHour")}
           </span>
-        </span>
+        </span> */}
         <span className="flex items-center gap-0.5 text-sm font-semibold text-primary">
           {t("tutor.viewProfile")}
           <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />

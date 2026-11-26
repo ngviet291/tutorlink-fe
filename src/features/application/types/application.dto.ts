@@ -28,6 +28,7 @@ export interface UserSummary {
   fullName: string;
   avatarUrl?: string | null;
   // Thông tin thêm cho Tutor (null nếu là Student)
+  experienceYears?: number | null;
   averageRating?: number | null;
   totalReviews?: number | null;
 }

@@ -56,15 +56,13 @@ export function Footer() {
             <a
               href="#"
               aria-label={t("shared.footer.websiteAria")}
-              className={link}
-            >
+              className={link}>
               <Globe className="size-5" />
             </a>
             <Link
               to={ROUTES.CHAT_INBOX}
               aria-label={t("shared.footer.messagesAria")}
-              className={link}
-            >
+              className={link}>
               <MessageCircle className="size-5" />
             </Link>
           </div>
@@ -106,10 +104,15 @@ export function Footer() {
             {t("shared.footer.contact")}
           </h3>
           <span className="flex items-center gap-2">
-            <Phone className="size-4" /> 1900 0000
+            <Phone className="size-4" /> 033 868 7106
           </span>
           <span className="flex items-center gap-2">
-            <Mail className="size-4" /> tutorlink.n3@gmail.com
+            <Mail className="size-4" />
+            <a
+              href="mailto:tutorlink.n3@gmail.com"
+              className="font-semibold text-primary hover:underline">
+              tutorlink.n3@gmail.com
+            </a>
           </span>
           <span className="flex items-center gap-2">
             <MapPin className="size-4" /> {t("shared.footer.address")}

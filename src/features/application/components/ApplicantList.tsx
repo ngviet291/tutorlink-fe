@@ -41,9 +41,7 @@ export function ApplicantList({ post }: { post: PostResponse }) {
 
   const hasAccepted =
     data?.some((a) =>
-      ["ACCEPTED", "CONFIRMED", "FINISHED"].includes(
-        a.applicationStatus,
-      ),
+      ["ACCEPTED", "CONFIRMED", "FINISHED"].includes(a.applicationStatus),
     ) ?? false;
   const canSelect = post.status === "PUBLISHED" && !hasAccepted;
   const pending =
