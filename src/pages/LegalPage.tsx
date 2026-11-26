@@ -44,9 +44,9 @@ function createLegalPage(key: keyof typeof LEGAL_DOCS) {
           </Link>{" "}
           <span>{t("legal.orContact")} </span>
           <a
-            href="mailto:tutor.n3@gmail.com"
+            href="mailto:tutorlink.n3@gmail.com"
             className="font-semibold text-primary hover:underline">
-            tutor.n3@gmail.com
+            tutorlink.n3@gmail.com
           </a>
         </p>
       </div>

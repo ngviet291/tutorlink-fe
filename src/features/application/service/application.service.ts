@@ -47,17 +47,21 @@ function asStudent(user: BaseUserResponse): StudentResponse {
   };
 }
 
-function asTutor(user: BaseUserResponse): TutorResponse {
+/**
+ * Nhận thẳng UserSummary (không đi qua fromSummary) để giữ experienceYears từ BE.
+ * hourlyRate và verificationStatus vẫn là giá trị mặc định vì BE không trả trong UserSummary.
+ */
+function asTutor(u: UserSummary): TutorResponse {
   return {
-    id: user.id,
-    fullName: user.fullName,
-    avatarUrl: user.avatarUrl,
-    experienceYears: 0,
+    id: u.id,
+    fullName: u.fullName,
+    avatarUrl: u.avatarUrl,
+    experienceYears: u.experienceYears ?? 0,
     hourlyRate: 0,
-    averageRating: user.averageRating ?? 0,
-    reviewCount: user.totalReviews ?? 0,
+    averageRating: u.averageRating ?? 0,
+    reviewCount: u.totalReviews ?? 0,
     verificationStatus: "PENDING",
-    address: user.address,
+    address: undefined,
   };
 }
 
@@ -127,7 +131,7 @@ export class ApplicationService {
       id: dto.id,
       post,
       student: asStudent(fromSummary(dto.student)),
-      tutor: asTutor(fromSummary(dto.tutor)),
+      tutor: asTutor(dto.tutor),
       applicationStatus: dto.applicationStatus,
       message: dto.message,
       proposedFee: dto.proposedFee,
