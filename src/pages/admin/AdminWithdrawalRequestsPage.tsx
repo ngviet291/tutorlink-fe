@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { Modal } from "@/shared/components/ui/Modal";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
@@ -9,14 +8,15 @@ import { formatVnd } from "@/shared/utils/currency";
 import { formatDateTime } from "@/shared/utils/date";
 import { Button } from "@/shared/components/ui/Button";
 import { useToast } from "@/shared/hooks/useToast";
+import { getErrorMessage } from "@/shared/utils/errors";
 import {
   useAdminPaymentMutations,
   useAdminTransactions,
   useAdminTransaction,
 } from "@/features/admin/hooks/useAdminPayments";
+import { useTranslation } from "react-i18next";
 
 export default function AdminWithdrawalRequestsPage() {
-  const { t } = useTranslation();
   const {
     data,
     isLoading,
@@ -26,7 +26,7 @@ export default function AdminWithdrawalRequestsPage() {
     hasNextPage,
     isFetchingNextPage,
   } = useAdminTransactions({ status: "PENDING", type: "WITHDRAW" });
-
+  const { t } = useTranslation();
   const items = data?.pages.flatMap((p) => p.content) ?? [];
   const [detailId, setDetailId] = useState<string>();
   const detailQuery = useAdminTransaction(detailId);
@@ -36,6 +36,35 @@ export default function AdminWithdrawalRequestsPage() {
   const [confirmAction, setConfirmAction] = useState<
     "approve" | "reject" | null
   >(null);
+
+  const showQr =
+    detail?.transactionStatus === "PENDING" &&
+    Boolean(detail.bankAccountNumber);
+
+  const qrUrl =
+    detail && showQr
+      ? `https://img.vietqr.io/image/${encodeURIComponent(detail.bankName ?? "")}-${detail.bankAccountNumber}-compact2.png` +
+        `?amount=${detail.amount}` +
+        `&addInfo=${encodeURIComponent(t("admin.withdrawalrequests.qrTransferMemo", { id: detail.id.slice(0, 8) }))}` +
+        `&accountName=${encodeURIComponent(detail.accountHolderName ?? "")}`
+      : "";
+
+  // Thông tin đã in trong ảnh QR thì không hiện lại ở danh sách.
+  const rows: [string, string][] = detail
+    ? [
+        [t("admin.withdrawalrequests.txId"), detail.id],
+        [t("admin.withdrawalrequests.colTutor"), detail.tutorName ?? detail.tutorId ?? "—"],
+        ...(showQr
+          ? []
+          : ([
+              [t("admin.withdrawalrequests.colAmount"), formatVnd(detail.amount)],
+              [t("admin.withdrawalrequests.holder"), detail.accountHolderName ?? "—"],
+              [t("admin.withdrawalrequests.accountNumber"), detail.bankAccountNumber ?? "—"],
+              [t("admin.withdrawalrequests.bank"), detail.bankName ?? "—"],
+            ] as [string, string][])),
+        [t("admin.withdrawalrequests.requestedAt"), formatDateTime(detail.createdAt)],
+      ]
+    : [];
 
   const handleApprove = () => {
     if (!detail) {
@@ -64,39 +93,6 @@ export default function AdminWithdrawalRequestsPage() {
       onError: (e) => toast.apiError(e),
     });
   };
-
-  // Key cố định để đổi ngôn ngữ không làm React mount lại cả dòng.
-  const detailRows: [string, string, string | undefined][] = detail
-    ? [
-        ["id", t("admin.withdrawalrequests.txId"), detail.id],
-        [
-          "tutor",
-          t("admin.withdrawalrequests.colTutor"),
-          detail.tutorName ?? detail.tutorId ?? "—",
-        ],
-        [
-          "amount",
-          t("admin.withdrawalrequests.colAmount"),
-          formatVnd(detail.amount),
-        ],
-        [
-          "holder",
-          t("admin.withdrawalrequests.holder"),
-          detail.accountHolderName ?? "—",
-        ],
-        [
-          "accountNumber",
-          t("admin.withdrawalrequests.accountNumber"),
-          detail.bankAccountNumber ?? "—",
-        ],
-        ["bank", t("admin.withdrawalrequests.colBank"), detail.bankName ?? "—"],
-        [
-          "requestedAt",
-          t("admin.withdrawalrequests.requestedAt"),
-          formatDateTime(detail.createdAt),
-        ],
-      ]
-    : [];
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5">
@@ -131,28 +127,25 @@ export default function AdminWithdrawalRequestsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {items.map((tx) => (
+                {items.map((t) => (
                   <tr
-                    key={tx.id}
+                    key={t.id}
                     className="cursor-pointer hover:bg-surface-hover"
-                    onClick={() => setDetailId(tx.id)}
-                  >
+                    onClick={() => setDetailId(t.id)}>
                     <td className="p-3 text-text-secondary">
-                      {formatDateTime(tx.createdAt)}
+                      {formatDateTime(t.createdAt)}
                     </td>
                     <td className="font-medium text-text">
-                      {tx.tutorName ?? tx.tutorId ?? "—"}
+                      {t.tutorName ?? t.tutorId ?? "—"}
                     </td>
-                    <td className="pr-5 text-right font-semibold text-danger-text">
-                      {formatVnd(tx.amount)}
+                    <td className="pr-5 text-right font-semibold text-danger">
+                      {formatVnd(t.amount)}
                     </td>
-                    <td className="text-text-secondary">
-                      {tx.bankName ?? "—"}
-                    </td>
+                    <td className="text-text-secondary">{t.bankName ?? "—"}</td>
                     <td className="pr-3">
                       <StatusBadge
                         kind="transaction"
-                        status={tx.transactionStatus}
+                        status={t.transactionStatus}
                       />
                     </td>
                   </tr>
@@ -178,8 +171,8 @@ export default function AdminWithdrawalRequestsPage() {
           setConfirmAction(null);
         }}
         title={t("admin.withdrawalrequests.detailTitle")}
-        size="sm"
-      >
+        size="md"
+        className="max-h-[96vh]! [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {detailQuery.isLoading && <ListSkeleton rows={2} />}
         {detailQuery.isError && (
           <ErrorState onRetry={() => void detailQuery.refetch()} />
@@ -187,10 +180,10 @@ export default function AdminWithdrawalRequestsPage() {
         {detail && (
           <>
             <dl className="divide-y divide-border text-sm">
-              {detailRows.map(([key, label, value]) => (
-                <div key={key} className="flex justify-between gap-3 py-2">
-                  <dt className="text-text-secondary">{label}</dt>
-                  <dd className="font-semibold text-text">{value}</dd>
+              {rows.map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-3 py-2">
+                  <dt className="text-text-secondary">{k}</dt>
+                  <dd className="font-semibold text-text">{v}</dd>
                 </div>
               ))}
               <div className="flex justify-between py-2">
@@ -205,7 +198,13 @@ export default function AdminWithdrawalRequestsPage() {
                 </dd>
               </div>
             </dl>
-
+            {showQr && (
+              <img
+                src={qrUrl}
+                alt={t("admin.withdrawalrequests.qrAlt")}
+                className="mx-auto mt-4 w-full max-w-sm rounded-xl border border-border bg-white object-contain p-2"
+              />
+            )}
             {detail.transactionStatus === "PENDING" && (
               <>
                 {!confirmAction ? (
@@ -213,15 +212,13 @@ export default function AdminWithdrawalRequestsPage() {
                     <Button
                       variant="danger"
                       fullWidth
-                      onClick={() => setConfirmAction("reject")}
-                    >
+                      onClick={() => setConfirmAction("reject")}>
                       {t("admin.withdrawalrequests.reject")}
                     </Button>
                     <Button
                       variant="primary"
                       fullWidth
-                      onClick={() => setConfirmAction("approve")}
-                    >
+                      onClick={() => setConfirmAction("approve")}>
                       {t("admin.withdrawalrequests.approve")}
                     </Button>
                   </div>
@@ -236,8 +233,7 @@ export default function AdminWithdrawalRequestsPage() {
                       <Button
                         variant="secondary"
                         fullWidth
-                        onClick={() => setConfirmAction(null)}
-                      >
+                        onClick={() => setConfirmAction(null)}>
                         {t("admin.withdrawalrequests.cancel")}
                       </Button>
                       <Button
@@ -253,8 +249,7 @@ export default function AdminWithdrawalRequestsPage() {
                           confirmAction === "approve"
                             ? handleApprove
                             : handleReject
-                        }
-                      >
+                        }>
                         {t("admin.withdrawalrequests.confirm")}
                       </Button>
                     </div>

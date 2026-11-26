@@ -20,8 +20,7 @@ function createLegalPage(key: keyof typeof LEGAL_DOCS) {
               {s.paragraphs?.map((p) => (
                 <p
                   key={p}
-                  className="mb-2 text-sm leading-relaxed text-text-secondary"
-                >
+                  className="mb-2 text-sm leading-relaxed text-text-secondary">
                   {p}
                 </p>
               ))}
@@ -40,11 +39,15 @@ function createLegalPage(key: keyof typeof LEGAL_DOCS) {
           {t("legal.questions")}{" "}
           <Link
             to={ROUTES.HOME}
-            className="font-semibold text-primary hover:underline"
-          >
+            className="font-semibold text-primary hover:underline">
             {t("legal.backHome")}
           </Link>{" "}
-          {t("legal.orContact", { email: "support@tutorlink.vn" })}
+          <span>{t("legal.orContact")} </span>
+          <a
+            href="mailto:tutor.n3@gmail.com"
+            className="font-semibold text-primary hover:underline">
+            tutor.n3@gmail.com
+          </a>
         </p>
       </div>
     );

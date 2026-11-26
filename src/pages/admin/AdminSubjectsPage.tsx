@@ -113,8 +113,7 @@ export default function AdminSubjectsPage() {
           {data?.map((s) => (
             <li
               key={s.id}
-              className="flex items-center justify-between gap-3 p-3"
-            >
+              className="flex items-center justify-between gap-3 p-3">
               <div>
                 <p className="font-semibold text-text">{s.name}</p>
                 <p className="text-xs text-text-secondary">
@@ -128,16 +127,14 @@ export default function AdminSubjectsPage() {
                   variant="ghost"
                   size="sm"
                   aria-label={t("adminSubjects.editAria", { name: s.name })}
-                  onClick={() => open(s)}
-                >
+                  onClick={() => open(s)}>
                   <Pencil className="size-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   aria-label={t("adminSubjects.deleteAria", { name: s.name })}
-                  onClick={() => setDeleting(s)}
-                >
+                  onClick={() => setDeleting(s)}>
                   <Trash2 className="size-4 text-danger-text" />
                 </Button>
               </div>
@@ -162,13 +159,11 @@ export default function AdminSubjectsPage() {
             </Button>
             <Button
               loading={create.isPending || update.isPending}
-              onClick={() => void submit()}
-            >
+              onClick={() => void submit()}>
               {t("common.save")}
             </Button>
           </>
-        }
-      >
+        }>
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-3">
           <Input
             label={t("adminSubjects.nameLabel")}
@@ -209,21 +204,19 @@ export default function AdminSubjectsPage() {
             <Button
               variant="ghost"
               onClick={() => setDeleting(null)}
-              disabled={remove.isPending}
-            >
+              disabled={remove.isPending}>
               {t("common.cancel")}
             </Button>
-            <Button
-              variant="danger"
-              loading={remove.isPending}
-              disabled={deletingInUse}
-              onClick={confirmDelete}
-            >
-              {t("common.delete")}
-            </Button>
+            {!deletingInUse && (
+              <Button
+                variant="danger"
+                loading={remove.isPending}
+                onClick={confirmDelete}>
+                {t("common.delete")}
+              </Button>
+            )}
           </>
-        }
-      >
+        }>
         <p className="text-sm text-text-secondary">
           <Trans
             i18nKey="adminSubjects.deleteConfirm"
@@ -234,8 +227,7 @@ export default function AdminSubjectsPage() {
         {deletingInUse && (
           <p
             role="alert"
-            className="mt-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
-          >
+            className="mt-3 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text">
             {t("adminSubjects.inUse")}
           </p>
         )}

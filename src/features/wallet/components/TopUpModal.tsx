@@ -144,8 +144,7 @@ export function TopUpModal({ open, onClose }: Props) {
       <Modal
         open={open}
         onClose={close}
-        title={t("wallet.topUpModal.paymentTitle")}
-      >
+        title={t("wallet.topUpModal.paymentTitle")}>
         <div className="flex flex-col items-center gap-4 text-center">
           <p className="text-2xl font-extrabold text-primary">
             {formatVnd(session.transaction.amount)}
@@ -153,8 +152,7 @@ export function TopUpModal({ open, onClose }: Props) {
           {isDemo && (
             <p
               role="status"
-              className="text-sm font-semibold text-warning-text"
-            >
+              className="text-sm font-semibold text-warning-text">
               {t("wallet.topUpModal.demoNotice")}
             </p>
           )}
@@ -193,8 +191,7 @@ export function TopUpModal({ open, onClose }: Props) {
                     <button
                       type="button"
                       onClick={() => copy(session.transaction.providerOrderId!)}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-hover px-3 py-1.5 text-xs font-semibold text-text"
-                    >
+                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-surface-hover px-3 py-1.5 text-xs font-semibold text-text">
                       {t("wallet.topUpModal.orderId", {
                         id: session.transaction.providerOrderId,
                       })}
@@ -212,8 +209,7 @@ export function TopUpModal({ open, onClose }: Props) {
                     demoConfirm.mutate(session.transaction.id, {
                       onError: (error) => toast.apiError(error),
                     })
-                  }
-                >
+                  }>
                   {t("wallet.topUpModal.demoConfirm")}
                 </Button>
               ) : (
@@ -230,8 +226,7 @@ export function TopUpModal({ open, onClose }: Props) {
                     <a
                       href={session.paymentLink}
                       target="_blank"
-                      rel="noreferrer"
-                    >
+                      rel="noreferrer">
                       <Button>
                         <ExternalLink className="size-4" />{" "}
                         {t("wallet.topUpModal.openPayment")}
@@ -250,8 +245,7 @@ export function TopUpModal({ open, onClose }: Props) {
                     onClick={() => {
                       setExpired(false);
                       void status.refetch();
-                    }}
-                  >
+                    }}>
                     {t("wallet.topUpModal.recheck")}
                   </Button>
                 </div>
@@ -262,8 +256,7 @@ export function TopUpModal({ open, onClose }: Props) {
                   </p>
                   <Button
                     variant="outline"
-                    onClick={() => void status.refetch()}
-                  >
+                    onClick={() => void status.refetch()}>
                     {t("wallet.topUpModal.recheck")}
                   </Button>
                 </div>
@@ -276,8 +269,7 @@ export function TopUpModal({ open, onClose }: Props) {
           )}
           <Button
             variant={done || failed ? "primary" : "ghost"}
-            onClick={close}
-          >
+            onClick={close}>
             {done || failed
               ? t("wallet.topUpModal.close")
               : t("wallet.topUpModal.later")}
@@ -305,8 +297,7 @@ export function TopUpModal({ open, onClose }: Props) {
                 amount === p && !custom
                   ? "border-primary bg-primary text-white"
                   : "border-border bg-surface text-text hover:border-primary hover:text-primary",
-              )}
-            >
+              )}>
               {formatVnd(p)}
             </button>
           ))}
@@ -316,7 +307,8 @@ export function TopUpModal({ open, onClose }: Props) {
             {t("wallet.customAmount")}
           </label>
           <input
-            type="text"
+            type="number"
+            step={1000}
             inputMode="numeric"
             value={custom}
             onChange={(e) => {
@@ -334,8 +326,7 @@ export function TopUpModal({ open, onClose }: Props) {
           <div
             className="grid grid-cols-2 gap-2"
             role="radiogroup"
-            aria-label={t("wallet.topUpModal.method")}
-          >
+            aria-label={t("wallet.topUpModal.method")}>
             {METHODS.map((m) => (
               <button
                 key={m.value}
@@ -348,8 +339,7 @@ export function TopUpModal({ open, onClose }: Props) {
                   method === m.value
                     ? "border-primary bg-primary-light text-primary"
                     : "border-border text-text hover:border-primary",
-                )}
-              >
+                )}>
                 {m.label}
               </button>
             ))}

@@ -83,8 +83,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
       onClose={handleClose}
       title={t("wallet.withdrawModal.title")}
       size="md"
-      busy={isSubmitting}
-    >
+      busy={isSubmitting}>
       <p className="mb-4 text-sm text-text-secondary">
         {t("wallet.withdrawModal.currentBalance")}{" "}
         <strong className="text-primary">{formatVnd(currentBalance)}</strong>
@@ -93,8 +92,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
-        className="flex flex-col gap-4"
-      >
+        className="flex flex-col gap-4">
         <Input
           label={t("wallet.withdrawModal.amountLabel")}
           required
@@ -149,8 +147,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
           label={t("wallet.withdrawModal.bank")}
           htmlFor={bankId}
           required
-          error={errors.bankName?.message}
-        >
+          error={errors.bankName?.message}>
           <Controller
             name="bankName"
             control={control}
@@ -169,6 +166,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
         </FormField>
 
         <Input
+          className="uppercase"
           label={t("wallet.withdrawModal.holder")}
           required
           type="text"
@@ -190,8 +188,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
         {/* Cảnh báo tài chính hiển thị TRƯỚC checkbox xác nhận */}
         <div
           role="note"
-          className="flex gap-2.5 rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm text-text"
-        >
+          className="flex gap-2.5 rounded-xl border border-warning/40 bg-warning/10 p-3 text-sm text-text">
           <AlertTriangle
             className="mt-0.5 size-5 shrink-0 text-warning-text"
             aria-hidden="true"
@@ -202,8 +199,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
         <div>
           <label
             htmlFor={confirmId}
-            className="flex min-h-11 cursor-pointer items-start gap-2.5"
-          >
+            className="flex min-h-11 cursor-pointer items-start gap-2.5">
             <input
               id={confirmId}
               type="checkbox"
@@ -234,8 +230,7 @@ export function WithdrawModal({ open, onClose, currentBalance }: Props) {
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {t("common.cancel")}
           </Button>
           <Button type="submit" loading={isSubmitting}>
