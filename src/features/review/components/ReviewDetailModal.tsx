@@ -37,9 +37,17 @@ export function ReviewDetailModal({
   const [complainOpen, setComplainOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
 
-  const complained = Boolean(
-    review?.complaintStatus && review.complaintStatus !== "NONE",
-  );
+  const status = review?.complaintStatus;
+  // BE: NONE | PENDING | APPROVED (đánh giá bị gỡ) | REJECTED (giữ lại đánh giá)
+  const complained = Boolean(status && status !== "NONE");
+  const complaintNote =
+    status === "PENDING" || status === "OPEN"
+      ? t("review.detail.complaintPending")
+      : status === "REJECTED" || status === "RESOLVED"
+        ? t("review.detail.complaintRejected")
+        : status === "APPROVED"
+          ? t("review.detail.complaintApproved")
+          : "";
 
   return (
     <>
@@ -48,7 +56,9 @@ export function ReviewDetailModal({
           <ListSkeleton rows={2} />
         ) : !review ? (
           <p className="text-sm text-text-secondary">
-            {t("review.detail.notFound")}
+            {isTutor
+              ? t("review.detail.notFoundTutor")
+              : t("review.detail.notFound")}
           </p>
         ) : (
           <div className="flex flex-col gap-3">
@@ -90,8 +100,11 @@ export function ReviewDetailModal({
 
             {isTutor &&
               (complained ? (
-                <p className="text-xs text-text-secondary">
-                  {t("review.detail.alreadyComplained")}
+                <p
+                  role="status"
+                  className="text-xs font-medium text-text-secondary"
+                >
+                  {complaintNote}
                 </p>
               ) : (
                 <div>

@@ -6,11 +6,11 @@ import { ROUTES } from "@/constants/routes";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { Badge } from "@/shared/components/ui/Badge";
 import { Button } from "@/shared/components/ui/Button";
-import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
 import { RatingStars } from "@/shared/components/ui/RatingStars";
 import { useToast } from "@/shared/hooks/useToast";
+import { PayFeeModal } from "@/features/wallet/components/PayFeeModal";
 import { useApplicationMutations } from "../hooks/useApplications";
 import { ExpiryCountdown } from "./ExpiryCountdown";
 import { NextStepHint } from "./NextStepHint";
@@ -42,40 +42,22 @@ export function ApplicantRow({
   const tutor = a.tutor;
   const toast = useToast();
   const user = useSelector((state: RootState) => state.auth.user);
-  const { confirm, unselect, reject, pay } = useApplicationMutations();
+  const { confirm, unselect, reject } = useApplicationMutations();
   const [payOpen, setPayOpen] = useState(false);
   const isTutor = user?.role === "TUTOR";
   const isStudent = user?.role === "STUDENT";
-  // Người apply: gia sư với bài FIND_TUTOR, học viên với bài FIND_STUDENT.
   const isTutorPost = a.post.type === "FIND_TUTOR";
   const applicant = isTutorPost ? tutor : a.student;
-  // Người apply là bên xác nhận sau khi trả phí (BE check theo post.type).
-  // BE chỉ cho xác nhận khi đã trả phí nên chỉ hiện nút khi a.paid.
   const canConfirm =
     a.applicationStatus === "ACCEPTED" &&
     Boolean(a.paid) &&
     (isTutorPost ? isTutor : isStudent);
-  // Gia sư của đơn luôn là người trả phí: bài FIND_TUTOR là gia sư ứng tuyển,
-  // bài FIND_STUDENT là gia sư đăng bài (BE gán a.tutor = tác giả bài).
   const canPay =
     a.applicationStatus === "ACCEPTED" &&
     !a.paid &&
     isTutor &&
     Boolean(user?.id) &&
     user?.id === a.tutor.id;
-
-  const onPay = () => {
-    pay.mutate(a.id, {
-      onSuccess: () => {
-        setPayOpen(false);
-        toast.success(t("application.applicantRow.paidToast"));
-      },
-      onError: (e) => {
-        setPayOpen(false);
-        toast.apiError(e);
-      },
-    });
-  };
 
   return (
     <li className="rounded-2xl border border-border bg-surface p-4">
@@ -84,7 +66,8 @@ export function ApplicantRow({
           {showAi && a.aiRank !== undefined && (
             <span
               className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold text-white"
-              aria-label={t("application.rank", { rank: a.aiRank })}>
+              aria-label={t("application.rank", { rank: a.aiRank })}
+            >
               {a.aiRank}
             </span>
           )}
@@ -169,7 +152,8 @@ export function ApplicantRow({
                 ? ROUTES.TUTOR_DETAIL(applicant.id)
                 : ROUTES.STUDENT_DETAIL(applicant.id)
             }
-            state={{ section: showAi ? "TOP" : "OTHERS", rank: a.aiRank }}>
+            state={{ section: showAi ? "TOP" : "OTHERS", rank: a.aiRank }}
+          >
             <Button variant="outline" size="sm" fullWidth>
               {t("tutor.viewProfile")}
             </Button>
@@ -189,7 +173,8 @@ export function ApplicantRow({
                     toast.success(t("application.applicantRow.confirmedToast")),
                   onError: (e) => toast.apiError(e),
                 })
-              }>
+              }
+            >
               {isTutorPost
                 ? t("application.applicantRow.confirmTutor")
                 : t("application.applicantRow.confirmStudent")}
@@ -211,7 +196,8 @@ export function ApplicantRow({
                     toast.success(t("application.applicantRow.rejectedToast")),
                   onError: (e) => toast.apiError(e),
                 })
-              }>
+              }
+            >
               {t("application.applicantRow.reject")}
             </Button>
           )}
@@ -229,21 +215,18 @@ export function ApplicantRow({
                     ),
                   onError: (e) => toast.apiError(e),
                 })
-              }>
+              }
+            >
               {t("application.applicantRow.unselect")}
             </Button>
           )}
         </div>
       </div>
 
-      <ConfirmDialog
-        open={payOpen}
+      {/* Hiện phí, số dư ví và số dư sau thanh toán; trả phí chỉ xảy ra khi bấm xác nhận trong modal */}
+      <PayFeeModal
+        application={payOpen ? a : null}
         onClose={() => setPayOpen(false)}
-        title={t("application.applicantRow.payDialog.title")}
-        confirmText={t("application.applicantRow.payDialog.confirm")}
-        loading={pay.isPending}
-        onConfirm={onPay}
-        description={t("application.applicantRow.payDialog.description")}
       />
     </li>
   );

@@ -16,10 +16,6 @@ import type { ReviewResponse } from "../types/review.types";
 
 interface Props {
   tutorId: string;
-  /**
-   * Đánh giá cần cuộn tới và làm nổi. Nếu không truyền, tự đọc từ URL (?highlight=<id>),
-   * nên bấm thông báo "nhận được đánh giá mới" sẽ làm sáng đúng đánh giá đó.
-   */
   highlightReviewId?: string;
 }
 
@@ -29,6 +25,9 @@ export function ReviewList({ tutorId, highlightReviewId }: Props) {
   const { data, isLoading } = useTutorReviews(tutorId);
   const [target, setTarget] = useState<ReviewResponse | null>(null);
   const isOwner = user?.id === tutorId;
+  const isComplaintOpen = (st?: string) => st === "PENDING" || st === "OPEN";
+  const isComplaintKept = (st?: string) =>
+    st === "REJECTED" || st === "RESOLVED";
 
   const urlHighlightId = useHighlightParam();
   const highlightId = highlightReviewId ?? urlHighlightId;
@@ -82,13 +81,13 @@ export function ReviewList({ tutorId, highlightReviewId }: Props) {
                       </span>
                     )}
 
-                    {r.complaintStatus === "OPEN" && (
+                    {isComplaintOpen(r.complaintStatus) && (
                       <Badge tone="yellow">
                         {t("review.list.complaintOpen")}
                       </Badge>
                     )}
 
-                    {r.complaintStatus === "RESOLVED" && (
+                    {isComplaintKept(r.complaintStatus) && (
                       <Badge tone="green">
                         {t("review.list.complaintResolved")}
                       </Badge>

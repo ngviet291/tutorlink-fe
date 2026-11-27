@@ -1,16 +1,13 @@
 import { http } from "@/config/axiosClient";
 import type { CursorResponse } from "@/shared/types/api.types";
-import type {
-  ReviewComplaintResponse,
-  ReviewResponse as ReviewDto,
-} from "../types/review.dto";
-import type { ReviewPayload, ReviewResponse } from "../types/review.types";
+import type { ReviewComplaintResponse, ReviewResponse as ReviewDto } from "../types/review.dto";
+import type { ComplaintStatus, ReviewPayload, ReviewResponse } from "../types/review.types";
 
-// BE: NONE/PENDING/APPROVED/REJECTED -> FE: NONE/OPEN/RESOLVED
-function toComplaintStatus(s?: string): "NONE" | "OPEN" | "RESOLVED" {
-  if (!s || s === "NONE") return "NONE";
-  if (s === "PENDING") return "OPEN";
-  return "RESOLVED";
+// BE trả NONE | PENDING | APPROVED | REJECTED: giữ nguyên để FE phân biệt
+// "admin chấp nhận" (đánh giá bị gỡ) và "admin bác" (giữ lại đánh giá).
+function toComplaintStatus(s?: string): ComplaintStatus {
+  if (s === "PENDING" || s === "APPROVED" || s === "REJECTED") return s;
+  return "NONE";
 }
 
 export const reviewService = {
@@ -54,32 +51,23 @@ export const reviewService = {
     reason: string,
   ): Promise<ReviewComplaintResponse> {
     return http
-      .post<ReviewComplaintResponse>(`/v1/reviews/${reviewId}/complaints`, {
-        reason,
-      })
+      .post<ReviewComplaintResponse>(`/v1/reviews/${reviewId}/complaints`, { reason })
       .then((res) => res.data);
   },
 
   /** Chi tiết 1 đánh giá (admin xem khiếu nại). */
   async getReviewById(reviewId: string): Promise<ReviewResponse> {
-    return http.get<ReviewDto>(`/v1/reviews/${reviewId}`).then((res) => ({
-      id: res.data.id,
-      applicationId: res.data.applicationId,
-      tutorId: res.data.tutorId,
-      rating: res.data.rating,
-      comment: res.data.comment ?? "",
-      student: { id: res.data.studentId, fullName: res.data.studentName ?? "" },
-      createdAt: res.data.createdAt,
-      complaintStatus: toComplaintStatus(res.data.complaintStatus),
-    }));
-  },
-  /** Học viên sửa đánh giá của mình (chưa bị khiếu nại). */
-  async updateReview(
-    reviewId: string,
-    payload: { rating: number; comment: string },
-  ): Promise<ReviewDto> {
     return http
-      .put<ReviewDto>(`/v1/reviews/${reviewId}`, payload)
-      .then((res) => res.data);
+      .get<ReviewDto>(`/v1/reviews/${reviewId}`)
+      .then((res) => ({
+        id: res.data.id,
+        applicationId: res.data.applicationId,
+        tutorId: res.data.tutorId,
+        rating: res.data.rating,
+        comment: res.data.comment ?? "",
+        student: { id: res.data.studentId, fullName: res.data.studentName ?? "" },
+        createdAt: res.data.createdAt,
+        complaintStatus: toComplaintStatus(res.data.complaintStatus),
+      }));
   },
 };

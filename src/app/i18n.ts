@@ -1394,6 +1394,14 @@ const vi = {
       notFound: "Không tìm thấy đánh giá.",
       alreadyComplained: "Bạn đã gửi khiếu nại cho đánh giá này.",
       complain: "Khiếu nại đánh giá",
+      complaintPending:
+        "Bạn đã gửi khiếu nại cho đánh giá này, đang chờ admin xử lý.",
+      complaintRejected:
+        "Khiếu nại của bạn đã bị từ chối, đánh giá được giữ lại.",
+      complaintApproved:
+        "Khiếu nại của bạn đã được chấp nhận, đánh giá đã bị gỡ.",
+      notFoundTutor:
+        "Không tìm thấy đánh giá. Nếu khiếu nại của bạn đã được chấp nhận thì đánh giá đã bị gỡ.",
     },
     list: {
       empty: {
@@ -3231,6 +3239,14 @@ const en = {
       alreadyComplained:
         "You have already submitted a complaint for this review.",
       complain: "Report review",
+      complaintPending:
+        "You have complained about this review. It is waiting for an admin to process.",
+      complaintRejected:
+        "Your complaint was rejected. The review has been kept.",
+      complaintApproved:
+        "Your complaint was approved. The review has been removed.",
+      notFoundTutor:
+        "Review not found. If your complaint was approved, the review has been removed.",
     },
     list: {
       empty: {
