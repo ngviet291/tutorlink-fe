@@ -7,7 +7,7 @@ import "./index.css";
 import "./app/i18n";
 import { store } from "./app/store";
 import { router } from "./app/router";
-import { ErrorBoundary } from "./shared/components/ErrorBoundary";
+import { ErrorBoundary } from "./shared/components/ui/ErrorBoundary";
 import { ToastContainer } from "./shared/components/ui/Toast";
 import { AuthInitializer } from "./features/auth/components/AuthInitializer";
 import { initTracking } from "./features/tracking/tracker";
