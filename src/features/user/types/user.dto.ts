@@ -111,6 +111,7 @@ export interface TutorResponse extends BaseUserResponse {
   teachingMode?: TeachingMode;
   teachingAreas?: string[];
   availableSlots?: AvailableSlotResponse[];
+  certificates?: CertificateResponse[];
 }
 
 export interface UpdateTutorProfileRequest {

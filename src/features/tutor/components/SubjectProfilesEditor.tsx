@@ -75,6 +75,21 @@ function parseAreas(text: string): string[] {
     });
 }
 
+function hasOverlappingSchedule(schedule: ScheduleSlot[]): boolean {
+  return schedule.some((slot, index) =>
+    schedule.slice(index + 1).some(
+      (other) =>
+        slot.day === other.day &&
+        slot.from &&
+        slot.to &&
+        other.from &&
+        other.to &&
+        slot.from < other.to &&
+        other.from < slot.to,
+    ),
+  );
+}
+
 /** Môn chưa có dữ liệu riêng (hồ sơ cũ) lấy giá trị chung của gia sư làm mặc định. */
 function toSubjectValues(data: TutorResponse): SubjectFormValues[] {
   const profiles = new Map<string, SubjectProfile>(
@@ -173,8 +188,7 @@ function CertificateItem({
         variant="ghost"
         aria-label={t("subjectEditor.deleteCertAria")}
         loading={deleting}
-        onClick={onDelete}
-      >
+        onClick={onDelete}>
         <Trash2 className="size-4 text-danger-text" />
       </Button>
     </li>
@@ -201,8 +215,7 @@ function SlotsEditor({ form }: { form: Form }) {
       {fields.map((f, i) => (
         <div
           key={f.id}
-          className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_1fr_auto]"
-        >
+          className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
           <Select
             aria-label={t("subjectEditor.dayAria")}
             options={DAYS.map((d) => ({ value: d, label: DAY_LABEL[d] }))}
@@ -230,8 +243,7 @@ function SlotsEditor({ form }: { form: Form }) {
           <Button
             variant="ghost"
             aria-label={t("subjectEditor.deleteSlotAria")}
-            onClick={() => remove(i)}
-          >
+            onClick={() => remove(i)}>
             <Trash2 className="size-4 text-danger-text" />
           </Button>
         </div>
@@ -240,8 +252,7 @@ function SlotsEditor({ form }: { form: Form }) {
         variant="outline"
         size="sm"
         className="w-fit"
-        onClick={() => append({ day: "MONDAY", from: "18:00", to: "20:00" })}
-      >
+        onClick={() => append({ day: "MONDAY", from: "18:00", to: "20:00" })}>
         <Plus className="size-4" /> {t("subjectEditor.addSlot")}
       </Button>
     </fieldset>
@@ -256,8 +267,7 @@ function CommonInfoCard({ form }: { form: Form }) {
   return (
     <section
       className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6"
-      aria-label={t("subjectEditor.commonInfo")}
-    >
+      aria-label={t("subjectEditor.commonInfo")}>
       <h2 className="text-lg font-bold text-text">
         {t("subjectEditor.commonInfo")}
       </h2>
@@ -296,8 +306,7 @@ function CommonInfoCard({ form }: { form: Form }) {
           {TEACHING_LEVELS.map((level) => (
             <label
               key={level}
-              className="flex cursor-pointer items-center gap-2 text-sm text-text"
-            >
+              className="flex cursor-pointer items-center gap-2 text-sm text-text">
               <input
                 type="checkbox"
                 value={level}
@@ -357,8 +366,7 @@ function SubjectCard({
     return (
       <section
         className="flex flex-col gap-3 rounded-3xl border border-dashed border-border bg-surface p-5 sm:p-6"
-        aria-label={t("subjectEditor.newSubject")}
-      >
+        aria-label={t("subjectEditor.newSubject")}>
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-lg font-bold text-text">
             {t("subjectEditor.newSubject")}
@@ -381,8 +389,7 @@ function SubjectCard({
   return (
     <section
       className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6"
-      aria-label={t("subjectEditor.subjectAria", { name: subjectName })}
-    >
+      aria-label={t("subjectEditor.subjectAria", { name: subjectName })}>
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-lg font-bold text-text">{subjectName}</h3>
@@ -403,8 +410,7 @@ function SubjectCard({
           aria-label={t("subjectEditor.removeSubjectAria", {
             name: subjectName,
           })}
-          onClick={onRemoveSubject}
-        >
+          onClick={onRemoveSubject}>
           <Trash2 className="size-4 text-danger-text" />
         </Button>
       </div>
@@ -549,6 +555,10 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
       toast.error(t("subjectEditor.pickOrCancel"));
       return;
     }
+    if (hasOverlappingSchedule(values.schedule ?? [])) {
+      toast.error(t("subjectEditor.overlappingSchedule"));
+      return;
+    }
     // Hồ sơ đã duyệt: phải bổ sung đủ thì mới nhận lớp / đăng bài được
     if (data.verificationStatus === "APPROVED") {
       const lacking: string[] = [];
@@ -612,8 +622,7 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
     <form
       onSubmit={(ev) => void submit(ev)}
       noValidate
-      className="flex flex-col gap-5"
-    >
+      className="flex flex-col gap-5">
       {data.verificationStatus === "APPROVED" &&
         !(
           data.bio?.trim() &&
@@ -623,14 +632,11 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
         ) && (
           <p
             role="alert"
-            className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-text"
-          >
+            className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-text">
             {t("subjectEditor.approvedBanner")}
           </p>
         )}
-
       <CommonInfoCard form={form} />
-
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-bold text-text">
           {t("subjectEditor.subjectsTitle")}
@@ -639,15 +645,12 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
           {t("subjectEditor.subjectsHint")}
         </p>
       </div>
-
       {certsLoading && <Skeleton className="h-16 w-full" />}
-
       {fields.length === 0 && (
         <p className="text-sm text-text-secondary">
           {t("subjectEditor.noSubjects")}
         </p>
       )}
-
       {fields.map((field, index) => (
         <SubjectCard
           key={field.id}
@@ -675,7 +678,6 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
           deletingCertificateId={deletingId}
         />
       ))}
-
       {orphans.length > 0 && (
         <div className="flex flex-col gap-2">
           <p className="text-xs text-text-secondary">
@@ -693,18 +695,15 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
           </ul>
         </div>
       )}
-
       <Button
         variant="outline"
         className="w-fit"
         disabled={
           availableSubjects.length === 0 || current.some((c) => !c.subjectId)
         }
-        onClick={() => append(newSubjectValues("", ""))}
-      >
+        onClick={() => append(newSubjectValues("", ""))}>
         <Plus className="size-4" /> {t("subjectEditor.addSubject")}
       </Button>
-
       <div className="flex justify-end border-t border-border pt-4">
         <Button type="submit" loading={save.isPending || upload.isPending}>
           {data.verificationStatus === "REJECTED"
@@ -712,7 +711,6 @@ export function SubjectProfilesEditor({ data }: { data: TutorResponse }) {
             : t("subjectEditor.saveProfile")}
         </Button>
       </div>
-
       <ConfirmDialog
         open={subjectToRemove !== null}
         onClose={() => setSubjectToRemove(null)}

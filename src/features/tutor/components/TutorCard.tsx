@@ -5,7 +5,6 @@ import { ROUTES } from "@/constants/routes";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { RatingStars } from "@/shared/components/ui/RatingStars";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
-import { formatVnd } from "@/shared/utils/currency";
 import type { TutorResponse } from "../types/tutor.types";
 
 const MAX_SUBJECTS = 3;

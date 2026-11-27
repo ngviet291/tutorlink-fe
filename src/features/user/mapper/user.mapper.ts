@@ -74,6 +74,7 @@ export function toTutor(dto: TutorResponseDto): TutorResponse {
       hourlyRate: p.hourlyRate ?? 0,
       teachingMode: p.teachingMode ?? dto.teachingMode ?? "BOTH",
     })),
+    certificates: dto.certificates ?? []
   };
 }
 

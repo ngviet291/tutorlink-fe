@@ -1417,6 +1417,7 @@ const vi = {
     fromAria: "Từ giờ",
     toAria: "Đến giờ",
     enterTime: "Nhập giờ",
+    overlappingSchedule: "Lịch rảnh bị trùng nhau trong cùng một ngày",
     mustBeAfterStart: "Phải sau giờ bắt đầu",
     deleteSlotAria: "Xóa ca",
     addSlot: "Thêm ca rảnh",
@@ -1555,6 +1556,7 @@ const vi = {
     changePasswordButton: "Đổi mật khẩu",
     currentPassword: "Mật khẩu hiện tại",
     currentPasswordRequired: "Vui lòng nhập mật khẩu hiện tại",
+    passwordSameAsCurrent: "Mật khẩu mới phải khác mật khẩu hiện tại",
     newPassword: "Mật khẩu mới",
     confirmPassword: "Nhập lại mật khẩu mới",
     confirmRequired: "Vui lòng nhập lại mật khẩu mới",
@@ -3252,6 +3254,8 @@ const en = {
     fromAria: "From",
     toAria: "To",
     enterTime: "Enter a time",
+    overlappingSchedule: "Availability times overlap on the same day",
+
     mustBeAfterStart: "Must be after the start time",
     deleteSlotAria: "Delete slot",
     addSlot: "Add availability slot",
@@ -3394,6 +3398,8 @@ const en = {
     changePasswordButton: "Change password",
     currentPassword: "Current password",
     currentPasswordRequired: "Please enter your current password",
+    passwordSameAsCurrent:
+      "New password must be different from the current password",
     newPassword: "New password",
     confirmPassword: "Confirm new password",
     confirmRequired: "Please re-enter your new password",
