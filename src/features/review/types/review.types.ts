@@ -1,25 +1,31 @@
-import type { StudentSummary } from '@/features/user/types/user.types'
+import type { StudentSummary } from "@/features/user/types/user.types";
 
-export type ComplaintStatus = 'NONE' | 'OPEN' | 'RESOLVED'
+export type ComplaintStatus =
+  | "NONE"
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "OPEN"
+  | "RESOLVED";
 
 export interface ReviewResponse {
-  id: string
-  applicationId?: string
-  tutorId: string
-  rating: number
-  comment: string
-  student: StudentSummary
-  createdAt?: string
-  complaintStatus?: ComplaintStatus
+  id: string;
+  applicationId?: string;
+  tutorId: string;
+  rating: number;
+  comment: string;
+  student: StudentSummary;
+  createdAt?: string;
+  complaintStatus?: ComplaintStatus;
   /** Lý do khiếu nại của gia sư */
-  complaintReason?: string
+  complaintReason?: string;
   /** Kết quả xử lý: giữ hay gỡ */
-  complaintDecision?: 'KEPT' | 'REMOVED'
-  complaintDecisionNote?: string
+  complaintDecision?: "KEPT" | "REMOVED";
+  complaintDecisionNote?: string;
 }
 
 export interface ReviewPayload {
-  applicationId: string
-  rating: number
-  comment: string
+  applicationId: string;
+  rating: number;
+  comment: string;
 }
