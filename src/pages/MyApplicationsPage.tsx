@@ -138,14 +138,12 @@ export default function MyApplicationsPage() {
                     (flashing
                       ? "ring-2 ring-primary"
                       : "ring-2 ring-primary/40"),
-                )}
-              >
+                )}>
                 <div className="min-w-0">
                   <Link
                     to={ROUTES.POST_DETAIL(a.post.id)}
                     state={{ mine: true }}
-                    className="block truncate font-bold text-text hover:text-primary"
-                  >
+                    className="block truncate font-bold text-text hover:text-primary">
                     {a.post.title}
                   </Link>
                   <p className="mt-0.5 text-xs text-text-secondary">
@@ -197,8 +195,7 @@ export default function MyApplicationsPage() {
                               toast.success(t("myApplications.confirmed")),
                             onError: (e) => toast.apiError(e),
                           })
-                        }
-                      >
+                        }>
                         {t("myApplications.confirm")}
                       </Button>
                     )}
@@ -207,8 +204,7 @@ export default function MyApplicationsPage() {
                       size="sm"
                       variant="outline"
                       loading={finish.isPending && finish.variables === a.id}
-                      onClick={() => handleFinish(a)}
-                    >
+                      onClick={() => handleFinish(a)}>
                       {t("myApplications.finishClass")}
                     </Button>
                   )}
@@ -218,8 +214,7 @@ export default function MyApplicationsPage() {
                         (user?.id === a.student?.id
                           ? a.tutor?.id
                           : a.student?.id) ?? a.post.author.id,
-                      )}
-                    >
+                      )}>
                       <Button size="sm" variant="secondary">
                         {t("myApplications.openChat")}
                       </Button>

@@ -728,6 +728,7 @@ const vi = {
       contentHint:
         "Tối đa {{max}} ký tự. Mô tả rõ mục tiêu, trình độ và lịch học mong muốn.",
       budgetUnitLabel: "Đơn vị ngân sách",
+      budgetPerHour: "Theo giờ",
       budgetPerSession: "Theo buổi",
       budgetPerMonth: "Theo tháng",
       minBudgetLabel: "Ngân sách tối thiểu ({{unit}})",
@@ -2048,7 +2049,7 @@ const en = {
     subjectsTitle: "Subject categories",
     subjectsSubTutor: "Pick a subject to see classes looking for tutors",
     subjectsSubStudent: "Pick a subject to see matching tutors",
-    topTutors: "Top-Rated Tutors",
+    topTutors: "Featured Tutors",
     tutorsLookingForStudents: "Tutors Looking for Students",
     classesLookingForTutors: "Classes Looking for Tutors",
     stepsTitle: "A simple 3-step process",
@@ -2471,6 +2472,7 @@ const en = {
       contentHint:
         "Up to {{max}} characters. Describe your goals, level and preferred schedule.",
       budgetUnitLabel: "Budget unit",
+      budgetPerHour: "Per hour",
       budgetPerSession: "Per session",
       budgetPerMonth: "Per month",
       minBudgetLabel: "Minimum budget ({{unit}})",
