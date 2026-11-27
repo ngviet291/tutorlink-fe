@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
+  Globe,
   LayoutDashboard,
   LogOut,
   Menu,
   Moon,
   Sun,
   User,
-  UserRound,
   X,
 } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
@@ -107,7 +107,7 @@ export function Navbar() {
                           navigate(ROUTES.TUTOR_DETAIL(user.id));
                         }}
                       >
-                        <UserRound className="size-4" />{" "}
+                        <Globe className="size-4" aria-hidden="true" />{" "}
                         {t("shared.navbar.publicProfile")}
                       </button>
                     )}

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { usePostStatistics } from "@/features/post/hooks/usePosts";
 import { POST_STATUS_META } from "@/constants/enums";
 import { AdminApplicationsPanel } from "@/features/admin/components/AdminApplicationsPanel";
-import { CircleDollarSign, Handshake } from "lucide-react";
+import { CalendarDays, CircleDollarSign, Handshake } from "lucide-react";
 import { ErrorState } from "@/shared/components/ui/EmptyState";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
@@ -14,7 +14,14 @@ function formatMonthYear(periodStart: string): string {
   const [year, month] = periodStart.split("-");
   return `${month}/${year}`;
 }
-
+/** 200000 -> "200k", 1600000 -> "1.6tr", 0 -> "0" */
+function formatShort(value: number, millionLabel: string): string {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}${millionLabel}`;
+  }
+  if (value >= 1_000) return `${Math.round(value / 1_000)}k`;
+  return String(Math.round(value));
+}
 /** Biểu đồ cột tự dựng bằng SVG. */
 function RevenueChart({ points }: { points: RevenuePoint[] }) {
   const { t } = useTranslation();
@@ -45,7 +52,8 @@ function RevenueChart({ points }: { points: RevenuePoint[] }) {
         />
       ))}
       {points.map((p, i) => {
-        const h = ((H - PAD.t - PAD.b) * p.revenue) / max;
+        const rawH = ((H - PAD.t - PAD.b) * p.revenue) / max;
+        const h = p.revenue > 0 ? Math.max(rawH, 8) : 2;
         const x = PAD.l + i * bw + bw * 0.18;
         const y = H - PAD.b - h;
         return (
@@ -66,8 +74,7 @@ function RevenueChart({ points }: { points: RevenuePoint[] }) {
               fontWeight="700"
               fill="var(--color-text)"
             >
-              {(p.revenue / 1_000_000).toFixed(1)}
-              {t("adminStats.millionShort")}
+              {formatShort(p.revenue, t("adminStats.millionShort"))}
             </text>
             <text
               x={x + bw * 0.32}
@@ -92,6 +99,7 @@ export default function AdminStatsPage() {
   if (isError) return <ErrorState onRetry={() => void refetch()} />;
 
   const totalRevenue = data?.revenueByMonth.reduce((s, p) => s + p.revenue, 0);
+  const thisMonthRevenue = data?.revenueByMonth.at(-1)?.revenue;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
@@ -102,6 +110,12 @@ export default function AdminStatsPage() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         {[
+          {
+            icon: CalendarDays,
+            label: t("adminStats.revenueThisMonth"),
+            value:
+              data === undefined ? undefined : formatVnd(thisMonthRevenue ?? 0),
+          },
           {
             icon: CircleDollarSign,
             label: t("adminStats.revenue6m"),
@@ -118,11 +132,11 @@ export default function AdminStatsPage() {
             key={label}
             className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4"
           >
-            <span className="flex size-11 items-center justify-center rounded-xl bg-primary-light text-primary">
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary-light text-primary">
               <Icon className="size-5" />
             </span>
-            <div>
-              <p className="text-xs text-text-secondary">{label}</p>
+            <div className="min-w-0">
+              <p className="truncate text-xs text-text-secondary">{label}</p>
               {value === undefined ? (
                 <Skeleton className="mt-1 h-6 w-20" />
               ) : (
@@ -144,8 +158,8 @@ export default function AdminStatsPage() {
         )}
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+      <div className="grid items-stretch gap-4 lg:grid-cols-2">
+        <section className="h-full rounded-2xl border border-border bg-surface p-4 sm:p-5">
           <h2 className="mb-3 text-lg font-bold text-text">
             {t("adminStats.topTutors")}
           </h2>
@@ -158,7 +172,7 @@ export default function AdminStatsPage() {
                   key={tutor.tutorId}
                   className="flex items-center gap-3 rounded-xl bg-surface-hover px-3 py-2"
                 >
-                  <span className="flex size-7 items-center justify-center rounded-full bg-primary text-xs font-extrabold text-white">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-extrabold text-white">
                     {i + 1}
                   </span>
                   <span className="flex-1 truncate font-semibold text-text">
@@ -172,26 +186,34 @@ export default function AdminStatsPage() {
             </ol>
           )}
         </section>
+
+        <section className="h-full rounded-2xl border border-border bg-surface p-4 sm:p-5">
+          <h2 className="mb-3 text-lg font-bold text-text">
+            {t("adminStats.postsByStatus")}
+          </h2>
+          {postStats.isLoading ? (
+            <Skeleton className="h-40" />
+          ) : postStats.isError ? (
+            <ErrorState onRetry={() => void postStats.refetch()} />
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {postStats.data?.map((p) => (
+                <li
+                  key={p.status}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-surface-hover px-3 py-2"
+                >
+                  <span className="font-semibold text-text">
+                    {POST_STATUS_META[p.status].label}
+                  </span>
+                  <span className="text-sm font-bold text-primary">
+                    {p.count}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
-      <section className="rounded-2xl border border-border bg-surface p-4">
-        <h2 className="mb-3 text-lg font-bold">
-          {t("adminStats.postsByStatus")}
-        </h2>
-        {postStats.isLoading ? (
-          <Skeleton className="h-24" />
-        ) : postStats.isError ? (
-          <ErrorState onRetry={() => void postStats.refetch()} />
-        ) : (
-          <ul>
-            {postStats.data?.map((p) => (
-              <li key={p.status} className="flex justify-between py-2">
-                <span>{POST_STATUS_META[p.status].label}</span>
-                <strong>{p.count}</strong>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
       <AdminApplicationsPanel />
     </div>
   );
