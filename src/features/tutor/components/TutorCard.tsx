@@ -5,7 +5,6 @@ import { ROUTES } from "@/constants/routes";
 import { Avatar } from "@/shared/components/ui/Avatar";
 import { RatingStars } from "@/shared/components/ui/RatingStars";
 import { SubjectTag } from "@/shared/components/ui/SubjectTag";
-import { formatVnd } from "@/shared/utils/currency";
 import type { TutorResponse } from "../types/tutor.types";
 
 const MAX_SUBJECTS = 3;
@@ -43,6 +42,9 @@ export function TutorCard({ tutor }: { tutor: TutorResponse }) {
                   {tutor.averageRating.toFixed(1)}
                 </span>
               )}
+              <span className="text-xs font-semibold tabular-nums text-text">
+                {tutor.experienceYears} {t("common.yearsExperience")}
+              </span>
             </div>
           </div>
         </div>
@@ -81,7 +83,7 @@ export function TutorCard({ tutor }: { tutor: TutorResponse }) {
       </div>
 
       {/* Chân thẻ: giá là điểm nhấn duy nhất */}
-      <div className="flex items-center justify-end border-t border-border bg-primary/5 p-3" >
+      <div className="flex items-center justify-end border-t border-border bg-primary/5 p-3">
         {/* <span className="text-lg font-bold tabular-nums text-primary">
           {formatVnd(tutor.hourlyRate)}
           <span className="ml-0.5 text-xs font-normal text-text-secondary">

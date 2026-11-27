@@ -237,15 +237,14 @@ export default function TutorDetailPage() {
                   {tutor.certificates.map((c, i) => (
                     <li
                       key={`${c.name}-${i}`}
-                      className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4"
-                    >
+                      className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
                       <span className="flex size-10 items-center justify-center rounded-full bg-primary-light text-primary">
                         <Award className="size-5" />
                       </span>
                       <div>
                         <p className="font-semibold text-text">{c.name}</p>
                         <p className="text-xs text-text-secondary">
-                          {c.issuer} · {c.year}
+                          {c.issuedDate} · {c.issuedBy}
                         </p>
                       </div>
                     </li>
@@ -277,8 +276,7 @@ export default function TutorDetailPage() {
                       <Button
                         variant="outline"
                         loading={tutorPosts.isFetchingNextPage}
-                        onClick={() => void tutorPosts.fetchNextPage()}
-                      >
+                        onClick={() => void tutorPosts.fetchNextPage()}>
                         {t("tutorDetail.loadMore")}
                       </Button>
                     </div>
@@ -293,8 +291,7 @@ export default function TutorDetailPage() {
                   {tutor.schedule.map((s, i) => (
                     <li
                       key={i}
-                      className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4"
-                    >
+                      className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
                       <span className="font-semibold text-text">
                         {DAY_LABEL[s.day]}
                       </span>
@@ -321,8 +318,7 @@ export default function TutorDetailPage() {
               fullWidth
               variant={isFav ? "secondary" : "outline"}
               onClick={onFavorite}
-              loading={toggle.isPending}
-            >
+              loading={toggle.isPending}>
               <Heart className={isFav ? "size-4 fill-current" : "size-4"} />{" "}
               {isFav
                 ? t("tutorDetail.favorited")
@@ -347,8 +343,7 @@ export default function TutorDetailPage() {
         <Button
           variant={isFav ? "secondary" : "outline"}
           onClick={onFavorite}
-          aria-label={t("tutorDetail.favoriteAria")}
-        >
+          aria-label={t("tutorDetail.favoriteAria")}>
           <Heart className={isFav ? "size-4 fill-current" : "size-4"} />
         </Button>
       </div>

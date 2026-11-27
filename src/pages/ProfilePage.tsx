@@ -126,8 +126,7 @@ export default function ProfilePage() {
             aria-label={t("profile.changeAvatar")}
             disabled={uploadAvatar.isPending}
             onClick={() => fileRef.current?.click()}
-            className="group relative shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
-          >
+            className="group relative shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60">
             <Avatar name={user.fullName} src={user.avatarUrl} size="xl" />
             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
               <Camera className="size-5" aria-hidden="true" />
@@ -159,8 +158,7 @@ export default function ProfilePage() {
                 onError: (er) => toast.apiError(er),
               }),
             )(e)
-          }
-        >
+          }>
           <Input
             label={t("profile.fullName")}
             required
@@ -245,8 +243,7 @@ export default function ProfilePage() {
                 },
               ),
             )(e)
-          }
-        >
+          }>
           <Input
             label={t("profile.currentPassword")}
             type="password"
@@ -263,7 +260,12 @@ export default function ProfilePage() {
             autoComplete="new-password"
             required
             error={pw.formState.errors.newPassword?.message}
-            {...pw.register("newPassword", rules.password)}
+            {...pw.register("newPassword", {
+              ...rules.password,
+              validate: (v) =>
+                v !== pw.getValues("currentPassword") ||
+                t("profile.passwordSameAsCurrent"),
+            })}
           />
           <Input
             label={t("profile.confirmPassword")}

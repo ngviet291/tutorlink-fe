@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { Modal } from "@/shared/components/ui/Modal";
@@ -16,6 +17,7 @@ interface Props {
 
 export function PayFeeModal({ application, onClose }: Props) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const toast = useToast();
   const { payCommission: pay } = useWalletMutations();
   const wallet = useWallet(Boolean(application));
@@ -84,19 +86,24 @@ export function PayFeeModal({ application, onClose }: Props) {
           <Button variant="ghost" onClick={onClose}>
             {t("common.cancel")}
           </Button>
-          <Button
-            loading={pay.isPending}
-            disabled={
-              insufficient ||
-              !quote.data ||
-              wallet.isLoading ||
-              wallet.isError ||
-              quote.isError
-            }
-            onClick={handlePay}
-          >
-            {t("wallet.confirmPay")}
-          </Button>
+          {insufficient ? (
+            <Button
+              onClick={() => {
+                onClose();
+                navigate("/wallet");
+              }}
+            >
+              {t("wallet.topUp")}
+            </Button>
+          ) : (
+            <Button
+              loading={pay.isPending}
+              disabled={!quote.data || wallet.isLoading || wallet.isError || quote.isError}
+              onClick={handlePay}
+            >
+              {t("wallet.confirmPay")}
+            </Button>
+          )}
         </div>
       </div>
     </Modal>

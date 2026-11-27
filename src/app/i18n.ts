@@ -741,6 +741,7 @@ const vi = {
       contentHint:
         "Tối đa {{max}} ký tự. Mô tả rõ mục tiêu, trình độ và lịch học mong muốn.",
       budgetUnitLabel: "Đơn vị ngân sách",
+      budgetPerHour: "Theo giờ",
       budgetPerSession: "Theo buổi",
       budgetPerMonth: "Theo tháng",
       minBudgetLabel: "Ngân sách tối thiểu ({{unit}})",
@@ -1438,6 +1439,7 @@ const vi = {
     fromAria: "Từ giờ",
     toAria: "Đến giờ",
     enterTime: "Nhập giờ",
+    overlappingSchedule: "Lịch rảnh bị trùng nhau trong cùng một ngày",
     mustBeAfterStart: "Phải sau giờ bắt đầu",
     deleteSlotAria: "Xóa ca",
     addSlot: "Thêm ca rảnh",
@@ -1576,6 +1578,7 @@ const vi = {
     changePasswordButton: "Đổi mật khẩu",
     currentPassword: "Mật khẩu hiện tại",
     currentPasswordRequired: "Vui lòng nhập mật khẩu hiện tại",
+    passwordSameAsCurrent: "Mật khẩu mới phải khác mật khẩu hiện tại",
     newPassword: "Mật khẩu mới",
     confirmPassword: "Nhập lại mật khẩu mới",
     confirmRequired: "Vui lòng nhập lại mật khẩu mới",
@@ -2059,7 +2062,7 @@ const en = {
     subjectsTitle: "Subject categories",
     subjectsSubTutor: "Pick a subject to see classes looking for tutors",
     subjectsSubStudent: "Pick a subject to see matching tutors",
-    topTutors: "Top-Rated Tutors",
+    topTutors: "Featured Tutors",
     tutorsLookingForStudents: "Tutors Looking for Students",
     classesLookingForTutors: "Classes Looking for Tutors",
     stepsTitle: "A simple 3-step process",
@@ -2495,6 +2498,7 @@ const en = {
       contentHint:
         "Up to {{max}} characters. Describe your goals, level and preferred schedule.",
       budgetUnitLabel: "Budget unit",
+      budgetPerHour: "Per hour",
       budgetPerSession: "Per session",
       budgetPerMonth: "Per month",
       minBudgetLabel: "Minimum budget ({{unit}})",
@@ -3294,6 +3298,8 @@ const en = {
     fromAria: "From",
     toAria: "To",
     enterTime: "Enter a time",
+    overlappingSchedule: "Availability times overlap on the same day",
+
     mustBeAfterStart: "Must be after the start time",
     deleteSlotAria: "Delete slot",
     addSlot: "Add availability slot",
@@ -3436,6 +3442,8 @@ const en = {
     changePasswordButton: "Change password",
     currentPassword: "Current password",
     currentPasswordRequired: "Please enter your current password",
+    passwordSameAsCurrent:
+      "New password must be different from the current password",
     newPassword: "New password",
     confirmPassword: "Confirm new password",
     confirmRequired: "Please re-enter your new password",

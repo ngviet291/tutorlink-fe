@@ -42,9 +42,12 @@ const SUBJECT_ICONS: Record<string, LucideIcon> = {
   "019cef3d-7fd8-7881-95f9-bf62461639ef": Music2,
 };
 
+const TOP_1_TUTOR = 1;
 function Hero({ role }: { role?: string }) {
+  const topTutors = useTopTutor(TOP_1_TUTOR);
   const { t } = useTranslation();
   const isTutor = role === "TUTOR";
+  const firstTutor = topTutors.data?.content[0];
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary-light via-background to-background">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 lg:grid-cols-2 lg:py-20">
@@ -91,8 +94,8 @@ function Hero({ role }: { role?: string }) {
           <div className="absolute -left-6 -top-6 size-40 rounded-full bg-secondary/40 blur-2xl" />
           <div className="absolute -bottom-8 -right-4 size-48 rounded-full bg-primary/30 blur-2xl" />
           <div className="relative rounded-3xl border border-border bg-surface p-6 shadow-xl">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="flex size-12 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
+            {/* <div className="mb-4 flex items-center gap-3"> */}
+              {/* <span className="flex size-12 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
                 H
               </span>
               <div>
@@ -129,8 +132,17 @@ function Hero({ role }: { role?: string }) {
             <p className="flex items-center gap-2 rounded-xl bg-primary-light p-3 text-xs text-text-secondary">
               <Brain className="size-4 shrink-0 text-primary" />{" "}
               {t("home.aiNote")}
-            </p>
+            </p> */}
+          {firstTutor && (
+            <>
+              <h2 className="mb-4 text-lg font-extrabold text-text">
+                {t("home.topTutors")}
+              </h2>
+              <TutorCard tutor={firstTutor} />
+            </>
+          )}
           </div>
+
         </div>
       </div>
     </section>
@@ -220,8 +232,7 @@ export default function HomePage() {
                 <Link
                   key={s.id}
                   to={`${subjectTarget}?subject=${s.id}`}
-                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
-                >
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
                   <span className="flex size-12 items-center justify-center rounded-xl bg-primary-light text-primary">
                     <Icon className="size-6" />
                   </span>
@@ -300,8 +311,7 @@ export default function HomePage() {
             ].map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-border bg-surface p-5"
-              >
+                className="rounded-2xl border border-border bg-surface p-5">
                 <Icon className="mb-3 size-7 text-primary" />
                 <h3 className="mb-1 font-bold text-text">{title}</h3>
                 <p className="text-sm text-text-secondary">{desc}</p>

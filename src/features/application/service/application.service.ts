@@ -55,7 +55,7 @@ function asTutor(u: UserSummary): TutorResponse {
   return {
     id: u.id,
     fullName: u.fullName,
-    avatarUrl: u.avatarUrl ?? undefined,
+    avatarUrl: u.avatarUrl || undefined,
     experienceYears: u.experienceYears ?? 0,
     hourlyRate: 0,
     averageRating: u.averageRating ?? 0,

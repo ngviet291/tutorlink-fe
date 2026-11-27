@@ -62,7 +62,7 @@ const getTestDefaults = (
 
 /** Khớp BudgetRangeValidator của BE. */
 const BUDGET_MIN_EXCLUSIVE = 10000;
-const BUDGET_MAX = 5000000;
+const BUDGET_MAX = 50000000;
 
 /** Tên input trong form; field BE trả về ngoài danh sách này sẽ hiện ở root.server. */
 const FORM_FIELDS = [
@@ -225,6 +225,7 @@ export function PostForm({
 
   // Nhãn tính trong component để đổi theo ngôn ngữ hiện tại.
   const budgetUnitOptions = [
+    { value: "PER_HOUR", label: t("post.postForm.budgetPerHour") },
     { value: "PER_SESSION", label: t("post.postForm.budgetPerSession") },
     { value: "PER_MONTH", label: t("post.postForm.budgetPerMonth") },
   ] as const;

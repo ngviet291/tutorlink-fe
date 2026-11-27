@@ -8,6 +8,7 @@ import type {
 } from "@/shared/types/common.types";
 import type { SubjectResponse } from "@/features/subject/types/subject.types";
 import type { ContactInfo } from "@/features/user/types/user.types";
+import type { CertificateResponse } from "@/features/user/types/user.dto";
 
 type SubjectSummary = Pick<SubjectResponse, "id" | "name">;
 export const TOP_TUTOR = 4;
@@ -52,7 +53,7 @@ export interface TutorResponse {
   /** Chỉ có sau khi kết nối thành công */
   contact?: ContactInfo;
   createdAt?: string;
-  certificates?: Certificate[];
+  certificates?: CertificateResponse[];
   educationLevels?: EducationLevel[];
   subjects?: SubjectSummary[];
   /** Kinh nghiệm / giá / hình thức dạy riêng từng môn */
