@@ -105,7 +105,18 @@ export const APPLICATION_STATUS_META: Record<
     },
     tone: "green",
   },
-  // FINISHED:  { get label() { return t('application.status.FINISHED') },  tone: 'green' },
+  FINISH_REQUESTED: {
+    get label() {
+      return t("application.status.FINISH_REQUESTED");
+    },
+    tone: "yellow",
+  },
+  DISPUTED: {
+    get label() {
+      return t("application.status.DISPUTED");
+    },
+    tone: "red",
+  },
 };
 
 export const VERIFICATION_STATUS_META: Record<

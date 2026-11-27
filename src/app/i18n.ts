@@ -6,6 +6,8 @@ const vi = {
     home: "Trang chủ",
     findTutor: "Tìm Gia Sư",
     findClass: "Tìm Lớp",
+    postCreate: "Đăng bài",
+    messages: "Tin nhắn",
     tutorCorner: "Góc Gia Sư",
     studentCorner: "Góc Học Viên",
     wallet: "Ví của tôi",
@@ -372,6 +374,16 @@ const vi = {
     colFeeEarned: "Phí nhận lớp",
     colFeeTransaction: "Giao dịch phí",
     loadMore: "Tải thêm đơn",
+    refundTutor: "Hoàn phí cho gia sư",
+    dismissDispute: "Bác tranh chấp",
+    refundTitle: "Hoàn phí cho gia sư?",
+    refundDesc:
+      "Phí nhận lớp sẽ được cộng lại vào ví gia sư và đơn chuyển sang đã hủy. Thao tác này không hoàn tác được.",
+    dismissTitle: "Bác tranh chấp?",
+    dismissDesc:
+      "Đơn sẽ chuyển sang hoàn thành và phí nhận lớp được giữ nguyên.",
+    resolvedRefund: "Đã hoàn phí cho gia sư",
+    resolvedDismiss: "Đã bác tranh chấp",
     status: {
       PENDING: "Chờ xử lý",
       ACCEPTED: "Đã chấp nhận",
@@ -379,6 +391,8 @@ const vi = {
       FINISHED: "Đã hoàn thành",
       CANCELLED: "Đã hủy",
       REJECTED: "Đã từ chối",
+      FINISH_REQUESTED: "Chờ xác nhận hoàn thành",
+      DISPUTED: "Đang tranh chấp",
     },
   },
   adminTutorCertificateGallery: {
@@ -573,7 +587,7 @@ const vi = {
     min: "Tối thiểu 0%",
     max: "Tối đa 100%",
     save: "Lưu",
-    note: "Các mức phí được lưu để quản lý. Hệ thống hiện chưa áp dụng bảng cấu hình này khi tính phí nhận lớp.",
+    note: "Tỉ lệ có hiệu lực mới nhất sẽ được áp dụng khi tính phí nhận lớp cho các đơn thanh toán sau đó.",
     history: "Lịch sử các mức phí",
     colRate: "Tỉ lệ",
     colFrom: "Hiệu lực từ",
@@ -800,7 +814,7 @@ const vi = {
     estimated: "(dự kiến)",
     descriptionTitle: "Mô tả chi tiết",
     feeNotice:
-      "Học phí thực tế hằng tháng do hai bên tự thỏa thuận ngoài hệ thống TutorLink. Gia sư chỉ trả một khoản phí nhận lớp (tính trên học phí dự kiến tháng đầu) khi được chọn.",
+      "Học phí thực tế hằng tháng do hai bên tự thỏa thuận ngoài hệ thống TutorLink. Gia sư chỉ trả một khoản phí nhận lớp (tính theo tỉ lệ % trên học phí của một buổi học) khi được chọn.",
     author: "Người đăng",
     applicationCount_other: "{{count}} lượt đăng ký",
     apply: "Đăng ký nhận lớp",
@@ -986,7 +1000,7 @@ const vi = {
     stepsTitle: "Quy trình nhận lớp",
     feeTitle: "Phí nhận lớp",
     feeDesc:
-      "Phí do gia sư thanh toán, bằng một tỉ lệ phần trăm (hiện 20%, do Admin cấu hình) của học phí dự kiến tháng đầu. Ví chỉ dùng để nạp và trả phí.",
+      "Phí do gia sư thanh toán, bằng một tỉ lệ phần trăm (hiện 20%, do Admin cấu hình) của học phí một buổi học. Ví chỉ dùng để nạp và trả phí.",
     feePolicyLink: "Xem chính sách phí",
     shortcuts: {
       findClass: {
@@ -1073,6 +1087,8 @@ const vi = {
       CANCELLED: "Đã hủy",
       CONFIRMED: "Đã xác nhận",
       FINISHED: "Đã hoàn thành",
+      FINISH_REQUESTED: "Chờ xác nhận hoàn thành",
+      DISPUTED: "Đang tranh chấp",
     },
     paidWaitingConfirm: "Đã thanh toán — chờ học viên xác nhận",
     actionStudentConfirm: "học viên xác nhận",
@@ -1512,6 +1528,7 @@ const vi = {
   },
   dashboard: {
     greeting: "Xin chào, {{name}}!",
+    viewDetails: "Xem chi tiết",
     descTutor: "Quản lý hồ sơ và theo dõi lớp học của bạn.",
     descStudent: "Tìm gia sư và quản lý các lớp học của bạn.",
     myPosts: "Bài đăng của tôi",
@@ -1797,6 +1814,12 @@ const vi = {
     s500: "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
     s503: "Hệ thống đang tạm thời không khả dụng. Vui lòng thử lại sau.",
   },
+  nextStep: {
+    finishNeedConfirm:
+      "Đối phương báo lớp đã hoàn thành — bạn cần xác nhận hoặc từ chối",
+    finishWaitOther: "Chờ đối phương xác nhận lớp đã hoàn thành",
+    disputed: "Đơn đang tranh chấp, chờ quản trị viên xử lý",
+  },
   myApplications: {
     title: "Đơn đã ứng tuyển",
     descTutor:
@@ -1818,6 +1841,20 @@ const vi = {
     openChat: "Mở chat",
     viewReview: "Xem đánh giá",
     review: "Đánh giá",
+    finishWaiting: "Đã gửi yêu cầu hoàn thành. Chờ đối phương xác nhận.",
+    finishConfirm: "Xác nhận hoàn thành",
+    finishReject: "Từ chối",
+    finishConfirmed: "Đã xác nhận hoàn thành lớp",
+    finishRejected:
+      "Đã từ chối. Đơn chuyển sang tranh chấp, quản trị viên sẽ xem xét.",
+    actionFinishConfirm: "xác nhận hoàn thành",
+    rejectDialogTitle: "Từ chối xác nhận hoàn thành?",
+    rejectDialogDesc:
+      "Đơn sẽ chuyển sang trạng thái tranh chấp và quản trị viên sẽ xem xét. Bạn nên gửi bằng chứng qua email hỗ trợ.",
+    rejectDialogCancel: "Quay lại",
+    disputedHelp:
+      "Đơn đang tranh chấp. Vui lòng gửi bằng chứng (ảnh chụp tin nhắn, thỏa thuận học...) qua email:",
+    disputeEmailSubject: "Tranh chấp đơn {{id}}",
   },
   tutorProfile: {
     pendingTitle: "Hồ sơ đang chờ Admin duyệt",
@@ -1840,6 +1877,8 @@ const en = {
     home: "Home",
     findTutor: "Find Tutors",
     findClass: "Find Classes",
+    postCreate: "Post",
+    messages: "Messages",
     tutorCorner: "Tutor Corner",
     studentCorner: "Student Corner",
     wallet: "My Wallet",
@@ -2208,6 +2247,16 @@ const en = {
     colFeeTransaction: "Fee transaction",
     colFeeEarned: "Class fee",
     loadMore: "Load more applications",
+    refundTutor: "Refund tutor",
+    dismissDispute: "Dismiss dispute",
+    refundTitle: "Refund the tutor?",
+    refundDesc:
+      "The placement fee will be returned to the tutor's wallet and the application will be cancelled. This cannot be undone.",
+    dismissTitle: "Dismiss the dispute?",
+    dismissDesc:
+      "The application will be marked as finished and the placement fee is kept.",
+    resolvedRefund: "Tutor refunded",
+    resolvedDismiss: "Dispute dismissed",
     status: {
       PENDING: "Pending",
       ACCEPTED: "Accepted",
@@ -2215,6 +2264,8 @@ const en = {
       FINISHED: "Finished",
       CANCELLED: "Cancelled",
       REJECTED: "Rejected",
+      FINISH_REQUESTED: "Awaiting completion confirmation",
+      DISPUTED: "Disputed",
     },
   },
   adminTutorCertificateGallery: {
@@ -2543,7 +2594,7 @@ const en = {
     min: "Minimum 0%",
     max: "Maximum 100%",
     save: "Save",
-    note: "Fee rates are saved for management purposes. The system does not currently apply this configuration when calculating placement fees.",
+    note: "The most recent effective rate is applied when calculating placement fees for applications paid afterwards.",
     history: "Fee rate history",
     colRate: "Rate",
     colFrom: "Effective from",
@@ -2650,7 +2701,7 @@ const en = {
     estimated: "(estimated)",
     descriptionTitle: "Description",
     feeNotice:
-      "The actual monthly tuition is agreed between the two parties outside the TutorLink system. Tutors only pay a class-acceptance fee (based on the estimated first-month tuition) when selected.",
+      "The actual monthly tuition is agreed between both parties outside the TutorLink system. Tutors only pay a placement fee (a percentage of the tuition for one session) when selected.",
     author: "Posted by",
     applicationCount_one: "{{count}} application",
     applicationCount_other: "{{count}} applications",
@@ -2839,7 +2890,7 @@ const en = {
     stepsTitle: "How to get a class",
     feeTitle: "Class placement fee",
     feeDesc:
-      "The fee is paid by the tutor as a percentage (currently 20%, set by Admin) of the expected first-month tuition. The wallet is only used for top-ups and paying fees.",
+      "The fee is paid by the tutor as a percentage (currently 20%, set by Admin) of the tuition for one session. The wallet is only used for top-ups and paying fees.",
     feePolicyLink: "View fee policy",
     shortcuts: {
       findClass: {
@@ -2926,6 +2977,8 @@ const en = {
       CANCELLED: "Cancelled",
       CONFIRMED: "Confirmed",
       FINISHED: "Finished",
+      FINISH_REQUESTED: "Awaiting completion confirmation",
+      DISPUTED: "Disputed",
     },
     paidWaitingConfirm: "Paid — waiting for the student to confirm",
     actionStudentConfirm: "the student to confirm",
@@ -3374,6 +3427,7 @@ const en = {
   },
   dashboard: {
     greeting: "Hello, {{name}}!",
+    viewDetails: "View details",
     descTutor: "Manage your profile and track your classes.",
     descStudent: "Find tutors and manage your classes.",
     myPosts: "My posts",
@@ -3678,6 +3732,13 @@ const en = {
     pageDescription:
       "This information is shown publicly once your profile is approved (except contact details).",
   },
+  nextStep: {
+    finishNeedConfirm:
+      "The other party marked the class as finished — please confirm or decline",
+    finishWaitOther:
+      "Waiting for the other party to confirm the class is finished",
+    disputed: "This application is disputed and awaiting an admin decision",
+  },
   myApplications: {
     title: "My applications",
     descTutor:
@@ -3699,6 +3760,21 @@ const en = {
     openChat: "Open chat",
     viewReview: "View review",
     review: "Review",
+    finishWaiting:
+      "Completion request sent. Waiting for the other party to confirm.",
+    finishConfirm: "Confirm completion",
+    finishReject: "Decline",
+    finishConfirmed: "Class completion confirmed",
+    finishRejected:
+      "Declined. The application is now disputed and an admin will review it.",
+    actionFinishConfirm: "confirm completion",
+    rejectDialogTitle: "Decline to confirm completion?",
+    rejectDialogDesc:
+      "The application will be marked as disputed and an admin will review it. Please send your evidence to the support email.",
+    rejectDialogCancel: "Go back",
+    disputedHelp:
+      "This application is disputed. Please send your evidence (chat screenshots, agreements, etc.) to:",
+    disputeEmailSubject: "Dispute for application {{id}}",
   },
 };
 

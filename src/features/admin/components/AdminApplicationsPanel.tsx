@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   adminApplicationsService,
@@ -15,12 +19,16 @@ import { formatVnd } from "@/shared/utils/currency";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { Modal } from "@/shared/components/ui/Modal";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
+import { useToast } from "@/shared/hooks/useToast";
 
 // Chỉ giữ giá trị; nhãn được dịch lúc render để đổi VI/EN có hiệu lực ngay.
 const STATUS_VALUES: ApplicationStatus[] = [
   "PENDING",
   "ACCEPTED",
   "CONFIRMED",
+  "FINISH_REQUESTED",
+  "DISPUTED",
   "FINISHED",
   "CANCELLED",
   "REJECTED",
@@ -30,6 +38,30 @@ export function AdminApplicationsPanel() {
   const { t } = useTranslation();
   const [status, setStatus] = useState<ApplicationStatus | "">("");
   const [detail, setDetail] = useState<AdminApplication | null>(null);
+  const toast = useToast();
+  const qc = useQueryClient();
+  // true: hoàn phí cho gia sư; false: bác tranh chấp; null: không mở hộp thoại
+  const [resolveRefund, setResolveRefund] = useState<boolean | null>(null);
+  const resolve = useMutation({
+    mutationFn: (v: { id: string; refund: boolean }) =>
+      adminApplicationsService.resolveDispute(v.id, v.refund),
+    onSuccess: (_, v) => {
+      toast.success(
+        t(
+          v.refund
+            ? "adminApplicationsPanel.resolvedRefund"
+            : "adminApplicationsPanel.resolvedDismiss",
+        ),
+      );
+      setResolveRefund(null);
+      setDetail(null);
+      void qc.invalidateQueries({ queryKey: ["admin", "applications"] });
+    },
+    onError: (e) => {
+      setResolveRefund(null);
+      toast.apiError(e);
+    },
+  });
   const states = STATUS_VALUES.map((value) => ({
     value,
     label: t(`adminApplicationsPanel.status.${value}`),
@@ -211,6 +243,20 @@ export function AdminApplicationsPanel() {
                 </dd>
               </div>
             )}
+            {/* Chỉ đơn đang tranh chấp mới có thao tác của admin */}
+            {detail.applicationStatus === "DISPUTED" && (
+              <div className="flex flex-wrap gap-2 pt-3">
+                <Button onClick={() => setResolveRefund(true)}>
+                  {t("adminApplicationsPanel.refundTutor")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setResolveRefund(false)}
+                >
+                  {t("adminApplicationsPanel.dismissDispute")}
+                </Button>
+              </div>
+            )}
             <div className="pt-3">
               <Link to={ROUTES.POST_DETAIL(detail.postId)}>
                 <Button variant="outline" fullWidth>
@@ -221,6 +267,32 @@ export function AdminApplicationsPanel() {
           </dl>
         )}
       </Modal>
+      <ConfirmDialog
+        open={resolveRefund !== null}
+        onClose={() => setResolveRefund(null)}
+        title={t(
+          resolveRefund
+            ? "adminApplicationsPanel.refundTitle"
+            : "adminApplicationsPanel.dismissTitle",
+        )}
+        description={t(
+          resolveRefund
+            ? "adminApplicationsPanel.refundDesc"
+            : "adminApplicationsPanel.dismissDesc",
+        )}
+        confirmText={t(
+          resolveRefund
+            ? "adminApplicationsPanel.refundTutor"
+            : "adminApplicationsPanel.dismissDispute",
+        )}
+        danger={Boolean(resolveRefund)}
+        loading={resolve.isPending}
+        onConfirm={() => {
+          if (detail && resolveRefund !== null) {
+            resolve.mutate({ id: detail.id, refund: resolveRefund });
+          }
+        }}
+      />
     </section>
   );
 }

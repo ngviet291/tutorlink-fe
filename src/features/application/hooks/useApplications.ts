@@ -75,6 +75,14 @@ export function useApplicationMutations() {
       mutationFn: (id: string) => applicationService.finishApplication(id),
       onSuccess: invalidate,
     }),
+    confirmFinish: useMutation({
+      mutationFn: (id: string) => applicationService.confirmFinish(id),
+      onSuccess: invalidate,
+    }),
+    rejectFinish: useMutation({
+      mutationFn: (id: string) => applicationService.rejectFinish(id),
+      onSuccess: invalidate,
+    }),
     decline: useMutation({
       mutationFn: (id: string) => applicationService.declineOffer(id),
       onSuccess: invalidate,

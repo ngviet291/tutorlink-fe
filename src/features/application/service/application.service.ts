@@ -17,7 +17,11 @@ import type { TutorResponse } from "@/features/tutor/types/tutor.types";
 import type { StudentResponse } from "@/features/user/types/user.types";
 import { describeWarnings } from "../util/matchwarning";
 
-const CONNECTED_STATUSES: string[] = ["CONFIRMED"];
+const CONNECTED_STATUSES: string[] = [
+  "CONFIRMED",
+  "FINISH_REQUESTED",
+  "DISPUTED",
+];
 
 /** BE chỉ trả id/fullName/avatarUrl/averageRating/totalReviews; các field còn lại của public-profile để trống. */
 function fromSummary(u: UserSummary): BaseUserResponse {
@@ -143,6 +147,8 @@ export class ApplicationService {
       transactionId: dto.transactionId,
       transactionStatus: dto.transactionStatus,
       paid: dto.paid,
+      finishRequestedAt: dto.finishRequestedAt,
+      finishRequestedBy: dto.finishRequestedBy,
     };
   }
 
@@ -285,7 +291,11 @@ export class ApplicationService {
 
   finishApplication = async (id: string): Promise<ApplicationResponse> =>
     this.enrich(await this.gateway.finish(id));
+  confirmFinish = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.confirmFinish(id));
 
+  rejectFinish = async (id: string): Promise<ApplicationResponse> =>
+    this.enrich(await this.gateway.rejectFinish(id));
   declineOffer = async (id: string): Promise<ApplicationResponse> =>
     this.enrich(await this.gateway.cancel(id));
 

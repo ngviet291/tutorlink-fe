@@ -1,4 +1,5 @@
 import { ArrowRight, Hourglass } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ApplicationResponse } from "../types/application.types";
 import { getNextStep } from "../util/nextStep";
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function NextStepHint({ application, userId, className = "" }: Props) {
+  useTranslation();
   const step = getNextStep(application, userId);
   if (!step.label) return null;
 

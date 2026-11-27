@@ -22,5 +22,7 @@ export interface ApplicationGateway {
   finish(id: string): Promise<ApplicationResponse>;
   cancel(id: string): Promise<ApplicationResponse>;
   pay(id: string): Promise<void>;
+  confirmFinish(id: string): Promise<ApplicationResponse>;
+  rejectFinish(id: string): Promise<ApplicationResponse>;
   getPublicUser(userId: string): Promise<BaseUserResponse>;
 }

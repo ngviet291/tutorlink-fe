@@ -1,17 +1,18 @@
-import { useEffect, useRef, useState } from "react"; // MỚI: useEffect, useRef
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { Star } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/shared/components/ui/Button";
+import { ConfirmDialog } from "@/shared/components/ui/ConfirmDialog";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { ListSkeleton } from "@/shared/components/ui/Skeleton";
 import { StatusBadge } from "@/shared/components/ui/StatusBadge";
 import { formatDate } from "@/shared/utils/date";
-import { cn } from "@/shared/utils/cn"; // MỚI
-import { useHighlight, useHighlightParam } from "@/shared/hooks/useHighlight"; // MỚI
+import { cn } from "@/shared/utils/cn";
+import { useHighlight, useHighlightParam } from "@/shared/hooks/useHighlight";
 import { OfferList } from "@/features/application/components/OfferList";
 import { ExpiryCountdown } from "@/features/application/components/ExpiryCountdown";
 import { NextStepHint } from "@/features/application/components/NextStepHint";
@@ -29,18 +30,30 @@ import { ReviewDetailModal } from "@/features/review/components/ReviewDetailModa
 import { reviewService } from "@/features/review/service/review.service";
 import { useHasReviewed } from "@/features/review/hooks/useReviews";
 
+// Email nhận bằng chứng khi đơn bị tranh chấp
+const SUPPORT_EMAIL =
+  (import.meta.env.VITE_SUPPORT_EMAIL as string | undefined) ??
+  "tutorlink.n3@gmail.com";
+
+// Chat vẫn mở khi đang chờ xác nhận hoàn thành và khi tranh chấp
+const CHAT_STATUSES = ["CONFIRMED", "FINISH_REQUESTED", "DISPUTED"];
+
 export default function MyApplicationsPage() {
   const { t } = useTranslation();
   const { data, isLoading, isError, refetch } = useMyApplications();
   const toast = useToast();
   const user = useSelector((state: RootState) => state.auth.user);
-  const { finish, confirm } = useApplicationMutations();
+  const { finish, confirm, confirmFinish, rejectFinish } =
+    useApplicationMutations();
   const [offer, setOffer] = useState<ApplicationResponse | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<ApplicationResponse | null>(
+    null,
+  );
   const [reviewTarget, setReviewTarget] = useState<ApplicationResponse | null>(
     null,
   );
 
-  // MỚI: đơn cần làm sáng khi vào từ thông báo (?highlight=<applicationId>)
+  // Đơn cần làm sáng khi vào từ thông báo (?highlight=<applicationId>)
   const highlightId = useHighlightParam();
   const {
     ref: highlightRef,
@@ -51,7 +64,7 @@ export default function MyApplicationsPage() {
     !isLoading && Boolean(data?.length),
   );
 
-  // MỚI: đơn mới từ thông báo có thể chưa nằm trong cache -> tải lại đúng một lần
+  // Đơn mới từ thông báo có thể chưa nằm trong cache -> tải lại đúng một lần
   const refetchedFor = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!highlightId || isLoading || !data) return;
@@ -61,26 +74,62 @@ export default function MyApplicationsPage() {
     void refetch();
   }, [highlightId, isLoading, data, refetch]);
 
-  // Finish xong: học viên của đơn được mở modal đánh giá gia sư (nếu chưa review)
+  const isParty = (a: ApplicationResponse) =>
+    Boolean(user) && (a.student?.id === user?.id || a.tutor?.id === user?.id);
+
+  // Đơn vừa chuyển sang FINISHED: học viên của đơn được mở modal đánh giá (nếu chưa review)
+  const askReviewIfFinished = (
+    a: ApplicationResponse,
+    res: ApplicationResponse | undefined,
+  ) => {
+    if (res?.applicationStatus !== "FINISHED") return;
+    if (user?.role !== "STUDENT" || a.student?.id !== user.id) return;
+    void reviewService
+      .hasReviewed(a.id)
+      .then((reviewed) => {
+        if (!reviewed) setReviewTarget(a);
+      })
+      .catch(() => setReviewTarget(a));
+  };
+
+  // Bước 1: một bên bấm "Hoàn thành" -> FINISH_REQUESTED, chờ bên kia xác nhận
   const handleFinish = (a: ApplicationResponse) => {
     finish.mutate(a.id, {
       onSuccess: (res) => {
-        const finished = res?.applicationStatus === "FINISHED";
         toast.success(
-          finished
+          res?.applicationStatus === "FINISHED"
             ? t("myApplications.finished")
             : t("myApplications.finishWaiting"),
         );
-        if (finished && user?.role === "STUDENT" && a.student?.id === user.id) {
-          void reviewService
-            .hasReviewed(a.id)
-            .then((reviewed) => {
-              if (!reviewed) setReviewTarget(a);
-            })
-            .catch(() => setReviewTarget(a));
-        }
+        askReviewIfFinished(a, res);
       },
       onError: (e) => toast.apiError(e),
+    });
+  };
+
+  // Bước 2a: bên kia xác nhận -> FINISHED
+  const handleConfirmFinish = (a: ApplicationResponse) => {
+    confirmFinish.mutate(a.id, {
+      onSuccess: (res) => {
+        toast.success(t("myApplications.finishConfirmed"));
+        askReviewIfFinished(a, res);
+      },
+      onError: (e) => toast.apiError(e),
+    });
+  };
+
+  // Bước 2b: bên kia từ chối -> DISPUTED
+  const handleRejectFinish = () => {
+    if (!rejectTarget) return;
+    rejectFinish.mutate(rejectTarget.id, {
+      onSuccess: () => {
+        setRejectTarget(null);
+        toast.success(t("myApplications.finishRejected"));
+      },
+      onError: (e) => {
+        setRejectTarget(null);
+        toast.apiError(e);
+      },
     });
   };
 
@@ -126,11 +175,15 @@ export default function MyApplicationsPage() {
       ) : (
         <ul className="flex flex-col gap-3">
           {data.map((a) => {
-            const lit = isHighlighted(a.id); // MỚI
+            const lit = isHighlighted(a.id);
+            const waitingMyConfirm =
+              a.applicationStatus === "FINISH_REQUESTED" &&
+              a.finishRequestedBy !== user?.id &&
+              isParty(a);
             return (
               <li
                 key={a.id}
-                ref={lit ? highlightRef : undefined} // MỚI
+                ref={lit ? highlightRef : undefined}
                 className={cn(
                   "flex flex-col gap-3 rounded-2xl border border-border p-4 transition-colors duration-500 sm:flex-row sm:items-center sm:justify-between",
                   lit && flashing ? "bg-primary-light" : "bg-surface",
@@ -156,6 +209,20 @@ export default function MyApplicationsPage() {
                     userId={user?.id}
                     className="mt-1.5"
                   />
+                  {a.applicationStatus === "DISPUTED" && (
+                    <p className="mt-2 rounded-xl border border-border bg-surface-hover p-3 text-xs text-text-secondary">
+                      {t("myApplications.disputedHelp")}{" "}
+                      <a
+                        href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+                          t("myApplications.disputeEmailSubject", {
+                            id: a.id,
+                          }),
+                        )}`}
+                        className="font-semibold text-primary hover:underline">
+                        {SUPPORT_EMAIL}
+                      </a>
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <StatusBadge
@@ -174,6 +241,14 @@ export default function MyApplicationsPage() {
                       onExpire={() => void refetch()}
                     />
                   )}
+                  {a.applicationStatus === "FINISH_REQUESTED" &&
+                    a.expiresAt && (
+                      <ExpiryCountdown
+                        expiresAt={a.expiresAt}
+                        actionLabel={t("myApplications.actionFinishConfirm")}
+                        onExpire={() => void refetch()}
+                      />
+                    )}
                   {a.applicationStatus === "ACCEPTED" &&
                     !a.paid &&
                     isFeePayer(a, user?.id) && (
@@ -208,7 +283,26 @@ export default function MyApplicationsPage() {
                       {t("myApplications.finishClass")}
                     </Button>
                   )}
-                  {a.applicationStatus === "CONFIRMED" && (
+                  {waitingMyConfirm && (
+                    <>
+                      <Button
+                        size="sm"
+                        loading={
+                          confirmFinish.isPending &&
+                          confirmFinish.variables === a.id
+                        }
+                        onClick={() => handleConfirmFinish(a)}>
+                        {t("myApplications.finishConfirm")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setRejectTarget(a)}>
+                        {t("myApplications.finishReject")}
+                      </Button>
+                    </>
+                  )}
+                  {CHAT_STATUSES.includes(a.applicationStatus) && (
                     <Link
                       to={ROUTES.CHAT_WITH(
                         (user?.id === a.student?.id
@@ -230,6 +324,17 @@ export default function MyApplicationsPage() {
         </ul>
       )}
       <PayFeeModal application={offer} onClose={() => setOffer(null)} />
+      <ConfirmDialog
+        open={Boolean(rejectTarget)}
+        onClose={() => setRejectTarget(null)}
+        title={t("myApplications.rejectDialogTitle")}
+        description={t("myApplications.rejectDialogDesc")}
+        confirmText={t("myApplications.finishReject")}
+        cancelText={t("myApplications.rejectDialogCancel")}
+        danger
+        loading={rejectFinish.isPending}
+        onConfirm={handleRejectFinish}
+      />
       {reviewTarget && (
         <ReviewForm
           applicationId={reviewTarget.id}

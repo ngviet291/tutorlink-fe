@@ -4,6 +4,8 @@ export type ApplicationStatus =
   | "PENDING"
   | "ACCEPTED"
   | "CONFIRMED"
+  | "FINISH_REQUESTED"
+  | "DISPUTED"
   | "FINISHED"
   | "CANCELLED"
   | "REJECTED";
@@ -45,5 +47,10 @@ export const adminApplicationsService = {
         params,
       })
     ).data;
+  },
+  async resolveDispute(id: string, refund: boolean): Promise<void> {
+    await http.post(`/v1/applications/${id}/dispute/resolve`, null, {
+      params: { refund },
+    });
   },
 };

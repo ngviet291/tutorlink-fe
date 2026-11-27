@@ -23,6 +23,7 @@ import { LanguageSwitcher } from "@/shared/components/ui/LanguageSwitcher";
 import { NotificationBell } from "@/features/notification/components/NotificationBell";
 import { useLogout } from "@/features/auth/hooks/useAuth";
 import { getPublicNav } from "./navItems";
+import { NavbarQuickLinks } from "../ui/NavbarQuickLinks";
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -82,6 +83,7 @@ export function Navbar() {
 
           {user ? (
             <>
+              <NavbarQuickLinks />
               <NotificationBell />
               <Dropdown
                 triggerLabel={t("shared.navbar.accountMenu")}

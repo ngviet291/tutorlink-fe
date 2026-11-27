@@ -52,6 +52,10 @@ export interface ApplicationResponse {
   transactionStatus?: string;
   /** true nếu transaction.status == SUCCESS */
   paid?: boolean;
+  /** Thời điểm một bên bấm "Hoàn thành"; null nếu chưa có yêu cầu. */
+  finishRequestedAt?: string;
+  /** Id người bấm "Hoàn thành" (bên kia là người phải xác nhận). */
+  finishRequestedBy?: string;
 }
 /** BE: application/dto/response/MatchBreakdown.java */
 export interface MatchBreakdown {

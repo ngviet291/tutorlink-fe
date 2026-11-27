@@ -19,7 +19,9 @@ export type ApplicationStatus =
   | "REJECTED"
   | "CANCELLED"
   | "CONFIRMED"
-  | "FINISHED";
+  | "FINISHED"
+  | "FINISH_REQUESTED"
+  | "DISPUTED";
 export type TransactionStatus =
   | "PENDING"
   | "SUCCESS"

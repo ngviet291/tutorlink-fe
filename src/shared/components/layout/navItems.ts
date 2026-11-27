@@ -41,13 +41,19 @@ export interface NavGroup {
 export interface PublicNavItem {
   to: string;
   labelKey: string;
+  /** Vai trò không thấy mục này (khách chưa đăng nhập được coi là học viên). */
   hideFor?: Role[];
+  /** Chỉ hiện khi đã đăng nhập (khách không thấy). */
+  authOnly?: boolean;
 }
 
+// Thứ tự hiển thị trên Navbar: Trang chủ, Tìm gia sư, Tìm lớp, Đăng bài,
+// Góc gia sư, Góc học viên, Ví, Tin nhắn.
 export const PUBLIC_NAV: PublicNavItem[] = [
   { to: ROUTES.HOME, labelKey: "nav.home" },
   { to: ROUTES.FIND_TUTOR, labelKey: "nav.findTutor", hideFor: ["TUTOR"] },
   { to: ROUTES.FIND_CLASS, labelKey: "nav.findClass" },
+  { to: ROUTES.POST_CREATE, labelKey: "nav.postCreate", authOnly: true },
   {
     to: ROUTES.TUTOR_CORNER,
     labelKey: "nav.tutorCorner",
@@ -63,7 +69,10 @@ export const PUBLIC_NAV: PublicNavItem[] = [
 export function getPublicNav(role?: Role): PublicNavItem[] {
   if (role === "ADMIN") return [];
   const effective: Role = role ?? "STUDENT";
-  return PUBLIC_NAV.filter((i) => !i.hideFor?.includes(effective));
+  return PUBLIC_NAV.filter((i) => {
+    if (i.authOnly && !role) return false;
+    return !i.hideFor?.includes(effective);
+  });
 }
 
 /** Tạo một mục menu có nhãn dịch theo ngôn ngữ hiện tại (key nằm trong nav.items.*). */

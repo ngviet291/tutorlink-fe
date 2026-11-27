@@ -8,13 +8,11 @@ import {
   Heart,
   Inbox,
   Plus,
-  Star,
   Users,
   Wallet,
 } from "lucide-react";
 import { ROUTES } from "@/constants/routes";
 import { Button } from "@/shared/components/ui/Button";
-import { Badge } from "@/shared/components/ui/Badge";
 import { EmptyState, ErrorState } from "@/shared/components/ui/EmptyState";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
@@ -32,10 +30,9 @@ import { needsMyAction } from "@/features/application/util/nextStep";
 import type { ApplicationResponse } from "@/features/application/types/application.types";
 import { useFavorites } from "@/features/favorite/hooks/useFavorites";
 import { useMyPosts } from "@/features/post/hooks/usePosts";
-import { ReviewForm } from "@/features/review/components/ReviewForm";
-import { useHasReviewed } from "@/features/review/hooks/useReviews";
 import { useTutorProfile } from "@/features/tutor/hooks/useTutors";
 import { PayFeeModal } from "@/features/wallet/components/PayFeeModal";
+import { useTranslation } from "react-i18next";
 import { useWallet } from "@/features/wallet/hooks/useWallet";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { useToast } from "@/shared/hooks/useToast";
@@ -79,16 +76,20 @@ function TodoSection({
   isTutor: boolean;
   onPay: (a: ApplicationResponse) => void;
 }) {
+  const { t } = useTranslation();
   const toast = useToast();
   const apps = useMyApplications();
   const posts = useMyPosts();
   const profile = useTutorProfile();
-  const { confirm, decline } = useApplicationMutations();
+  const { confirm, decline, confirmFinish } = useApplicationMutations();
 
   // Đơn PENDING (chủ bài cần chọn) đã được gộp vào dòng "N ứng viên đang chờ bạn chọn" của bài,
-  // nên ở đây chỉ lấy đơn ACCEPTED (cần trả phí / xác nhận) để không bị lặp và không hiện nút sai.
+  // nên ở đây chỉ lấy đơn cần tôi trả phí / xác nhận lớp / xác nhận hoàn thành.
   const myApps = (apps.data ?? []).filter(
-    (a) => a.applicationStatus === "ACCEPTED" && needsMyAction(a, userId),
+    (a) =>
+      (a.applicationStatus === "ACCEPTED" ||
+        a.applicationStatus === "FINISH_REQUESTED") &&
+      needsMyAction(a, userId),
   );
   const postsWaiting = (
     posts.data?.pages.flatMap((p) => p.content) ?? []
@@ -106,10 +107,12 @@ function TodoSection({
   return (
     <section
       aria-labelledby="todo-heading"
-      className="rounded-2xl border-2 border-primary/40 bg-primary-light/60 p-4 sm:p-5">
+      className="rounded-2xl border-2 border-primary/40 bg-primary-light/60 p-4 sm:p-5"
+    >
       <h2
         id="todo-heading"
-        className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text">
+        className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text"
+      >
         <ClipboardList className="size-5 text-primary" aria-hidden="true" />
         Việc cần xử lý
         {total > 0 && (
@@ -151,7 +154,8 @@ function TodoSection({
           {postsWaiting.map((p) => (
             <li
               key={p.id}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
+              className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div className="min-w-0">
                 <p className="truncate font-semibold text-text">{p.title}</p>
                 <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-primary">
@@ -170,14 +174,17 @@ function TodoSection({
             const canPay = accepted && !a.paid && isFeePayer(a, userId);
             const canConfirm =
               accepted && Boolean(a.paid) && isApplicant(a, userId);
+            const finishAsk = a.applicationStatus === "FINISH_REQUESTED";
             return (
               <li
                 key={a.id}
-                className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
+                className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div className="min-w-0">
                   <Link
                     to={ROUTES.POST_DETAIL(a.post.id)}
-                    className="block truncate font-semibold text-text hover:text-primary">
+                    className="block truncate font-semibold text-text hover:text-primary"
+                  >
                     {a.post.title}
                   </Link>
                   <NextStepHint
@@ -204,7 +211,8 @@ function TodoSection({
                               toast.success("Đã từ chối lời mời"),
                             onError: (e) => toast.error(getErrorMessage(e)),
                           })
-                        }>
+                        }
+                      >
                         Từ chối
                       </Button>
                     </>
@@ -218,9 +226,38 @@ function TodoSection({
                           onSuccess: () => toast.success("Đã xác nhận lớp học"),
                           onError: (e) => toast.error(getErrorMessage(e)),
                         })
-                      }>
+                      }
+                    >
                       Xác nhận lớp học
                     </Button>
+                  )}
+                  {/* Từ chối hoàn thành dẫn đến tranh chấp nên có hộp thoại xác nhận ở trang Đơn của tôi */}
+                  {finishAsk && (
+                    <>
+                      <Button
+                        size="sm"
+                        loading={
+                          confirmFinish.isPending &&
+                          confirmFinish.variables === a.id
+                        }
+                        onClick={() =>
+                          confirmFinish.mutate(a.id, {
+                            onSuccess: () =>
+                              toast.success(
+                                t("myApplications.finishConfirmed"),
+                              ),
+                            onError: (e) => toast.error(getErrorMessage(e)),
+                          })
+                        }
+                      >
+                        {t("myApplications.finishConfirm")}
+                      </Button>
+                      <Link to={`${ROUTES.MY_APPLICATIONS}?highlight=${a.id}`}>
+                        <Button size="sm" variant="ghost">
+                          {t("dashboard.viewDetails")}
+                        </Button>
+                      </Link>
+                    </>
                   )}
                 </div>
               </li>
@@ -233,47 +270,55 @@ function TodoSection({
 }
 
 function ConnectedRow({ a, myId }: { a: ApplicationResponse; myId: string }) {
-  const [open, setOpen] = useState(false);
-  const iAmStudent =
-    (a.post.type === "FIND_TUTOR" ? a.post.author.id : a.tutor.id) === myId;
+  const { t } = useTranslation();
+  const toast = useToast();
+  const { finish } = useApplicationMutations();
   const partner = a.post.author.id === myId ? a.tutor : a.post.author;
-  const tutorName =
-    a.post.type === "FIND_TUTOR" ? a.tutor.fullName : a.post.author.fullName;
-  const reviewed = useHasReviewed(a.id);
 
   return (
     <li className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <Link
           to={ROUTES.POST_DETAIL(a.post.id)}
-          className="block truncate font-bold text-text hover:text-primary">
+          className="block truncate font-bold text-text hover:text-primary"
+        >
           {a.post.title}
         </Link>
         <p className="text-xs text-text-secondary">
           Kết nối với {partner.fullName}
         </p>
+        <NextStepHint application={a} userId={myId} className="mt-1" />
       </div>
-      <div className="flex shrink-0 flex-wrap gap-2">
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <StatusBadge kind="application" status={a.applicationStatus} />
         <Link to={ROUTES.CHAT_WITH(partner.id)}>
           <Button size="sm" variant="secondary">
-            Mở chat
+            {t("myApplications.openChat")}
           </Button>
         </Link>
-        {iAmStudent && !reviewed.data && (
-          <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-            <Star className="size-4" /> Kết thúc lớp & đánh giá
+        {a.applicationStatus === "CONFIRMED" ? (
+          <Button
+            size="sm"
+            variant="outline"
+            loading={finish.isPending && finish.variables === a.id}
+            onClick={() =>
+              finish.mutate(a.id, {
+                onSuccess: () =>
+                  toast.success(t("myApplications.finishWaiting")),
+                onError: (e) => toast.error(getErrorMessage(e)),
+              })
+            }
+          >
+            {t("myApplications.finishClass")}
           </Button>
+        ) : (
+          <Link to={`${ROUTES.MY_APPLICATIONS}?highlight=${a.id}`}>
+            <Button size="sm" variant="outline">
+              {t("dashboard.viewDetails")}
+            </Button>
+          </Link>
         )}
-        {iAmStudent && reviewed.data && <Badge tone="green">Đã đánh giá</Badge>}
       </div>
-      {iAmStudent && (
-        <ReviewForm
-          applicationId={a.id}
-          tutorName={tutorName}
-          open={open}
-          onClose={() => setOpen(false)}
-        />
-      )}
     </li>
   );
 }
@@ -322,7 +367,8 @@ export default function DashboardPage() {
       {isTutor && profile?.verificationStatus === "PENDING" && (
         <Link
           to={ROUTES.TUTOR_PROFILE}
-          className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm font-semibold text-text hover:opacity-90">
+          className="rounded-2xl border border-warning/40 bg-warning/10 p-4 text-sm font-semibold text-text hover:opacity-90"
+        >
           Hồ sơ gia sư đang chờ duyệt — xem chi tiết →
         </Link>
       )}
@@ -391,7 +437,8 @@ export default function DashboardPage() {
           <h2 className="text-lg font-extrabold text-text">Bài đăng gần đây</h2>
           <Link
             to={ROUTES.MY_POSTS}
-            className="text-sm font-semibold text-primary hover:underline">
+            className="text-sm font-semibold text-primary hover:underline"
+          >
             Xem tất cả
           </Link>
         </div>
@@ -423,7 +470,8 @@ export default function DashboardPage() {
               <li key={p.id}>
                 <Link
                   to={ROUTES.POST_DETAIL(p.id)}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3 hover:shadow-md">
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-3 hover:shadow-md"
+                >
                   <span className="min-w-0 truncate font-semibold text-text">
                     {p.title}
                   </span>

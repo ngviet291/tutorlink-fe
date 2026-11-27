@@ -78,4 +78,11 @@ export class HttpApplicationGateway implements ApplicationGateway {
       `/v1/users/${userId}/public-profile`,
     );
   }
+  confirmFinish(id: string) {
+    return this.http.post<ApplicationResponse>(`${BASE}/${id}/finish/confirm`);
+  }
+
+  rejectFinish(id: string) {
+    return this.http.post<ApplicationResponse>(`${BASE}/${id}/finish/reject`);
+  }
 }

@@ -1,5 +1,8 @@
+import i18n from "@/app/i18n";
 import type { ApplicationResponse } from "../types/application.types";
 import { isApplicant, isFeePayer } from "./applicant";
+
+const t = (key: string) => i18n.t(key);
 
 export interface NextStep {
   /** true = chính người đang xem phải làm bước này. */
@@ -64,6 +67,26 @@ export function getNextStep(
         label: "Lớp đang diễn ra — đánh dấu hoàn thành khi lớp kết thúc",
       };
 
+    case "FINISH_REQUESTED": {
+      const iRequested = Boolean(userId) && a.finishRequestedBy === userId;
+      const isParty =
+        Boolean(userId) && (a.tutor?.id === userId || a.student?.id === userId);
+      if (!iRequested && isParty) {
+        return {
+          mine: true,
+          pending: true,
+          label: t("nextStep.finishNeedConfirm"),
+        };
+      }
+      return {
+        mine: false,
+        pending: true,
+        label: t("nextStep.finishWaitOther"),
+      };
+    }
+    case "DISPUTED":
+      return { mine: false, pending: true, label: t("nextStep.disputed") };
+
     case "FINISHED":
       return { mine: false, pending: false, label: "Lớp đã hoàn thành" };
     case "REJECTED":
@@ -75,10 +98,6 @@ export function getNextStep(
   }
 }
 
-/**
- * Việc người dùng PHẢI làm ngay (khác với "đang diễn ra"): chỉ gồm trả phí, xác nhận, chọn ứng viên.
- * CONFIRMED không tính vì không có hạn bắt buộc.
- */
 export function needsMyAction(
   a: ApplicationResponse,
   userId: string | undefined,

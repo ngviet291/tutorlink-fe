@@ -22,11 +22,12 @@ export interface ApplicationResponse {
   appliedAt: string;
   /** Thoi diem duoc chon (ACCEPTED). */
   selectedAt?: string;
-  studentFinishedAt?: string | null;
-  tutorFinishedAt?: string | null;
   /** Thoi diem thanh toan thanh cong. */
   paidAt?: string;
-
+  /** Thời điểm một bên bấm "Hoàn thành"; null nếu chưa có yêu cầu. */
+  finishRequestedAt?: string;
+  /** Id người bấm "Hoàn thành" (bên kia là người phải xác nhận). */
+  finishRequestedBy?: string;
   /** Hạn cuối bước đang chờ do BE tính (W1 chờ thanh toán / W2 chờ applicant confirm). */
   expiresAt?: string;
   processedByAdminId?: string;
