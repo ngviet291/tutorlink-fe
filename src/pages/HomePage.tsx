@@ -55,7 +55,7 @@ function Hero({ role }: { role?: string }) {
           <span className="inline-flex w-fit items-center gap-2 rounded-full bg-surface px-3 py-1 text-xs font-semibold text-primary shadow-sm">
             <Sparkles className="size-4" /> {t("home.heroBadge")}
           </span>
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-text sm:text-5xl">
+          <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-text sm:text-5xl">
             {t("home.heroTitle1")}{" "}
             <span className="text-primary">{t("home.heroTitle2")}</span>{" "}
             {t("home.heroTitle3")}
@@ -95,7 +95,7 @@ function Hero({ role }: { role?: string }) {
           <div className="absolute -bottom-8 -right-4 size-48 rounded-full bg-primary/30 blur-2xl" />
           <div className="relative rounded-3xl border border-border bg-surface p-6 shadow-xl">
             {/* <div className="mb-4 flex items-center gap-3"> */}
-              {/* <span className="flex size-12 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
+            {/* <span className="flex size-12 items-center justify-center rounded-full bg-primary text-xl font-bold text-white">
                 H
               </span>
               <div>
@@ -133,16 +133,15 @@ function Hero({ role }: { role?: string }) {
               <Brain className="size-4 shrink-0 text-primary" />{" "}
               {t("home.aiNote")}
             </p> */}
-          {firstTutor && (
-            <>
-              <h2 className="mb-4 text-lg font-extrabold text-text">
-                {t("home.topTutors")}
-              </h2>
-              <TutorCard tutor={firstTutor} />
-            </>
-          )}
+            {firstTutor && (
+              <>
+                <h2 className="mb-4 text-lg font-extrabold text-text">
+                  {t("home.topTutors")}
+                </h2>
+                <TutorCard tutor={firstTutor} />
+              </>
+            )}
           </div>
-
         </div>
       </div>
     </section>
@@ -232,7 +231,8 @@ export default function HomePage() {
                 <Link
                   key={s.id}
                   to={`${subjectTarget}?subject=${s.id}`}
-                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md">
+                  className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md"
+                >
                   <span className="flex size-12 items-center justify-center rounded-xl bg-primary-light text-primary">
                     <Icon className="size-6" />
                   </span>
@@ -311,7 +311,8 @@ export default function HomePage() {
             ].map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-border bg-surface p-5">
+                className="rounded-2xl border border-border bg-surface p-5"
+              >
                 <Icon className="mb-3 size-7 text-primary" />
                 <h3 className="mb-1 font-bold text-text">{title}</h3>
                 <p className="text-sm text-text-secondary">{desc}</p>

@@ -15,7 +15,6 @@ export default function PostCreatePage() {
   const toast = useToast();
   const { createPost } = usePostMutations();
 
-
   const handleSubmit = async (payload: PostPayload, asDraft = false) => {
     try {
       const post = await createPost.mutateAsync({ payload, asDraft });
@@ -30,14 +29,14 @@ export default function PostCreatePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <PageHeader
         title={t("post.createPost")}
         description={t("post.myPostsDesc")}
       />
-      <div className="mt-6">
+      <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
         <PostForm onSubmit={handleSubmit} isSubmitting={createPost.isPending} />
-      </div>
+      </section>
     </div>
   );
 }

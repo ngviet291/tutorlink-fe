@@ -108,7 +108,7 @@ export function TopUpAmountStep({ loading, onSubmit }: Props) {
               placeholder={t("wallet.customAmountPlaceholder")}
               aria-invalid={showError}
               className={cn(
-                "h-11 w-full rounded-xl border bg-surface px-3 pr-10 text-sm font-semibold text-text focus:outline-none",
+                "h-11 w-full rounded-xl border bg-surface px-3 pr-10 text-base sm:text-sm font-semibold text-text focus:outline-none",
                 showError
                   ? "border-danger"
                   : "border-border focus:border-primary",

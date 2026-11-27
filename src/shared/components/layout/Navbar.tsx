@@ -43,7 +43,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
         <Logo />
 
         <nav
@@ -62,8 +62,10 @@ export function Navbar() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          <LanguageSwitcher />
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
           <button
             type="button"
             onClick={toggle}
@@ -72,7 +74,7 @@ export function Navbar() {
                 ? t("shared.navbar.switchToLight")
                 : t("shared.navbar.switchToDark")
             }
-            className="cursor-pointer rounded-lg p-2 text-text-secondary hover:bg-surface-hover"
+            className="hidden cursor-pointer rounded-lg p-2 text-text-secondary hover:bg-surface-hover sm:block"
           >
             {theme === "dark" ? (
               <Sun className="size-5" />
@@ -208,6 +210,23 @@ export function Navbar() {
                 {t(item.labelKey)}
               </NavLink>
             ))}
+            <div className="mt-2 flex items-center justify-between gap-3 border-t border-border pt-3 sm:hidden">
+              <LanguageSwitcher />
+              <button
+                type="button"
+                onClick={toggle}
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-text-secondary hover:bg-surface-hover"
+              >
+                {theme === "dark" ? (
+                  <Sun className="size-5" />
+                ) : (
+                  <Moon className="size-5" />
+                )}
+                {theme === "dark"
+                  ? t("shared.navbar.switchToLight")
+                  : t("shared.navbar.switchToDark")}
+              </button>
+            </div>
             {!user && (
               <div className="mt-2 flex gap-2 sm:hidden">
                 <Link

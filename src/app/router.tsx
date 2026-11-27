@@ -159,6 +159,10 @@ export const router = createBrowserRouter([
             element: page(() => import("@/pages/ProfilePage")),
           },
           {
+            path: ROUTES.PROFILE_SECURITY,
+            element: page(() => import("@/pages/SecurityPage")),
+          },
+          {
             element: <RoleGuard allow={["STUDENT"]} />,
             children: [
               {

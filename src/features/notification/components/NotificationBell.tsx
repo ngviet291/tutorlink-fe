@@ -23,7 +23,7 @@ export function NotificationBell() {
           ? t("notification.unreadCount", { count: unread })
           : t("notification.title")
       }
-      className="w-80 max-w-[calc(100vw-2rem)]"
+      className="fixed inset-x-3 top-[4.5rem] w-auto max-w-none sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80"
       trigger={
         <span className="relative flex size-10 items-center justify-center rounded-full text-text-secondary hover:bg-surface-hover">
           <Bell className="size-5" />
@@ -33,7 +33,8 @@ export function NotificationBell() {
             </span>
           )}
         </span>
-      }>
+      }
+    >
       {(close) => (
         <div>
           <div className="flex items-center justify-between border-b border-border px-4 py-2">
@@ -43,7 +44,8 @@ export function NotificationBell() {
             <Link
               to={ROUTES.NOTIFICATIONS}
               onClick={close}
-              className="text-xs font-semibold text-primary hover:underline">
+              className="text-xs font-semibold text-primary hover:underline"
+            >
               {t("common.viewAll")}
             </Link>
           </div>

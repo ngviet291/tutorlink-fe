@@ -8,9 +8,9 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="flex">
+      <div className="mx-auto flex w-full max-w-screen-2xl gap-6 px-4">
         <Sidebar />
-        <main className="min-w-0 flex-1 px-4 pb-24 pt-6 lg:px-8 lg:pb-10">
+        <main className="min-w-0 flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-6 lg:pb-10">
           <Outlet />
         </main>
       </div>

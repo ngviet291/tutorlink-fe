@@ -13,7 +13,6 @@ import { useToast } from "@/shared/hooks/useToast";
 import { useServerFormErrors } from "@/shared/hooks/useServerFormErrors";
 import { rules } from "@/features/auth/validation/auth.validation";
 import {
-  useChangePassword,
   useUpdateProfile,
   useUploadAvatar,
 } from "@/features/user/hooks/useUser";
@@ -22,18 +21,12 @@ import type { UpdateProfilePayload } from "@/features/user/types/user.types";
 const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
 const NO_KNOWN_FIELDS = [] as const;
 
-interface PwForm {
-  currentPassword: string;
-  newPassword: string;
-  confirm: string;
-}
-
+// Đổi mật khẩu đã chuyển sang trang Bảo mật (SecurityPage, route /profile/security).
 export default function ProfilePage() {
   const { t } = useTranslation();
   const user = useAppSelector((s) => s.auth.user);
   const toast = useToast();
   const update = useUpdateProfile();
-  const change = useChangePassword();
   const uploadAvatar = useUploadAvatar();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -67,11 +60,9 @@ export default function ProfilePage() {
       },
     },
   });
-  const pw = useForm<PwForm>();
 
   // Khi đổi ngôn ngữ: validate lại các ô đang lỗi để chữ lỗi đổi theo.
   useServerFormErrors(info, NO_KNOWN_FIELDS);
-  useServerFormErrors(pw, NO_KNOWN_FIELDS);
 
   // Phải gọi trước `return null` (quy tắc hooks)
   const {
@@ -126,7 +117,8 @@ export default function ProfilePage() {
             aria-label={t("profile.changeAvatar")}
             disabled={uploadAvatar.isPending}
             onClick={() => fileRef.current?.click()}
-            className="group relative shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60">
+            className="group relative shrink-0 rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
+          >
             <Avatar name={user.fullName} src={user.avatarUrl} size="xl" />
             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
               <Camera className="size-5" aria-hidden="true" />
@@ -158,7 +150,8 @@ export default function ProfilePage() {
                 onError: (er) => toast.apiError(er),
               }),
             )(e)
-          }>
+          }
+        >
           <Input
             label={t("profile.fullName")}
             required
@@ -215,74 +208,6 @@ export default function ProfilePage() {
           <div className="flex justify-end">
             <Button type="submit" loading={update.isPending}>
               {t("profile.save")}
-            </Button>
-          </div>
-        </form>
-      </section>
-
-      <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
-        <h2 className="mb-4 text-lg font-bold text-text">
-          {t("profile.changePasswordTitle")}
-        </h2>
-        <form
-          noValidate
-          className="flex flex-col gap-4"
-          onSubmit={(e) =>
-            void pw.handleSubmit((v) =>
-              change.mutate(
-                {
-                  currentPassword: v.currentPassword,
-                  newPassword: v.newPassword,
-                },
-                {
-                  onSuccess: () => {
-                    toast.success(t("profile.passwordChanged"));
-                    pw.reset();
-                  },
-                  onError: (er) => toast.apiError(er),
-                },
-              ),
-            )(e)
-          }>
-          <Input
-            label={t("profile.currentPassword")}
-            type="password"
-            autoComplete="current-password"
-            required
-            error={pw.formState.errors.currentPassword?.message}
-            {...pw.register("currentPassword", {
-              required: t("profile.currentPasswordRequired"),
-            })}
-          />
-          <Input
-            label={t("profile.newPassword")}
-            type="password"
-            autoComplete="new-password"
-            required
-            error={pw.formState.errors.newPassword?.message}
-            {...pw.register("newPassword", {
-              ...rules.password,
-              validate: (v) =>
-                v !== pw.getValues("currentPassword") ||
-                t("profile.passwordSameAsCurrent"),
-            })}
-          />
-          <Input
-            label={t("profile.confirmPassword")}
-            type="password"
-            autoComplete="new-password"
-            required
-            error={pw.formState.errors.confirm?.message}
-            {...pw.register("confirm", {
-              required: t("profile.confirmRequired"),
-              validate: (v) =>
-                v === pw.getValues("newPassword") ||
-                t("profile.passwordMismatch"),
-            })}
-          />
-          <div className="flex justify-end">
-            <Button type="submit" loading={change.isPending}>
-              {t("profile.changePasswordButton")}
             </Button>
           </div>
         </form>

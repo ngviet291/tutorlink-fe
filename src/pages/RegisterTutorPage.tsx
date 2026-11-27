@@ -52,7 +52,7 @@ function Step({
 }) {
   return (
     <section
-      className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 sm:p-6"
+      className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-4 sm:p-6"
       aria-label={title}
     >
       <div className="flex items-start gap-3">
@@ -140,7 +140,7 @@ export default function RegisterTutorPage() {
   });
 
   return (
-    <RegisterLayout>
+    <RegisterLayout wide>
       <FormProvider {...methods}>
         <form
           onSubmit={(e) => void onSubmit(e)}

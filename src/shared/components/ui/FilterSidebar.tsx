@@ -7,7 +7,8 @@ import { useSubjects } from "@/features/subject/hooks/useSubjects";
 
 import type { BudgetUnit, TeachingMode } from "@/shared/types/common.types";
 import type { EducationLevel } from "@/constants/enums";
-
+import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
 import {
   BUDGET_UNIT_LABEL,
   EDUCATION_LEVELS,
@@ -96,6 +97,7 @@ export function FilterSidebar({
   hideEducationLevels = false,
 }: FilterSidebarProps) {
   const { t } = useTranslation();
+  const [mobileOpen, setMobileOpen] = useState(false);
   // Giá trị mặc định phải tính lúc render để đổi VI/EN có hiệu lực ngay
   const priceLabel = rangeLabel ?? t("shared.filterSidebar.priceRange");
 
@@ -139,200 +141,228 @@ export function FilterSidebar({
 
   return (
     <aside
-      className={`flex w-full flex-col gap-4 rounded-2xl border border-border bg-surface p-4 lg:w-64 lg:shrink-0 ${className}`}
+      className={`w-full rounded-2xl border border-border bg-surface p-4 lg:w-64 lg:shrink-0 ${className}`}
     >
-      <div>
-        <label className="mb-1 block text-xs font-semibold text-text-secondary">
-          {t("shared.filterSidebar.subject")}
-        </label>
+      <button
+        type="button"
+        aria-expanded={mobileOpen}
+        onClick={() => setMobileOpen((o) => !o)}
+        className="flex w-full cursor-pointer items-center justify-between text-sm font-bold text-text lg:hidden"
+      >
+        <span className="flex items-center gap-2">
+          <SlidersHorizontal className="size-4" aria-hidden="true" />
+          {t("shared.filterSidebar.toggle")}
+        </span>
+        <ChevronDown
+          className={cn(
+            "size-4 transition-transform",
+            mobileOpen && "rotate-180",
+          )}
+          aria-hidden="true"
+        />
+      </button>
 
-        <select
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
-          value={value.subjectId}
-          onChange={(e) => set({ subjectId: e.target.value })}
-        >
-          <option value="">{t("shared.filterSidebar.allSubjects")}</option>
-
-          {(subjects.data ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {!hideProvince && (
+      <div
+        className={cn(
+          "flex-col gap-4 lg:mt-0 lg:flex",
+          mobileOpen ? "mt-4 flex" : "hidden",
+        )}
+      >
         <div>
           <label className="mb-1 block text-xs font-semibold text-text-secondary">
-            {t("shared.filterSidebar.province")}
+            {t("shared.filterSidebar.subject")}
           </label>
 
           <select
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
-            value={value.province}
-            onChange={(e) => set({ province: e.target.value, ward: "" })}
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+            value={value.subjectId}
+            onChange={(e) => set({ subjectId: e.target.value })}
           >
-            <option value="">{t("shared.filterSidebar.allProvinces")}</option>
+            <option value="">{t("shared.filterSidebar.allSubjects")}</option>
 
-            {provinces.map((p) => (
-              <option key={p.code} value={p.name}>
-                {p.name}
+            {(subjects.data ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
               </option>
             ))}
           </select>
         </div>
-      )}
-      {!hideProvince && !hideWard && value.province && (
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-text-secondary">
-            {t("shared.filterSidebar.ward")}
-          </label>
+        {!hideProvince && (
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-text-secondary">
+              {t("shared.filterSidebar.province")}
+            </label>
 
-          <select
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
-            value={value.ward ?? ""}
-            disabled={wardsLoading}
-            onChange={(e) => set({ ward: e.target.value })}
-          >
-            <option value="">
-              {wardsLoading
-                ? t("common.loading")
-                : t("shared.filterSidebar.allWards")}
-            </option>
+            <select
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              value={value.province}
+              onChange={(e) => set({ province: e.target.value, ward: "" })}
+            >
+              <option value="">{t("shared.filterSidebar.allProvinces")}</option>
 
-            {wards.map((w) => (
-              <option key={w.code} value={w.name}>
-                {w.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-      {!hideTeachingMode && (
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-text-secondary">
-            {t("shared.filterSidebar.teachingMode")}
-          </label>
-
-          <select
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
-            value={value.teachingMode}
-            onChange={(e) =>
-              set({
-                teachingMode: e.target.value as TeachingMode | "",
-              })
-            }
-          >
-            <option value="">{t("shared.filterSidebar.all")}</option>
-            <option value="ONLINE">{t("common.teachingMode.ONLINE")}</option>
-            <option value="OFFLINE">{t("common.teachingMode.OFFLINE")}</option>
-            <option value="BOTH">{t("shared.filterSidebar.both")}</option>
-          </select>
-        </div>
-      )}
-
-      {!hideEducationLevels && (
-        <div>
-          <p className="mb-2 text-xs font-semibold text-text-secondary">
-            {t("shared.filterSidebar.educationLevel")}
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-            {EDUCATION_LEVELS.map((lvl) => {
-              const active = value.educationLevels.includes(lvl);
-
-              return (
-                <button
-                  key={lvl}
-                  type="button"
-                  onClick={() => toggleLevel(lvl)}
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                    active
-                      ? "border-primary bg-primary text-white"
-                      : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {EDUCATION_LEVEL_LABEL[lvl]}
-                </button>
-              );
-            })}
+              {provinces.map((p) => (
+                <option key={p.code} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      )}
+        )}
+        {!hideProvince && !hideWard && value.province && (
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-text-secondary">
+              {t("shared.filterSidebar.ward")}
+            </label>
 
-      {budgetUnitMode ? (
-        <div>
-          <p className="mb-2 text-xs font-semibold text-text-secondary">
-            {priceLabel}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {UNIT_ORDER.map((u) => {
-              const active = value.budgetUnit === u;
-              return (
-                <button
-                  key={u}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() =>
-                    set(
+            <select
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              value={value.ward ?? ""}
+              disabled={wardsLoading}
+              onChange={(e) => set({ ward: e.target.value })}
+            >
+              <option value="">
+                {wardsLoading
+                  ? t("common.loading")
+                  : t("shared.filterSidebar.allWards")}
+              </option>
+
+              {wards.map((w) => (
+                <option key={w.code} value={w.name}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {!hideTeachingMode && (
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-text-secondary">
+              {t("shared.filterSidebar.teachingMode")}
+            </label>
+
+            <select
+              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              value={value.teachingMode}
+              onChange={(e) =>
+                set({
+                  teachingMode: e.target.value as TeachingMode | "",
+                })
+              }
+            >
+              <option value="">{t("shared.filterSidebar.all")}</option>
+              <option value="ONLINE">{t("common.teachingMode.ONLINE")}</option>
+              <option value="OFFLINE">
+                {t("common.teachingMode.OFFLINE")}
+              </option>
+              <option value="BOTH">{t("shared.filterSidebar.both")}</option>
+            </select>
+          </div>
+        )}
+
+        {!hideEducationLevels && (
+          <div>
+            <p className="mb-2 text-xs font-semibold text-text-secondary">
+              {t("shared.filterSidebar.educationLevel")}
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {EDUCATION_LEVELS.map((lvl) => {
+                const active = value.educationLevels.includes(lvl);
+
+                return (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => toggleLevel(lvl)}
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                       active
-                        ? { budgetUnit: "", min: 0, max: rangeMax }
-                        : {
-                            budgetUnit: u,
-                            min: 0,
-                            max: BUDGET_RANGE_BY_UNIT[u].max,
-                          },
-                    )
-                  }
-                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                    active
-                      ? "border-primary bg-primary text-white"
-                      : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {BUDGET_UNIT_LABEL[u]}
-                </button>
-              );
-            })}
+                        ? "border-primary bg-primary text-white"
+                        : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {EDUCATION_LEVEL_LABEL[lvl]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          {value.budgetUnit ? (
+        )}
+
+        {budgetUnitMode ? (
+          <div>
+            <p className="mb-2 text-xs font-semibold text-text-secondary">
+              {priceLabel}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {UNIT_ORDER.map((u) => {
+                const active = value.budgetUnit === u;
+                return (
+                  <button
+                    key={u}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() =>
+                      set(
+                        active
+                          ? { budgetUnit: "", min: 0, max: rangeMax }
+                          : {
+                              budgetUnit: u,
+                              min: 0,
+                              max: BUDGET_RANGE_BY_UNIT[u].max,
+                            },
+                      )
+                    }
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                      active
+                        ? "border-primary bg-primary text-white"
+                        : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {BUDGET_UNIT_LABEL[u]}
+                  </button>
+                );
+              })}
+            </div>
+            {value.budgetUnit ? (
+              <RangeSlider
+                min={range.min}
+                max={range.max}
+                rangeMax={BUDGET_RANGE_BY_UNIT[value.budgetUnit].max}
+                step={BUDGET_RANGE_BY_UNIT[value.budgetUnit].step}
+                onChange={(mn, mx) => setRange({ min: mn, max: mx })}
+                className="mt-4"
+              />
+            ) : (
+              <p className="mt-2 text-xs text-text-secondary">
+                {t("shared.filterSidebar.pickUnitHint")}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-text-secondary">
+              {priceLabel}
+            </label>
             <RangeSlider
               min={range.min}
               max={range.max}
-              rangeMax={BUDGET_RANGE_BY_UNIT[value.budgetUnit].max}
-              step={BUDGET_RANGE_BY_UNIT[value.budgetUnit].step}
+              rangeMax={rangeMax}
+              step={rangeStep}
               onChange={(mn, mx) => setRange({ min: mn, max: mx })}
-              className="mt-4"
+              className="mt-2"
             />
-          ) : (
-            <p className="mt-2 text-xs text-text-secondary">
-              {t("shared.filterSidebar.pickUnitHint")}
-            </p>
-          )}
-        </div>
-      ) : (
-        <div>
-          <label className="mb-1 block text-xs font-semibold text-text-secondary">
-            {priceLabel}
-          </label>
-          <RangeSlider
-            min={range.min}
-            max={range.max}
-            rangeMax={rangeMax}
-            step={rangeStep}
-            onChange={(mn, mx) => setRange({ min: mn, max: mx })}
-            className="mt-2"
-          />
-        </div>
-      )}
+          </div>
+        )}
 
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onChange(emptyFilter(rangeMax))}
-        className="mt-1 !bg-[#F97316] !text-white !opacity-100 hover:!bg-[#EA580C] disabled:!opacity-100"
-      >
-        {t("shared.filterSidebar.reset")}
-      </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onChange(emptyFilter(rangeMax))}
+          className="mt-1 !bg-[#F97316] !text-white !opacity-100 hover:!bg-[#EA580C] disabled:!opacity-100"
+        >
+          {t("shared.filterSidebar.reset")}
+        </Button>
+      </div>
     </aside>
   );
 }

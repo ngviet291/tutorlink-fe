@@ -21,7 +21,7 @@ export function Logo({ className, light }: { className?: string; light?: boolean
       className={cn('inline-flex items-center gap-2', className)}
     >
       <LogoMark />
-      <span className={cn('text-xl tracking-tight', light ? 'text-white' : 'text-text')}>
+            <span className={cn('text-lg tracking-tight sm:text-xl', light ? 'text-white' : 'text-text')}>
         <span className="font-bold">Tutor</span>
         <span className={cn('font-normal', light ? 'text-secondary' : 'text-primary')}>Link</span>
       </span>

@@ -9,9 +9,9 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, action, actions, className = '' }: PageHeaderProps) {
   return (
-    <div className={`flex items-start justify-between gap-4 ${className}`}>
-      <div>
-        <h1 className="text-2xl font-extrabold text-text">{title}</h1>
+    <div className={`flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 ${className}`}>
+      <div className="min-w-0">
+        <h1 className="text-xl font-extrabold text-text sm:text-2xl">{title}</h1>
         {description && <p className="mt-1 text-sm text-text-secondary">{description}</p>}
       </div>
       {(action ?? actions) && <div className="shrink-0">{action ?? actions}</div>}

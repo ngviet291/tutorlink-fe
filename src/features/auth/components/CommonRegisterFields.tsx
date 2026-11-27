@@ -254,7 +254,7 @@ export function CommonRegisterFields() {
         error={errors.phone?.message}
         {...register("phone", rules.phone)}
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Select
           label={t("profile.gender")}
           required
@@ -286,7 +286,7 @@ export function CommonRegisterFields() {
             v.trim().length > 0 || t("validation.streetRequired"),
         })}
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {manualEntry ? (
           // API địa chỉ lỗi: cho nhập tay để không chặn đăng ký
           <>

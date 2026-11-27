@@ -40,7 +40,7 @@ export function ChatWindow({ channel }: { channel: ChatThread }) {
   );
 
   return (
-    <section className="flex h-[75dvh] min-h-96 flex-col overflow-hidden rounded-2xl border border-border bg-surface">
+    <section className="flex h-[calc(100dvh-20rem)] min-h-[22rem] flex-col overflow-hidden rounded-2xl border border-border bg-surface lg:h-[calc(100dvh-16rem)]">
       <ChatHeader partner={partner} />
       {messagesQuery.isLoading ? (
         <Skeleton className="m-4 h-full" />

@@ -33,5 +33,5 @@ export function FormField({ label, htmlFor, error, hint, required, className, ch
 }
 
 export const fieldBase =
-  'w-full rounded-lg border bg-surface px-3 text-sm text-text placeholder:text-text-secondary/60 transition-colors ' +
+   'w-full rounded-lg border bg-surface px-3 text-base text-text placeholder:text-text-secondary/60 transition-colors sm:text-sm ' +
   'focus:border-primary focus:outline-2 focus:outline-primary/30 disabled:cursor-not-allowed disabled:opacity-60'

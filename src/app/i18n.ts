@@ -18,6 +18,7 @@ const vi = {
     logout: "Đăng xuất",
     admin: "Quản trị",
     items: {
+      security: "Bảo mật",
       account: "Tài khoản",
       messages: "Tin nhắn",
       notifications: "Thông báo",
@@ -59,6 +60,7 @@ const vi = {
     sidebar: { ariaLabel: "Menu chức năng" },
     filterSidebar: {
       priceRange: "Mức giá",
+      toggle: "Bộ lọc",
       subject: "Môn học",
       allSubjects: "Tất cả môn",
       province: "Tỉnh / Thành phố",
@@ -1585,6 +1587,12 @@ const vi = {
     findTutorNow: "Tìm gia sư",
   },
   profile: {
+    security: {
+      title: "Bảo mật",
+      description: "Quản lý mật khẩu và bảo vệ tài khoản của bạn.",
+      passwordHint:
+        "Nên đổi mật khẩu định kỳ và không dùng lại mật khẩu của nơi khác.",
+    },
     title: "Tài khoản",
     desc: "Cập nhật thông tin cá nhân của bạn.",
     tutorProfile: "Hồ sơ gia sư",
@@ -1889,6 +1897,7 @@ const en = {
     logout: "Log out",
     admin: "Admin",
     items: {
+      security: "Security",
       account: "Account",
       messages: "Messages",
       notifications: "Notifications",
@@ -1930,6 +1939,7 @@ const en = {
     sidebar: { ariaLabel: "Function menu" },
     filterSidebar: {
       priceRange: "Price range",
+      toggle: "Filters",
       subject: "Subject",
       allSubjects: "All subjects",
       province: "Province / City",
@@ -3485,6 +3495,12 @@ const en = {
     findTutorNow: "Find a tutor",
   },
   profile: {
+    security: {
+      title: "Security",
+      description: "Manage your password and keep your account safe.",
+      passwordHint:
+        "Change your password regularly and never reuse one from another site.",
+    },
     title: "Account",
     desc: "Update your personal information.",
     tutorProfile: "Tutor profile",

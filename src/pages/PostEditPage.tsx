@@ -75,28 +75,29 @@ export default function PostEditPage() {
 
   if (isError || !post) {
     return (
-      <ErrorState
-        message={
-          isError && (error as { status?: number } | null)?.status !== 404
-            ? getErrorMessage(error)
-            : t("post.notFound")
-        }
-        onRetry={() => void refetch()}
-      />
+      <div className="mx-auto max-w-2xl">
+        <ErrorState
+          message={
+            isError && (error as { status?: number } | null)?.status !== 404
+              ? getErrorMessage(error)
+              : t("post.notFound")
+          }
+          onRetry={() => void refetch()}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <PageHeader title={t("post.editPost")} />
-
-      <div className="mt-6">
+      <section className="rounded-3xl border border-border bg-surface p-5 sm:p-6">
         <PostForm
           defaultValues={post}
           onSubmit={handleSubmit}
           isSubmitting={updatePost.isPending}
         />
-      </div>
+      </section>
     </div>
   );
 }

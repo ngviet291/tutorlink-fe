@@ -415,7 +415,8 @@ export function PostForm({
             required
             error={errors.subjectId?.message}
             value={field.value}
-            onChange={field.onChange}>
+            onChange={field.onChange}
+          >
             <option value="">{t("tutor.selectSubject")}</option>
 
             {subjects.map((subject) => (
@@ -441,7 +442,8 @@ export function PostForm({
               required
               error={errors.educationLevel?.message}
               value={field.value}
-              onChange={field.onChange}>
+              onChange={field.onChange}
+            >
               {educationLevels.map((level) => (
                 <option key={level} value={level}>
                   {EDUCATION_LEVEL_LABEL[level]}
@@ -463,7 +465,8 @@ export function PostForm({
               required
               error={errors.teachingMode?.message}
               value={field.value}
-              onChange={field.onChange}>
+              onChange={field.onChange}
+            >
               {TEACHING_MODES.map((mode) => (
                 <option key={mode} value={mode}>
                   {TEACHING_MODE_LABEL[mode]}
@@ -482,7 +485,8 @@ export function PostForm({
           <Select
             label={t("post.postForm.budgetUnitLabel")}
             value={field.value ?? "PER_SESSION"}
-            onChange={field.onChange}>
+            onChange={field.onChange}
+          >
             {budgetUnitOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -614,7 +618,8 @@ export function PostForm({
                   error={errors.address?.province?.message}
                   value={field.value ?? ""}
                   onChange={field.onChange}
-                  disabled={isLoadingProvinces}>
+                  disabled={isLoadingProvinces}
+                >
                   <option value="">{t("common.selectProvince")}</option>
 
                   {provinceOptions
@@ -650,7 +655,8 @@ export function PostForm({
                     error={errors.address?.ward?.message}
                     value={field.value ?? ""}
                     onChange={field.onChange}
-                    disabled={!province || isLoadingWards}>
+                    disabled={!province || isLoadingWards}
+                  >
                     <option value="">
                       {province
                         ? t("post.postForm.selectWard")
@@ -683,7 +689,8 @@ export function PostForm({
       {errors.root?.server && (
         <p
           role="alert"
-          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text">
+          className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-text"
+        >
           {errors.root.server.message}
         </p>
       )}
@@ -697,7 +704,8 @@ export function PostForm({
               variant="secondary"
               onClick={() => submitAs(true)}
               loading={isSubmitting}
-              className="sm:flex-1">
+              className="w-full sm:flex-1"
+            >
               {t("post.postForm.saveDraft")}
             </Button>
 
@@ -705,7 +713,8 @@ export function PostForm({
               type="button"
               onClick={() => submitAs(false)}
               loading={isSubmitting}
-              className="flex-1">
+              className="w-full sm:flex-1"
+            >
               {t("post.publishPost")}
             </Button>
           </>
@@ -714,7 +723,8 @@ export function PostForm({
             type="button"
             onClick={() => submitAs(false)}
             loading={isSubmitting}
-            className="w-full">
+            className="w-full"
+          >
             {t("post.postForm.saveChanges")}
           </Button>
         )}

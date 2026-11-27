@@ -110,7 +110,7 @@ export function Modal({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className={`relative max-h-[92vh] w-full overflow-y-auto ${widthClass} rounded-t-2xl border border-border bg-surface p-5 shadow-2xl outline-none sm:rounded-2xl sm:p-6 ${className}`}
+        className={`relative max-h-[92dvh] w-full overflow-y-auto ${widthClass} rounded-t-2xl border border-border bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl outline-none sm:rounded-2xl sm:p-6 ${className}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}

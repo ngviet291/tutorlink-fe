@@ -134,7 +134,7 @@ export default function TutorDetailPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-28 pt-8 md:pb-10">
+    <div className="mx-auto max-w-5xl px-4 pb-28 pt-8 lg:pb-10">
       <section className="flex flex-col gap-5 rounded-3xl border border-border bg-surface p-6 sm:flex-row sm:items-center">
         <Avatar name={tutor.fullName} src={tutor.avatarUrl} size="xl" />
         <div className="min-w-0 flex-1">
@@ -237,7 +237,8 @@ export default function TutorDetailPage() {
                   {tutor.certificates.map((c, i) => (
                     <li
                       key={`${c.name}-${i}`}
-                      className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4">
+                      className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4"
+                    >
                       <span className="flex size-10 items-center justify-center rounded-full bg-primary-light text-primary">
                         <Award className="size-5" />
                       </span>
@@ -276,7 +277,8 @@ export default function TutorDetailPage() {
                       <Button
                         variant="outline"
                         loading={tutorPosts.isFetchingNextPage}
-                        onClick={() => void tutorPosts.fetchNextPage()}>
+                        onClick={() => void tutorPosts.fetchNextPage()}
+                      >
                         {t("tutorDetail.loadMore")}
                       </Button>
                     </div>
@@ -291,7 +293,8 @@ export default function TutorDetailPage() {
                   {tutor.schedule.map((s, i) => (
                     <li
                       key={i}
-                      className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4">
+                      className="flex items-center justify-between rounded-2xl border border-border bg-surface p-4"
+                    >
                       <span className="font-semibold text-text">
                         {DAY_LABEL[s.day]}
                       </span>
@@ -318,7 +321,8 @@ export default function TutorDetailPage() {
               fullWidth
               variant={isFav ? "secondary" : "outline"}
               onClick={onFavorite}
-              loading={toggle.isPending}>
+              loading={toggle.isPending}
+            >
               <Heart className={isFav ? "size-4 fill-current" : "size-4"} />{" "}
               {isFav
                 ? t("tutorDetail.favorited")
@@ -336,14 +340,15 @@ export default function TutorDetailPage() {
         </aside>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-border bg-surface p-3 lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-border bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden">
         <Button className="flex-1" onClick={onContact}>
           <MessageCircle className="size-4" /> {t("tutorDetail.contact")}
         </Button>
         <Button
           variant={isFav ? "secondary" : "outline"}
           onClick={onFavorite}
-          aria-label={t("tutorDetail.favoriteAria")}>
+          aria-label={t("tutorDetail.favoriteAria")}
+        >
           <Heart className={isFav ? "size-4 fill-current" : "size-4"} />
         </Button>
       </div>

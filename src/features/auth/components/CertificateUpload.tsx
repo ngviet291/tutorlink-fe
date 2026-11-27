@@ -147,7 +147,7 @@ export function CertificateUpload({
                 aria-label={t("auth.certificateUpload.subjectOfAria", {
                   name: p.file.name,
                 })}
-                className="w-full rounded-md border border-border bg-transparent px-1 py-1 text-xs"
+                className="w-full rounded-md border border-border bg-transparent px-1 py-1 text-base sm:text-xs"
               >
                 <option value="">
                   {t("auth.certificateUpload.pickSubject")}

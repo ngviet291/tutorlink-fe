@@ -12,14 +12,16 @@ const TABS = [
 
 interface Props {
   children: ReactNode;
+  wide?: boolean;
 }
 
-export function RegisterLayout({ children }: Props) {
+export function RegisterLayout({ children, wide }: Props) {
   const { t } = useTranslation();
   return (
     <AuthShell
       title={t("auth.createAccount")}
       subtitle={t("auth.registerLayout.subtitle")}
+      wide={wide}
     >
       <nav className="mb-4 grid grid-cols-2 gap-2">
         {TABS.map((tab) => (

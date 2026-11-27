@@ -70,7 +70,9 @@ export function NavbarQuickLinks() {
   return (
     <>
       {role === "TUTOR" && (
-        <IconLink to={ROUTES.WALLET} icon={Wallet} label={t("nav.wallet")} />
+        <div className="hidden sm:block">
+          <IconLink to={ROUTES.WALLET} icon={Wallet} label={t("nav.wallet")} />
+        </div>
       )}
       <ChatLink />
     </>

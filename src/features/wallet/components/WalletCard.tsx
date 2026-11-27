@@ -34,7 +34,7 @@ export function WalletCard({
             {t("wallet.loadError")}
           </button>
         ) : (
-          <p className="text-4xl font-extrabold tracking-tight">
+          <p className="break-words text-3xl font-extrabold tracking-tight sm:text-4xl">
             {formatVnd(data?.balance ?? 0)}
           </p>
         )}

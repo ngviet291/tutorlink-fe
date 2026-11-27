@@ -146,7 +146,7 @@ export function MessageComposer({ channelId, onSend }: Props) {
           value={value}
           disabled={upload.isPending}
           onChange={(e) => setValue(e.target.value)}
-          className="h-10 flex-1 rounded-full border border-border bg-background px-4 text-sm text-text focus:border-primary focus:outline-2 focus:outline-primary/30"
+          className="h-10 flex-1 rounded-full border border-border bg-background px-4 min-w-0 text-base sm:text-sm text-text focus:border-primary focus:outline-2 focus:outline-primary/30"
         />
 
         <Button

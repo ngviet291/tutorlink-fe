@@ -5,6 +5,7 @@ import {
   FileText,
   GraduationCap,
   Heart,
+  KeyRound,
   LayoutDashboard,
   MessageSquare,
   PlusCircle,
@@ -48,7 +49,7 @@ export interface PublicNavItem {
 }
 
 // Thứ tự hiển thị trên Navbar: Trang chủ, Tìm gia sư, Tìm lớp, Đăng bài,
-// Góc gia sư, Góc học viên, Ví, Tin nhắn.
+// Góc gia sư, Góc học viên. Ví và Tin nhắn là biểu tượng cạnh chuông thông báo.
 export const PUBLIC_NAV: PublicNavItem[] = [
   { to: ROUTES.HOME, labelKey: "nav.home" },
   { to: ROUTES.FIND_TUTOR, labelKey: "nav.findTutor", hideFor: ["TUTOR"] },
@@ -92,14 +93,22 @@ function navItem(
   };
 }
 
-// end: true vì /profile là tiền tố của /profile/tutor, không có end thì
-// đứng ở Hồ sơ giảng dạy nút Tài khoản vẫn sáng.
+// end: true vì /profile là tiền tố của /profile/tutor và /profile/security,
+// không có end thì đứng ở Hồ sơ giảng dạy hay Bảo mật nút Tài khoản vẫn sáng.
 const accountItem = navItem(ROUTES.PROFILE, "account", User, true);
+// Bảo mật nằm ngay dưới Tài khoản
+const securityItem = navItem(
+  ROUTES.PROFILE_SECURITY,
+  "security",
+  KeyRound,
+  true,
+);
 
 const common: NavItem[] = [
   navItem(ROUTES.CHAT_INBOX, "messages", MessageSquare, true),
   navItem(ROUTES.NOTIFICATIONS, "notifications", Bell),
   accountItem,
+  securityItem,
 ];
 
 const studentItems: NavItem[] = [
@@ -140,11 +149,11 @@ export function getNavGroups(role: Role): NavGroup[] {
         },
         items: adminItems,
       },
-      { items: [accountItem] },
+      { items: [accountItem, securityItem] },
     ];
   }
-  if (role === "TUTOR") return [{ items: [...tutorItems, ...common] }];
-  return [{ items: [...studentItems, ...common] }];
+  if (role === "TUTOR") return [{ items: tutorItems }, { items: common }];
+  return [{ items: studentItems }, { items: common }];
 }
 
 /** 4–5 mục quan trọng nhất cho thanh điều hướng đáy trên mobile */
@@ -162,15 +171,15 @@ export function getBottomNav(role: Role): NavItem[] {
       tutorItems[0]!,
       tutorItems[4]!,
       tutorItems[5]!,
-      navItem(ROUTES.NOTIFICATIONS, "notifications", Bell),
       navItem(ROUTES.PROFILE, "account", UserCog, true),
+      securityItem,
     ];
   }
   return [
     studentItems[0]!,
     studentItems[1]!,
     studentItems[2]!,
-    navItem(ROUTES.NOTIFICATIONS, "notifications", Bell),
     navItem(ROUTES.PROFILE, "account", User, true),
+    securityItem,
   ];
 }

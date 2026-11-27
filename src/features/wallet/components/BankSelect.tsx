@@ -121,7 +121,7 @@ export function BankSelect({ value, onChange, disabled, error, id }: Props) {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("wallet.bankSelect.searchPlaceholder")}
-              className="h-9 w-full rounded-lg bg-background pl-8 pr-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
+              className="h-9 w-full rounded-lg bg-background pl-8 pr-3 text-base sm:text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <ul role="listbox" className="max-h-60 overflow-y-auto p-1">

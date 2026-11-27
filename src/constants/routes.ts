@@ -23,6 +23,7 @@ export const ROUTES = {
   FAVORITES: "/favorites",
   TUTOR_PROFILE: "/profile/tutor",
   PROFILE: "/profile",
+  PROFILE_SECURITY: "/profile/security",
   WALLET: "/wallet",
   CHAT: (channelId = ":channelId") => `/chat/${channelId}`,
   CHAT_WITH: (partnerId = ":partnerId") => `/chat/with/${partnerId}`,
