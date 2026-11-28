@@ -132,11 +132,8 @@ export function FilterSidebar({
   }, [debouncedRange]);
 
   const toggleLevel = (lvl: EducationLevel) => {
-    const next = value.educationLevels.includes(lvl)
-      ? value.educationLevels.filter((x) => x !== lvl)
-      : [...value.educationLevels, lvl];
-
-    set({ educationLevels: next });
+    const isActive = value.educationLevels.includes(lvl);
+    set({ educationLevels: isActive ? [] : [lvl] });
   };
 
   return (

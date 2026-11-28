@@ -61,6 +61,12 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     hideFor: ["STUDENT"],
   },
   {
+    to: ROUTES.WALLET,
+    labelKey: "nav.wallet",
+    hideFor: ["STUDENT"],
+    authOnly: true,
+  },
+  {
     to: ROUTES.STUDENT_CORNER,
     labelKey: "nav.studentCorner",
     hideFor: ["TUTOR"],
@@ -170,7 +176,7 @@ export function getBottomNav(role: Role): NavItem[] {
     return [
       tutorItems[0]!,
       tutorItems[4]!,
-      tutorItems[5]!,
+      tutorItems[3]!,
       navItem(ROUTES.PROFILE, "account", UserCog, true),
       securityItem,
     ];
