@@ -200,8 +200,10 @@ function SlotsEditor({ form }: { form: Form }) {
     register,
     control,
     getValues,
+    watch,
     formState: { errors },
   } = form;
+  const schedule = watch("schedule") ?? [];
   const { fields, append, remove } = useFieldArray({
     control,
     name: "schedule",
@@ -213,40 +215,67 @@ function SlotsEditor({ form }: { form: Form }) {
         {t("subjectEditor.scheduleLegend")}
       </legend>
       {fields.map((f, i) => (
-        <div
-          key={f.id}
-          className="grid gap-2 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
-          <Select
-            aria-label={t("subjectEditor.dayAria")}
-            options={DAYS.map((d) => ({ value: d, label: DAY_LABEL[d] }))}
-            {...register(`schedule.${i}.day`)}
-          />
-          <Input
-            aria-label={t("subjectEditor.fromAria")}
-            type="time"
-            error={errors.schedule?.[i]?.from?.message}
-            {...register(`schedule.${i}.from`, {
-              required: t("subjectEditor.enterTime"),
-            })}
-          />
-          <Input
-            aria-label={t("subjectEditor.toAria")}
-            type="time"
-            error={errors.schedule?.[i]?.to?.message}
-            {...register(`schedule.${i}.to`, {
-              required: t("subjectEditor.enterTime"),
-              validate: (to) =>
-                to > getValues(`schedule.${i}.from`) ||
-                t("subjectEditor.mustBeAfterStart"),
-            })}
-          />
-          <Button
-            variant="ghost"
-            aria-label={t("subjectEditor.deleteSlotAria")}
-            onClick={() => remove(i)}>
-            <Trash2 className="size-4 text-danger-text" />
-          </Button>
-        </div>
+        (() => {
+          const slot = schedule[i];
+          const hasOverlap = Boolean(
+            slot &&
+              schedule.some(
+                (other, index) =>
+                  index !== i &&
+                  slot.day === other.day &&
+                  slot.from &&
+                  slot.to &&
+                  other.from &&
+                  other.to &&
+                  slot.from < other.to &&
+                  other.from < slot.to,
+              ),
+          );
+
+          return (
+            <div
+              key={f.id}
+              className={`grid gap-2 rounded-xl border p-3 sm:grid-cols-[1fr_1fr_1fr_auto] ${
+                hasOverlap ? "border-danger" : "border-border"
+              }`}>
+              <Select
+                aria-label={t("subjectEditor.dayAria")}
+                options={DAYS.map((d) => ({ value: d, label: DAY_LABEL[d] }))}
+                {...register(`schedule.${i}.day`)}
+              />
+              <Input
+                aria-label={t("subjectEditor.fromAria")}
+                type="time"
+                error={errors.schedule?.[i]?.from?.message}
+                {...register(`schedule.${i}.from`, {
+                  required: t("subjectEditor.enterTime"),
+                })}
+              />
+              <Input
+                aria-label={t("subjectEditor.toAria")}
+                type="time"
+                error={errors.schedule?.[i]?.to?.message}
+                {...register(`schedule.${i}.to`, {
+                  required: t("subjectEditor.enterTime"),
+                  validate: (to) =>
+                    to > getValues(`schedule.${i}.from`) ||
+                    t("subjectEditor.mustBeAfterStart"),
+                })}
+              />
+              <Button
+                variant="ghost"
+                aria-label={t("subjectEditor.deleteSlotAria")}
+                onClick={() => remove(i)}>
+                <Trash2 className="size-4 text-danger-text" />
+              </Button>
+              {hasOverlap && (
+                <p className="col-span-full text-xs text-danger-text" role="alert">
+                  {t("subjectEditor.overlappingSchedule")}
+                </p>
+              )}
+            </div>
+          );
+        })()
       ))}
       <Button
         variant="outline"
