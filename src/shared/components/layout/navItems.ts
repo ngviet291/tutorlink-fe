@@ -61,15 +61,14 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     hideFor: ["STUDENT"],
   },
   {
-    to: ROUTES.WALLET,
-    labelKey: "nav.wallet",
-    hideFor: ["STUDENT"],
-    authOnly: true,
-  },
-  {
     to: ROUTES.STUDENT_CORNER,
     labelKey: "nav.studentCorner",
     hideFor: ["TUTOR"],
+  },
+  {
+    to: ROUTES.PROFILE_SECURITY,
+    labelKey: "nav.security",
+    authOnly: true,
   },
 ];
 
@@ -134,7 +133,7 @@ const tutorItems: NavItem[] = [
   navItem(ROUTES.WALLET, "wallet", Wallet),
 ];
 
-const adminItems: NavItem[] = [
+export const adminItems: NavItem[] = [
   navItem(ROUTES.ADMIN, "adminStats", BarChart3, true),
   navItem(ROUTES.ADMIN_TUTOR_REVIEW, "adminTutorReview", ShieldCheck),
   navItem(ROUTES.ADMIN_USERS, "adminUsers", Users),
@@ -144,6 +143,16 @@ const adminItems: NavItem[] = [
   navItem(ROUTES.ADMIN_WITHDRAWALS, "adminWithdrawals", Wallet),
   navItem(ROUTES.ADMIN_FEE, "adminFee", CircleDollarSign),
   navItem(ROUTES.ADMIN_COMPLAINTS, "adminComplaints", Flag),
+];
+
+const adminMenuItem = navItem(ROUTES.ADMIN_MENU, "adminMenu", Settings2, true);
+export const adminMenuItems: NavItem[] = [
+  adminItems[2]!, // Users
+  adminItems[3]!, // Subjects
+  adminItems[4]!, // Posts
+  adminItems[6]!, // Withdrawals
+  adminItems[7]!, // Fee
+  adminItems[8]!, // Complaints
 ];
 
 export function getNavGroups(role: Role): NavGroup[] {
@@ -165,20 +174,15 @@ export function getNavGroups(role: Role): NavGroup[] {
 /** 4–5 mục quan trọng nhất cho thanh điều hướng đáy trên mobile */
 export function getBottomNav(role: Role): NavItem[] {
   if (role === "ADMIN") {
-    return [
-      adminItems[0]!,
-      adminItems[1]!,
-      adminItems[5]!,
-      navItem(ROUTES.PROFILE, "account", Settings2, true),
-    ];
+    return [adminItems[0]!, adminItems[1]!, adminItems[5]!, adminMenuItem];
   }
   if (role === "TUTOR") {
     return [
       tutorItems[0]!,
       tutorItems[4]!,
       tutorItems[3]!,
+      tutorItems[5]!,
       navItem(ROUTES.PROFILE, "account", UserCog, true),
-      securityItem,
     ];
   }
   return [
@@ -186,6 +190,5 @@ export function getBottomNav(role: Role): NavItem[] {
     studentItems[1]!,
     studentItems[2]!,
     navItem(ROUTES.PROFILE, "account", User, true),
-    securityItem,
   ];
 }

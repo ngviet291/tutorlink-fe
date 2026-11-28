@@ -242,6 +242,10 @@ export const router = createBrowserRouter([
                   },
                 ],
               },
+              {
+                path: ROUTES.ADMIN_MENU,
+                element: page(() => import("@/pages/admin/AdminMenuPage")),
+              },
             ],
           },
         ],

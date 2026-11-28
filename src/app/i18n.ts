@@ -7,6 +7,7 @@ const vi = {
     findTutor: "Tìm Gia Sư",
     findClass: "Tìm Lớp",
     postCreate: "Đăng bài",
+    security: "Bảo mật",
     messages: "Tin nhắn",
     tutorCorner: "Góc Gia Sư",
     studentCorner: "Góc Học Viên",
@@ -31,6 +32,7 @@ const vi = {
       postCreateTutor: "Đăng tìm học viên",
       wallet: "Ví của tôi",
       adminTitle: "Quản trị",
+      adminMenu: "Quản trị",
       adminStats: "Thống kê",
       adminTutorReview: "Duyệt hồ sơ gia sư",
       adminUsers: "Người dùng",
@@ -1883,6 +1885,7 @@ const vi = {
 const en = {
   nav: {
     home: "Home",
+    security: "Security",
     findTutor: "Find Tutors",
     findClass: "Find Classes",
     postCreate: "Post",
@@ -1910,6 +1913,7 @@ const en = {
       postCreateTutor: "Post to find students",
       wallet: "My wallet",
       adminTitle: "Administration",
+      adminMenu: "Admin Menu",
       adminStats: "Statistics",
       adminTutorReview: "Review tutor profiles",
       adminUsers: "Users",

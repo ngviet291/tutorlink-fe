@@ -31,6 +31,7 @@ export const ROUTES = {
   NOTIFICATIONS: "/notifications",
 
   ADMIN: "/admin",
+  ADMIN_MENU: "/admin/menu",
   ADMIN_TUTOR_REVIEW: "/admin/tutor-review",
   ADMIN_USERS: "/admin/users",
   ADMIN_SUBJECTS: "/admin/subjects",
